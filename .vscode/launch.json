@@ -1,0 +1,44 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(Test) Launch Event Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Test/Event/Debug/EventTest.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Test/Event/Debug",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "Build Engine"
+        },
+        {
+            "name": "(Test) Launch Game Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Test/Game/Debug/GameTest.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Test/Game/Debug",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "Build Engine"
+        },
+        {
+            "name": "(Test) Launch GLTF2 Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/Test/GLTF2/Debug/GLTF2Test.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin/Test/GLTF2/Debug",
+            "environment": [],
+            "externalConsole": true,
+            "preLaunchTask": "Build Engine"
+        },
+    ]
+}
