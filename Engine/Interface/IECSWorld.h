@@ -71,6 +71,9 @@ namespace Engine
         template<typename Comp>
         inline Comp* GetComponent();
 
+        template<typename Comp>
+        inline bool HasComponent();
+
     public:
         EntityID m_id;
 
@@ -98,6 +101,13 @@ namespace Engine
 
         Comp* pComp = (Comp*)(&m_pWorld->m_compTable[compId][compIndex]);
         return pComp;
+    };
+
+    template<typename Comp>
+    inline bool IEntity::HasComponent()
+    {
+        static_assert(std::is_base_of<IComponent, Comp>::value);
+        return IsBitOf(m_compBitset, Comp::m_compID);
     };
 
     class IECSSystem : public IRuntimeModule

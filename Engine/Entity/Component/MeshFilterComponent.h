@@ -11,10 +11,10 @@ namespace Engine
         MeshFilterComponent() : ComponentBase<MeshFilterComponent>() {}
         virtual ~MeshFilterComponent() = default;
 
-        std::shared_ptr<IMesh> GetMesh();
+        std::shared_ptr<IMesh> GetMesh() const;
         void SetMesh(std::shared_ptr<IMesh> pMesh);
 
     private:
-        std::shared_ptr<IMesh> m_pMesh;
+        std::shared_ptr<IMesh> m_pMesh = nullptr;
     };
 }

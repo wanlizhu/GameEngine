@@ -25,7 +25,7 @@ DrawingParameter::~DrawingParameter()
 {
 }
 
-const uint32_t BasicTypeSize[eBasic_Count] = 
+const uint32_t DrawingParameter::BasicTypeSize[eBasic_Count] = 
 {
     sizeof(bool),
     sizeof(uint32_t),
@@ -84,6 +84,16 @@ void DrawingParameter::SetName(std::shared_ptr<std::string> pName)
     m_pName = pName;
 }
 
+bool DrawingParameter::IsDirty() const
+{
+    return m_bDirty;
+}
+
+void DrawingParameter::SetDirty(bool bDirty)
+{
+    m_bDirty = bDirty;
+}
+
 std::shared_ptr<std::string> DrawingParameter::GetSemantic() const
 {
     return m_pSemantic;
@@ -131,12 +141,18 @@ void DrawingParameter::SetValue(const void* pInitVal, uint32_t size)
     if (pInitVal != nullptr)
     {
         if (memcmp(m_pValue, pInitVal, size) != 0)
-            memcpy(m_pValue, pInitVal, size);
-        else
         {
-            static const unsigned int zeroMem[4096] = { 0 };
-            if (memcmp(m_pValue, zeroMem, size) != 0)
-                memset(m_pValue, 0, size);
+            memcpy(m_pValue, pInitVal, size);
+            m_bDirty = true;
+        }
+    }
+    else
+    {
+        static const unsigned int zeroMem[4096] = { 0 };
+        if (memcmp(m_pValue, zeroMem, size) != 0)
+        {
+            memset(m_pValue, 0, size);
+            m_bDirty = true;
         }
     }
 }
@@ -813,6 +829,8 @@ void DrawingParameter::CreateObjectParameter(uint32_t type, void* pInitVal)
 {
     m_type = type;
     UpdateValue(pInitVal, sizeof(void*));
+
+    m_bDirty = true;
 }
 
 void DrawingParameter::CreateValueParameter(uint32_t type,  void* pInitVal)
@@ -838,6 +856,8 @@ void DrawingParameter::CreateScalarParameter(uint32_t type, void* pInitVal)
 
     m_type = type;
     UpdateValue(pInitVal, BasicTypeSize[basicType] * arraySize);
+
+    m_bDirty = true;
 }
 
 void DrawingParameter::CreateVectorParameter(uint32_t type, void* pInitVal)
@@ -851,6 +871,8 @@ void DrawingParameter::CreateVectorParameter(uint32_t type, void* pInitVal)
 
     m_type = type;
     UpdateValue(pInitVal, BasicTypeSize[basicType] * rowSize * arraySize);
+
+    m_bDirty = true;
 }
 
 void DrawingParameter::CreateMatrixParameter(uint32_t type, void* pInitVal)
@@ -865,6 +887,8 @@ void DrawingParameter::CreateMatrixParameter(uint32_t type, void* pInitVal)
 
     m_type = type;
     UpdateValue(pInitVal, BasicTypeSize[basicType] * rowSize * colSize * arraySize);
+
+    m_bDirty = true;
 }
 
 void DrawingParameter::CreateStructParameter(uint32_t type, void* pInitVal)
@@ -877,6 +901,8 @@ void DrawingParameter::CreateStructParameter(uint32_t type, void* pInitVal)
 
     m_type = type;
     UpdateValue(pInitVal, structSize * arraySize);
+
+    m_bDirty = true;
 }
 
 void DrawingParameter::UpdateValue(void* pInitVal, uint32_t size)
@@ -900,7 +926,10 @@ template <typename T>
 void DrawingParameter::AsValue(const T& val)
 {
     if (memcmp(m_pValue, &val, sizeof(T)) != 0)
+    {
         *(T*)m_pValue = val;
+        m_bDirty = true;
+    }
 }
 
 template <typename T, EBasicType type>
@@ -982,7 +1011,10 @@ void DrawingParameter::AsValueArray(const T* val, uint32_t array_size)
     assert(GetArraySize() == array_size);
 
     if (memcmp(m_pValue, val, sizeof(T) * array_size) != 0)
+    {
         memcpy(m_pValue, val, m_size);
+        m_bDirty = true;
+    }
 }
 
 template <typename T, EBasicType type>
@@ -1129,7 +1161,7 @@ int32_t DrawingParameterSet::IndexOfName(const std::shared_ptr<std::string> pNam
     auto it = std::find_if(m_pParamList.cbegin(), m_pParamList.cend(), [pName](const std::shared_ptr<DrawingParameter> pParam)
     {
         assert(pParam != nullptr);
-        return pParam->GetName() == pName;
+        return pParam->GetName()->compare(*pName) == 0;
     });
 
     return it != m_pParamList.cend() ? static_cast<int32_t>(it - m_pParamList.cbegin()) : -1;

@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "Global.h"
+#include "CameraComponent.h"
 #include "TransformComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
@@ -33,6 +34,8 @@ void DrawingSystem::Initialize()
 {
     if (!EstablishConfiguration())
         return;
+
+    m_bEntityChanged = false;
 }
 
 void DrawingSystem::Shutdown()
@@ -42,28 +45,43 @@ void DrawingSystem::Shutdown()
 
 void DrawingSystem::Tick()
 {
-    m_pContext->UpdateContext(*m_pResourceTable);
-    m_pDevice->ClearTarget(m_pContext->GetSwapChain(), gpGlobal->GetConfiguration().background);
-
-    std::for_each(m_rendererTable.begin(), m_rendererTable.end(), [this](RendererTable::value_type& aElem)
+    for (auto& camera : m_pCameraList)
     {
-        auto& pRenderer = aElem.second;
+        auto pCameraComponent = camera->GetComponent<CameraComponent>();
+        auto pTransformComponent = camera->GetComponent<TransformComponent>();
+
+        auto trans = float4x4();
+        auto proj = UpdateProjectionMatrix(pCameraComponent);
+        auto view = UpdateViewMatrix(pTransformComponent);
+
+        m_pContext->UpdateContext(*m_pResourceTable);
+        m_pContext->UpdateTransform(*m_pResourceTable, trans);
+        m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+
+        m_pDevice->ClearTarget(m_pContext->GetSwapChain(), gpGlobal->GetConfiguration().background);
+
+        auto& pRenderer = gpGlobal->GetRenderer(pCameraComponent->GetRendererType());
         if (pRenderer != nullptr)
             pRenderer->Draw(*m_pResourceTable);
-    });
+    }
 
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
 }
 
 void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
 {
-    auto pRenderer = pEntity->GetComponent<MeshRendererComponent>();
-    auto pMesh = pEntity->GetComponent<MeshFilterComponent>();
+    if (!m_bEntityChanged)
+        return;
 
-    if (m_bEntityChanged)
-        pRenderer->GetRenderer()->AttachMesh(pMesh->GetMesh());
+    if (pEntity->HasComponent<CameraComponent>() && pEntity->HasComponent<TransformComponent>())
+        m_pCameraList.emplace_back(pEntity);
 
-    m_bEntityChanged = false;
+    if (pEntity->HasComponent<MeshFilterComponent>() && pEntity->HasComponent<TransformComponent>())
+    {
+        auto meshFilter = pEntity->GetComponent<MeshFilterComponent>();
+        auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
+        pRenderer->AttachMesh(meshFilter->GetMesh());
+    }
 }
 
 void DrawingSystem::BeginFrame()
@@ -171,8 +189,8 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
-    desc.mMultiSampleCount = 4;
-    desc.mMultiSampleQuality = 0;
+    //desc.mMultiSampleCount = 4;
+    //desc.mMultiSampleQuality = 0;
 
     std::shared_ptr<DrawingTarget> pSwapChain;
 
@@ -221,4 +239,51 @@ bool DrawingSystem::PostConfiguration()
     });
 
     return true;
+}
+
+float4x4 DrawingSystem::UpdateWorldMatrix(TransformComponent* pTransform)
+{
+    float4x4 ret;
+    return ret;
+}
+
+float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)
+{
+    float3 pos = pTransform->GetPosition();
+    float3 at = float3(0.0f, 0.0f, 1.0f);
+    float3 up = float3(0.0f, 1.0f, 0.0f);
+
+    float3 z = at.Normalize();
+    float3 x = up.Cross(z).Normalize();
+    float3 y = z.Cross(x);
+
+    float4x4 ret = {
+        x.x, x.y, x.z, -x.Dot(pos),
+        y.x, y.y, y.z, -y.Dot(pos),
+        z.x, z.y, z.z, -z.Dot(pos),
+        0.f, 0.f, 0.f, 1.f
+    };
+
+    return ret;
+}
+
+float4x4 DrawingSystem::UpdateProjectionMatrix(CameraComponent* pCamera)
+{
+    auto fovy = pCamera->GetFov();
+    auto zn = pCamera->GetClippingNear();
+    auto zf = pCamera->GetClippingFar();
+    auto aspect = (float)(gpGlobal->GetConfiguration().width) / (float)(gpGlobal->GetConfiguration().height);
+
+    float d2r = PI_F / 180.0f;
+    float yScale = 1.0f / std::tanf(d2r * fovy / 2.0f);
+    float xScale = yScale / aspect;
+
+    float4x4 ret = {
+        xScale, 0.0f, 0.0f, 0.0f,
+        0.0f, yScale, 0.0f, 0.0f,
+        0.0f, 0.0f, zf / (zf - zn), -zn * zf / (zf - zn),
+        0.0f, 0.0f, 1.0f, 0.0f
+    };
+
+    return ret;
 }

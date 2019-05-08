@@ -533,6 +533,76 @@ DrawingResourceDesc* DrawingIndexBufferDesc::Clone() const
     return new DrawingIndexBufferDesc(*this);
 }
 
+DrawingConstantBufferDesc::DrawingConstantBufferDesc() : DrawingResourceDesc()
+{
+}
+
+DrawingConstantBufferDesc::DrawingConstantBufferDesc(const DrawingConstantBufferDesc& desc) : DrawingResourceDesc(desc),
+    mParameters(desc.mParameters)
+{
+}
+
+DrawingConstantBufferDesc::DrawingConstantBufferDesc(DrawingConstantBufferDesc&& desc) : DrawingResourceDesc(std::move(desc)),
+    mParameters(std::move(desc.mParameters))
+{
+}
+
+DrawingConstantBufferDesc::~DrawingConstantBufferDesc()
+{
+    mParameters.clear();
+}
+
+DrawingConstantBufferDesc& DrawingConstantBufferDesc::operator= (const DrawingConstantBufferDesc& rhs)
+{
+    if (this == &rhs)
+        return *this;
+
+    DrawingResourceDesc::operator= (rhs);
+
+    mParameters = rhs.mParameters;
+
+    return *this;
+}
+
+EDrawingResourceType DrawingConstantBufferDesc::GetType() const
+{
+    return eResource_Constant_Buffer;
+}
+
+DrawingResourceDesc* DrawingConstantBufferDesc::Clone() const
+{
+    return new DrawingConstantBufferDesc(*this);
+}
+
+DrawingConstantBufferDesc::ParamDesc::ParamDesc() : mpName(nullptr), mType(EParam_Invalid)
+{
+}
+
+DrawingConstantBufferDesc::ParamDesc::ParamDesc(const ParamDesc& desc) : mpName(desc.mpName), mType(desc.mType)
+{
+}
+
+DrawingConstantBufferDesc::ParamDesc::ParamDesc(ParamDesc&& desc) : mpName(std::move(desc.mpName)), mType(std::move(desc.mType))
+{
+}
+
+DrawingConstantBufferDesc::ParamDesc::~ParamDesc()
+{
+    mpName = nullptr;
+    mType = EParam_Invalid;
+}
+
+DrawingConstantBufferDesc::ParamDesc& DrawingConstantBufferDesc::ParamDesc::operator= (const DrawingConstantBufferDesc::ParamDesc& rhs)
+{
+    if (this == &rhs)
+        return *this;
+
+    mpName = rhs.mpName;
+    mType = rhs.mType;
+
+    return *this;
+}
+
 DrawingBlendStateDesc::BlendDef::BlendDef() : mBlendSrc(eBlend_SrcAlpha), mBlendDst(eBlend_InvSrcAlpha), mBlendOp(eBlendOp_Add)
 {
 }

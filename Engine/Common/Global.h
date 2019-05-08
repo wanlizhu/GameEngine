@@ -24,7 +24,7 @@ namespace Engine
     enum ERendererType
     {
         eRenderer_Start = 0,
-        eRenderer_BasicPrim = 0,
+        eRenderer_Forward = 0,
         eRenderer_End = 1,
     };
 

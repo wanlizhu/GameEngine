@@ -4,6 +4,9 @@
 
 namespace Engine
 {
+    const double PI   = 3.141592653589793238463;
+    const float  PI_F = 3.14159265358979f;
+
     template <typename T>
     inline T AddBit(T& mask, uint32_t bit)
     {
@@ -17,6 +20,13 @@ namespace Engine
         mask &= ~((T)1 << (T)bit);
         return mask;
     }
+
+    template <typename T>
+    inline bool IsBitOf(T& mask, uint32_t bit)
+    {
+        return (mask >> (T)bit) & (T)1;
+    }
+
     /***************************************************************************
     * These functions were taken from the MiniEngine.
     * Source code available here:

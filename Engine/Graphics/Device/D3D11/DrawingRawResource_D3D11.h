@@ -213,6 +213,7 @@ namespace Engine
             return m_pTexture3D.get();
         }
 
+
     private:
         std::shared_ptr<TextureType> m_pTexture3D;
     };
@@ -585,8 +586,8 @@ namespace Engine
             std::shared_ptr<std::string> mpName = nullptr;
             uint32_t mSizeInBytes = 0;
 
-            std::array<int32_t, DrawingRawShader::RawShader_Count> mStartSlot;
-
+            std::array<uint32_t, DrawingRawShader::RawShader_Count> mStartSlot;
+            std::shared_ptr<DrawingRawConstantBuffer_D3D11> mpCB;
             SConstBuffer()
             {
                 mStartSlot.fill(EMPTY_SLOT);
@@ -598,7 +599,7 @@ namespace Engine
             std::shared_ptr<DrawingParameter> mpParam = nullptr;
             uint32_t mCount = 0;
 
-            std::array<int32_t, DrawingRawShader::RawShader_Count> mStartSlot;
+            std::array<uint32_t, DrawingRawShader::RawShader_Count> mStartSlot;
 
             SParamRes()
             {
@@ -612,6 +613,7 @@ namespace Engine
             uint32_t mSizeInBytes = 0;
 
             std::array<uint32_t, DrawingRawShader::RawShader_Count> mOffset;
+            std::array<std::shared_ptr<DrawingRawConstantBuffer_D3D11>, DrawingRawShader::RawShader_Count> mpCB;
 
             SParamVar()
             {
@@ -648,6 +650,10 @@ namespace Engine
             }
         };
 
+        void LoadShaderInfo(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+
+        void LoadConstantBufferFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+
         void UpdateParameterValues();
         void UpdateConstantBuffers();
         void UpdateDevice();
@@ -661,6 +667,9 @@ namespace Engine
         void SetSamplerSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType);
         void SetTexBufferSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType);
         void SetRWBufferSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType);
+
+        void BindConstantBuffer(DrawingDevice_D3D11::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        void GenerateParameters(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
 
         static constexpr const int32_t EMPTY_SLOT = -1;
 
@@ -705,8 +714,7 @@ namespace Engine
             m_pDevice(pDevice), m_sizeInBytes(desc.ByteWidth), m_stride(stride), m_startOffset(offset)
         {
             ID3D11Buffer* pRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateBuffer(&desc
-            , nullptr, &pRaw);
+            HRESULT hr = m_pDevice->GetDevice()->CreateBuffer(&desc, nullptr, &pRaw);
             assert(SUCCEEDED(hr));
             m_pBuffer = std::shared_ptr<ID3D11Buffer>(pRaw, D3D11Releaser<ID3D11Buffer>);
         }
@@ -930,6 +938,77 @@ namespace Engine
     private:
         std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
         std::shared_ptr<DrawingRawBuffer_D3D11> m_pBufferImpl;
+    };
+
+    class DrawingRawConstantBuffer_D3D11 : public DrawingRawConstantBuffer
+    {
+    public:
+        DrawingRawConstantBuffer_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, uint32_t sizeInBytes) :
+            m_pDevice(pDevice), m_sizeInBytes(sizeInBytes)
+        {
+            ID3D11Buffer* pRaw = nullptr;
+            D3D11_BUFFER_DESC desc;
+            desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+            desc.ByteWidth = sizeInBytes;
+            desc.Usage = D3D11_USAGE_DEFAULT;
+            desc.CPUAccessFlags = 0;
+            desc.MiscFlags = 0;
+            desc.StructureByteStride = 0;
+
+            HRESULT hr = m_pDevice->GetDevice()->CreateBuffer(&desc, nullptr, &pRaw);
+            assert(SUCCEEDED(hr));
+            m_pBuffer = std::shared_ptr<ID3D11Buffer>(pRaw, D3D11Releaser<ID3D11Buffer>);
+
+            m_pData = new char[sizeInBytes];
+            memset(m_pData, 0, sizeof(char) * sizeInBytes);
+        }
+
+        virtual ~DrawingRawConstantBuffer_D3D11() = default;
+
+        std::shared_ptr<ID3D11Buffer> GetBuffer() const
+        {
+            return m_pBuffer;
+        }
+
+        void SetValue(uint32_t offset, const void* pVal, uint32_t size)
+        {
+            assert(m_pDevice != nullptr);
+            assert(m_pBuffer != nullptr);
+            assert(m_pData != nullptr);
+            assert(offset + size <= m_sizeInBytes);
+            assert(pVal != nullptr);
+
+            if (memcmp(pVal, m_pData + offset, size) != 0)
+            {
+                memcpy(m_pData + offset, pVal, size);
+                m_bDirty = true;
+            }
+        }
+
+        void UpdateToHardware()
+        {
+            assert(m_pDevice != nullptr);
+            assert(m_pBuffer != nullptr);
+            assert(m_pData != nullptr);
+
+            auto pContext = m_pDevice->GetDeviceContext();
+            assert(pContext != nullptr);
+
+            pContext->UpdateSubresource(m_pBuffer.get(), 0, nullptr, m_pData, m_sizeInBytes, 0);
+            m_bDirty = false;
+        }
+
+        bool IsDirty() const
+        {
+            return m_bDirty;
+        }
+
+    private:
+        std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
+        std::shared_ptr<ID3D11Buffer> m_pBuffer;
+        char* m_pData;
+        uint32_t m_sizeInBytes;
+        bool m_bDirty;
     };
 
     class DrawingRawTarget_D3D11 : public DrawingRawTarget

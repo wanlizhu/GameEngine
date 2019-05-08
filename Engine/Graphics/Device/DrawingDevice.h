@@ -6,8 +6,12 @@
 
 #include "IDrawingSystem.h"
 
+#include "CameraComponent.h"
+#include "TransformComponent.h"
+
 #include "DirtyData.h"
 #include "DrawingType.h"
+#include "DrawingParameter.h"
 #include "DrawingRawResource.h"
 #include "DrawingResourceDesc.h"
 #include "DrawingResourceTable.h"
@@ -174,6 +178,28 @@ namespace Engine
         EDrawingResourceType GetType() const override;
     };
 
+    class DrawingConstantBuffer : public DrawingResource
+    {
+    public:
+        DrawingConstantBuffer(const std::shared_ptr<DrawingDevice>& pDevice);
+        virtual ~DrawingConstantBuffer();
+
+        void AddParameter(std::shared_ptr<DrawingParameter> pParam);
+        void RemoveParameter(std::shared_ptr<DrawingParameter> pParam);
+        std::shared_ptr<DrawingParameter> GetParameter(std::shared_ptr<std::string> pName);
+
+        bool UpdateEffect(std::shared_ptr<DrawingEffect> pEffect);
+
+        EDrawingResourceType GetType() const override;
+
+    private:
+        void ClearParameters();
+        bool UpdateParameterToEffect(std::shared_ptr<DrawingParameter> pParam, std::shared_ptr<DrawingEffect> pEffect);
+
+    private:
+        std::shared_ptr<DrawingParameterSet> m_pParams;
+    };
+
     class DrawingTarget : public DrawingResourceWrapper<DrawingRawTarget>
     {
     public:
@@ -277,6 +303,8 @@ namespace Engine
         Box2 GetViewport() const;
 
         void UpdateContext(DrawingResourceTable& resTable);
+        void UpdateTransform(DrawingResourceTable& resTable, float4x4 trans);
+        void UpdateCamera(DrawingResourceTable& resTable, float4x4 proj, float4x4 view);
 
         void UpdateTargets(DrawingResourceTable& resTable);
         void UpdateViewport(DrawingResourceTable& resTable);
@@ -310,6 +338,7 @@ namespace Engine
         virtual bool CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData = nullptr, uint32_t size = 0) = 0;
         virtual bool CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes) = 0;
         virtual bool CreateDepthBuffer(const DrawingDepthBufferDesc& desc, std::shared_ptr<DrawingDepthBuffer>& pRes) = 0;
+        virtual bool CreateConstantBuffer(const DrawingConstantBufferDesc& desc, std::shared_ptr<DrawingConstantBuffer>& pRes);
 
         virtual bool CreateBlendState(const DrawingBlendStateDesc& desc, std::shared_ptr<DrawingBlendState>& pRes) = 0;
         virtual bool CreateDepthState(const DrawingDepthStateDesc& desc, std::shared_ptr<DrawingDepthState>& pRes) = 0;

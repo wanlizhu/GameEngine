@@ -12,6 +12,8 @@
 
 using namespace Engine;
 
+uint32_t DrawingDevice_D3D11::s_gConstantBufferID = 0;
+
 DrawingDevice_D3D11::DrawingDevice_D3D11(const std::shared_ptr<ID3D11Device> device) : m_pDevice(device)
 {
 }
@@ -1042,7 +1044,7 @@ static uint32_t GenerateParamType(const DescType& descType, uint32_t dataSetType
         uint32_t t_row_size = rowSize == 0 ? 1 : rowSize;
         uint32_t t_col_size = colSize == 0 ? 1 : colSize;
 
-        dataSize = BasicTypeSize[basicType] * t_row_size * t_col_size * t_array_size;
+        dataSize = DrawingParameter::BasicTypeSize[basicType] * t_row_size * t_col_size * t_array_size;
     }
 
     return paramType;
@@ -1070,6 +1072,31 @@ uint32_t DrawingDevice_D3D11::GetParamType(const D3DX11_EFFECT_TYPE_DESC& type, 
 
 template
 uint32_t DrawingDevice_D3D11::GetParamType(const D3D11_SHADER_TYPE_DESC& type, uint32_t& size);
+
+DrawingDevice_D3D11::ConstBufferProp* DrawingDevice_D3D11::FindConstantBuffer(const DrawingDevice_D3D11::ConstBufferProp& prop)
+{
+    ConstBufferProp* pCBProp = nullptr;
+
+    std::for_each(m_constantBufferPool.begin(), m_constantBufferPool.end(), [this, &prop, &pCBProp](ConstBufferPropTable::value_type& aElem) {
+        auto& devProp = aElem.second;
+        if (devProp.IsEqual(prop))
+            pCBProp = &devProp;
+    });
+    return pCBProp;
+}
+
+void DrawingDevice_D3D11::AddConstantBuffer(const ConstBufferProp& prop)
+{
+    auto pName = strPtr(std::to_string(s_gConstantBufferID));
+    s_gConstantBufferID++;
+
+    m_constantBufferPool.emplace(pName, prop);
+}
+
+void DrawingDevice_D3D11::ClearConstantBuffers()
+{
+    m_constantBufferPool.clear();
+}
 
 bool DrawingDevice_D3D11::DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes)
 {

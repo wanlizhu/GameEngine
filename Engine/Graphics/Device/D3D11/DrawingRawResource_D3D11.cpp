@@ -1,4 +1,6 @@
 #include <array>
+#include <iostream> 
+#include <algorithm> 
 
 #include "Macros.h"
 #include "DrawingRawResource_D3D11.h"
@@ -67,7 +69,7 @@ static void UpdateSampler(DrawingParameter* pParam, ID3DX11EffectVariable* pVar)
     pSampler->SetSampler(0, pState != nullptr ? pState->Get().get() : nullptr);
 }
 
-void DrawingRawFxEffect_D3D11::SParamVar::UpdateParamValue(const DrawingRawFxEffect_D3D11* apEffect)
+void DrawingRawFxEffect_D3D11::_SParamVar::UpdateParamValue(const DrawingRawFxEffect_D3D11* apEffect)
 {
     assert(m_pParam != nullptr);
     assert(mpVar != nullptr);
@@ -201,6 +203,64 @@ void DrawingRawFxEffect_D3D11::ProcessVariable(ID3DX11EffectVariable* pVar)
     }
 }
 
+static void CollectVariables(DrawingDevice_D3D11::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D11* pShader)
+{
+    const DrawingRawShader_D3D11::VariableTableType& varTable = pShader->GetVariableTable();
+    for (auto iter = varTable.begin(); iter != varTable.end(); ++iter)
+    {
+        auto& varDesc = iter->second;
+        DrawingDevice_D3D11::VarProp var_prop;
+        var_prop.mpName = varDesc.mpName;
+        var_prop.mType = varDesc.mParamType;
+        var_prop.mSizeInBytes = varDesc.mSizeInBytes;
+        var_prop.mOffset = varDesc.mOffset;
+        auto cbPropIt = cbPropTable.find(varDesc.mpCBName);
+        if (cbPropIt == cbPropTable.end())
+        {
+            DrawingDevice_D3D11::ConstBufferProp local_cb_prop;
+            local_cb_prop.mpName = varDesc.mpCBName;
+            local_cb_prop.mSizeInBytes = varDesc.mCBSizeInBytes;
+            local_cb_prop.mVarProps.emplace_back(var_prop);
+            cbPropTable.emplace(varDesc.mpCBName, local_cb_prop);
+        }
+        else
+        {
+            auto cbProp = cbPropIt->second;
+            if ((cbProp.mpName != varDesc.mpCBName) ||
+                (cbProp.mSizeInBytes != varDesc.mCBSizeInBytes))
+            {
+                assert(false);
+                continue;
+            }
+            cbProp.mVarProps.emplace_back(var_prop);
+        }
+    }
+}
+
+static void SortVariables(DrawingDevice_D3D11::ConstBufferPropTable& cbPropTable)
+{
+    for (auto iter = cbPropTable.begin(); iter != cbPropTable.end(); ++iter)
+    {
+        DrawingDevice_D3D11::ConstBufferProp& cbProp = iter->second;
+        std::qsort(cbProp.mVarProps.data(), cbProp.mVarProps.size(), sizeof(DrawingDevice_D3D11::VarProp), [](const void* a, const void* b)
+        {
+            const DrawingDevice_D3D11::VarProp& var1 = *(static_cast<const DrawingDevice_D3D11::VarProp*>(a));
+            const DrawingDevice_D3D11::VarProp& var2 = *(static_cast<const DrawingDevice_D3D11::VarProp*>(b));
+            if (var1.mOffset < var2.mOffset)
+                return -1;
+            else if (var1.mOffset > var2.mOffset)
+                return 1;
+            return 0;
+        });
+    }
+}
+
+static void BuildCBPropTable(DrawingDevice_D3D11::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D11* pShader)
+{
+    CollectVariables(cbPropTable, pShader);
+    SortVariables(cbPropTable);
+}
+
 void DrawingRawShader_D3D11::ProcessVariables(std::shared_ptr<std::string> pName, uint32_t size, ID3D11ShaderReflectionConstantBuffer* pBuffer, uint32_t count)
 {
     for (uint32_t i = 0; i < count; ++i)
@@ -332,6 +392,9 @@ DrawingRawShaderEffect_D3D11::DrawingRawShaderEffect_D3D11(std::shared_ptr<Drawi
             default:
                 break;
         }
+
+        assert(shaderImpl != nullptr);
+        LoadShaderInfo(shaderImpl, type);
     }
 }
 
@@ -347,11 +410,13 @@ DrawingRawShaderEffect_D3D11::DrawingRawShaderEffect_D3D11(std::shared_ptr<Drawi
     {
         m_shaderBlocks[DrawingRawShader::RawShader_VS] = std::make_shared<ShaderBlock>();
         m_shaderBlocks[DrawingRawShader::RawShader_VS]->mpShader = pVertexShader;
+        LoadShaderInfo(vsShaderImpl, DrawingRawShader::RawShader_VS);
     }
     if (psShaderImpl != nullptr)
     {
         m_shaderBlocks[DrawingRawShader::RawShader_PS] = std::make_shared<ShaderBlock>();
         m_shaderBlocks[DrawingRawShader::RawShader_PS]->mpShader = pPixelShader;
+        LoadShaderInfo(vsShaderImpl, DrawingRawShader::RawShader_PS);
     }
 }
 
@@ -368,6 +433,31 @@ void DrawingRawShaderEffect_D3D11::Terminate()
 
 void DrawingRawShaderEffect_D3D11::SParamVar::UpdateValues(void)
 {
+    assert(mpParam != nullptr);
+    std::shared_ptr<DrawingRawConstantBuffer_D3D11> pPrevCB = nullptr;
+    for (auto index = 0; index < DrawingRawShader::RawShader_Count; ++index)
+    {
+        auto pCurCB = mpCB[index];
+        if (pCurCB != nullptr && pCurCB != pPrevCB)
+        {
+            pCurCB->SetValue(mOffset[index], mpParam->GetValuePtr(), mpParam->GetValueSize());
+            pPrevCB = pCurCB;
+            mpParam->SetDirty(false);
+        }
+    }
+}
+
+void DrawingRawShaderEffect_D3D11::LoadShaderInfo(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    LoadConstantBufferFromShader(pShader, shaderType);
+}
+
+void DrawingRawShaderEffect_D3D11::LoadConstantBufferFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    DrawingDevice_D3D11::ConstBufferPropTable cbPropTable;
+    BuildCBPropTable(cbPropTable, pShader);
+    BindConstantBuffer(cbPropTable, pShader, shaderType);
+    GenerateParameters(pShader, shaderType);
 }
 
 void DrawingRawShaderEffect_D3D11::UpdateParameterValues()
@@ -378,6 +468,12 @@ void DrawingRawShaderEffect_D3D11::UpdateParameterValues()
 
 void DrawingRawShaderEffect_D3D11::UpdateConstantBuffers()
 {
+    for (auto& item : mConstBufferTable)
+    {
+        auto& pCB = item.second.mpCB;
+        if (pCB->IsDirty())
+            pCB->UpdateToHardware();
+    }
 }
 
 void DrawingRawShaderEffect_D3D11::UpdateDevice()
@@ -450,6 +546,9 @@ void DrawingRawShaderEffect_D3D11::SetConstBufferSlots(ShaderBlock& shaderBlock,
         auto& constDesc = item.second;
         if (constDesc.mStartSlot[shaderType] == EMPTY_SLOT)
             continue;
+
+        shaderBlock.mCBSlots[constDesc.mStartSlot[shaderType]] = constDesc.mpCB->GetBuffer().get();
+        shaderBlock.mCBSlotsCount = max(shaderBlock.mCBSlotsCount, constDesc.mStartSlot[shaderType]);
     }
 }
 
@@ -467,4 +566,78 @@ void DrawingRawShaderEffect_D3D11::SetTexBufferSlots(ShaderBlock& shaderBlock, c
 
 void DrawingRawShaderEffect_D3D11::SetRWBufferSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType)
 {
+}
+
+void DrawingRawShaderEffect_D3D11::BindConstantBuffer(DrawingDevice_D3D11::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    for (auto& lItem : pShader->GetConstanceBufferTable())
+    {
+        auto& desc = lItem.second;
+        auto& cbPropIt = cbPropTable.find(desc.mpName);
+        if (cbPropIt == cbPropTable.end())
+            continue;
+
+        auto& cbProp = cbPropIt->second;
+        auto pDevCBProp = m_pDevice->FindConstantBuffer(cbProp);
+
+        if (nullptr == pDevCBProp)
+        {
+            cbProp.mpCB = std::make_shared<DrawingRawConstantBuffer_D3D11>(m_pDevice, cbProp.mSizeInBytes);
+            m_pDevice->AddConstantBuffer(cbProp);
+        }
+        else
+            cbProp.mpCB = pDevCBProp->mpCB;
+
+        auto& cbIt = mConstBufferTable.find(desc.mpName);
+        if (cbIt == mConstBufferTable.end())
+        {
+            SConstBuffer local_cb_desc;
+            local_cb_desc.mpName = cbProp.mpName;
+            local_cb_desc.mSizeInBytes = cbProp.mSizeInBytes;
+            local_cb_desc.mpCB = cbProp.mpCB;
+            local_cb_desc.mStartSlot[shaderType] = desc.mStartSlot;
+
+            mConstBufferTable.emplace(desc.mpName, local_cb_desc);
+        }
+        else
+            (cbIt->second).mStartSlot[shaderType] = desc.mStartSlot;
+    }
+}
+
+void DrawingRawShaderEffect_D3D11::GenerateParameters(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    for (auto& lItem : pShader->GetVariableTable())
+    {
+        auto& desc = lItem.second;
+        auto& varIt = mVarTable.find(desc.mpName);
+        auto& cbIt = mConstBufferTable.find(desc.mpCBName);
+
+        if (varIt == mVarTable.end())
+        {
+            SParamVar local_var_desc;
+
+            local_var_desc.mpParam = std::make_shared<DrawingParameter>(desc.mpName, desc.mParamType);
+            local_var_desc.mSizeInBytes = desc.mSizeInBytes;
+            local_var_desc.mOffset[shaderType] = desc.mOffset;
+            if (cbIt != mConstBufferTable.end())
+                local_var_desc.mpCB[shaderType] = (cbIt->second).mpCB;
+            else
+                local_var_desc.mpCB[shaderType] = nullptr;
+
+            mVarTable.emplace(desc.mpName, local_var_desc);
+            m_pParamSet->Add(local_var_desc.mpParam);
+        }
+        else
+        {
+            auto& var = varIt->second;
+            if (var.mpParam->GetType() != desc.mParamType)
+            {
+                assert(false);
+                continue;
+            }
+
+            var.mOffset[shaderType] = desc.mOffset;
+            var.mpCB[shaderType] = cbIt != mConstBufferTable.end() ? (cbIt->second).mpCB : nullptr;
+        }
+    }
 }

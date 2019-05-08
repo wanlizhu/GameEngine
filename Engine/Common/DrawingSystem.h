@@ -12,7 +12,7 @@
 #include "DrawingEffectPool.h"
 #include "DrawingResourceTable.h"
 #include "DrawingType.h"
-#include "BasicPrimitiveRenderer.h"
+#include "ForwardRenderer.h"
 
 namespace Engine
 {
@@ -48,6 +48,10 @@ namespace Engine
         std::shared_ptr<DrawingTarget> CreateSwapChain();
         std::shared_ptr<DrawingDepthBuffer> CreateDepthBuffer();
 
+        float4x4 UpdateWorldMatrix(TransformComponent* pTransform);
+        float4x4 UpdateViewMatrix(TransformComponent* pTransform);
+        float4x4 UpdateProjectionMatrix(CameraComponent* pCamera);
+
     private:
         void* m_window;
         uint2 m_deviceSize;
@@ -61,6 +65,8 @@ namespace Engine
         std::shared_ptr<DrawingEffectPool> m_pEffectPool;
         std::shared_ptr<DrawingResourceFactory> m_pResourceFactory;
         std::shared_ptr<DrawingResourceTable> m_pResourceTable;
+
+        std::vector<std::shared_ptr<IEntity>> m_pCameraList;
 
         typedef std::unordered_map<ERendererType, std::shared_ptr<IRenderer>> RendererTable;
         RendererTable m_rendererTable;

@@ -62,7 +62,11 @@ void BaseRenderer::DefineDefaultResources(DrawingResourceTable& resTable)
     DefineStaticVertexBuffer(DefaultPositionBuffer(), PositionOffset, m_vertexCount, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Position], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Position], resTable);
     DefineStaticVertexBuffer(DefaultNormalBuffer(), NormalOffset, m_vertexCount, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Normal], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Normal], resTable);
 
-    DefineStaticIndexBuffer(PerVertexIndexBuffer(), m_indexCount, &m_sIndexID, m_indexOffset, resTable);
+    DefineStaticIndexBuffer(DefaultIndexBuffer(), m_indexCount, &m_sIndexID, m_indexOffset, resTable);
+
+    DefineWorldMatrixConstantBuffer(resTable);
+    DefineViewMatrixConstantBuffer(resTable);
+    DefineProjectionMatrixConstantBuffer(resTable);
 
     DefineExternalTarget(ScreenTarget(), resTable);
     DefineExternalDepthBuffer(ScreenDepthBuffer(), resTable);
@@ -158,8 +162,6 @@ void BaseRenderer::DefineDefaultVertexFormat(DrawingResourceTable& resTable)
     inputElem.mIndex = 0;
     inputElem.mSlot = 0;
     inputElem.mOffset = 0;
-
-    
     inputElem.mInstanceStepRate = 0;
     pDesc->m_inputElements.emplace_back(inputElem);
 
@@ -214,7 +216,42 @@ void BaseRenderer::DefineStaticIndexBuffer(std::shared_ptr<std::string> pName, u
             pEntry->SetInitDataSlices(1);
         }
     }
+}
 
+void BaseRenderer::DefineWorldMatrixConstantBuffer(DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingConstantBufferDesc>();
+
+    DrawingConstantBufferDesc::ParamDesc param;
+    param.mpName = strPtr("gWorldMatrix");
+    param.mType = EParam_Float4x4;
+    pDesc->mParameters.emplace_back(param);
+
+    resTable.AddResourceEntry(DefaultWorldMatrix(), pDesc);
+}
+
+void BaseRenderer::DefineViewMatrixConstantBuffer(DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingConstantBufferDesc>();
+
+    DrawingConstantBufferDesc::ParamDesc param;
+    param.mpName = strPtr("gViewMatrix");
+    param.mType = EParam_Float4x4;
+    pDesc->mParameters.emplace_back(param);
+
+    resTable.AddResourceEntry(DefaultViewMatrix(), pDesc);
+}
+
+void BaseRenderer::DefineProjectionMatrixConstantBuffer(DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingConstantBufferDesc>();
+
+    DrawingConstantBufferDesc::ParamDesc param;
+    param.mpName = strPtr("gProjectionView");
+    param.mType = EParam_Float4x4;
+    pDesc->mParameters.emplace_back(param);
+
+    resTable.AddResourceEntry(DefaultProjectionMatrix(), pDesc);
 }
 
 void BaseRenderer::DefineDefaultDepthState(DrawingResourceTable& resTable)
@@ -393,12 +430,18 @@ void BaseRenderer::BindPipelineState(DrawingPass& pass, std::shared_ptr<std::str
     pass.BindResource(DrawingPass::PipelineStateSlotName(), pName);
 }
 
+void BaseRenderer::BindConstant(DrawingPass& pass, std::shared_ptr<std::string> pName)
+{
+    pass.AddResourceSlot(pName, ResourceSlot_ConstBuffer);
+    pass.BindResource(pName, pName);
+}
+
 void BaseRenderer::BindInputs(DrawingPass& pass)
 {
     BindVertexFormat(pass, DefaultVertexFormat());
     BindVertexBuffer(pass, 0, DefaultPositionBuffer());
     BindVertexBuffer(pass, 1, DefaultNormalBuffer());
-    BindIndexBuffer(pass, PerVertexIndexBuffer());
+    BindIndexBuffer(pass, DefaultIndexBuffer());
 }
 
 void BaseRenderer::BindStates(DrawingPass& pass)
@@ -412,6 +455,13 @@ void BaseRenderer::BindOutput(DrawingPass& pass)
 {
     BindTarget(pass, 0, ScreenTarget());
     BindDepthBuffer(pass, ScreenDepthBuffer());
+}
+
+void BaseRenderer::BindConstants(DrawingPass& pass)
+{
+    BindConstant(pass, DefaultWorldMatrix());
+    BindConstant(pass, DefaultViewMatrix());
+    BindConstant(pass, DefaultProjectionMatrix());
 }
 
 std::shared_ptr<DrawingStage> BaseRenderer::CreateStage(std::shared_ptr<std::string> pName)

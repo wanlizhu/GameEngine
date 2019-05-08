@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IECSWorld.h"
+#include "Global.h"
 
 namespace Engine
 {
@@ -10,16 +11,21 @@ namespace Engine
     public:
         inline ComponentBase()
         {
+            if (m_bInit)
+                return;
             m_createFunc = createFunc<T>;
             m_destroyFunc = destroyFunc<T>;
             m_size = sizeof(T);
             m_compID = RegisterComponent(ComponentBase<T>::m_createFunc, ComponentBase<T>::m_destroyFunc, ComponentBase<T>::m_size);
+
+            m_bInit = true;
         }
 
         inline virtual ~ComponentBase()
         {
         }
 
+        static bool m_bInit;
         static CreateCompFunc m_createFunc;
         static DestroyCompFunc m_destroyFunc;
         static uint32_t m_size;
@@ -43,6 +49,9 @@ namespace Engine
         T* pComp = (T*)pComponent;
         pComp->~T();
     };
+
+    template<typename T>
+    bool ComponentBase<T>::m_bInit = false;
 
     template<typename T>
     CreateCompFunc ComponentBase<T>::m_createFunc;

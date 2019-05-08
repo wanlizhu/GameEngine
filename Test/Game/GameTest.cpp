@@ -5,14 +5,15 @@
 #include "InputSystem.h"
 #include "LogSystem.h"
 
-#include "TransformComponent.h"
+#include "CameraComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
+#include "TransformComponent.h"
 
 #include "CubeMesh.h"
 #include "GLTF2Mesh.h"
 
-#include "BasicPrimitiveRenderer.h"
+#include "ForwardRenderer.h"
 
 using namespace Engine;
 using namespace Platform;
@@ -35,7 +36,7 @@ public:
         gpGlobal->RegisterRuntimeModule<DrawingSystem>(eSystem_Drawing);
         gpGlobal->RegisterRuntimeModule<LogSystem>(eSystem_Log);
 
-        gpGlobal->RegisterRenderer<BasicPrimitiveRenderer>(eRenderer_BasicPrim);
+        gpGlobal->RegisterRenderer<ForwardRenderer>(eRenderer_Forward);
 
         auto& pWorld = gpGlobal->GetECSWorld();
 
@@ -46,19 +47,26 @@ public:
         pWorld->AddECSSystem(gpGlobal->GetLogSystem());
 
         // Entity
-        TransformComponent posComp;
+        TransformComponent entityPosComp;
         MeshFilterComponent meshFilterComp;
         MeshRendererComponent meshRendererComp;
 
-        posComp.SetPosition(Vec3<float>(1.0f, 1.0f, 1.0f));
+        entityPosComp.SetPosition(Vec3<float>(1.0f, 1.0f, 1.0f));
 
         //auto pMesh = std::make_shared<CubeMesh>();
         auto pMesh = std::make_shared<GLTF2Mesh>("Asset/Scene/Test/DamagedHelmet.gltf");
-
         meshFilterComp.SetMesh(pMesh);
-        meshRendererComp.SetRenderer(gpGlobal->GetRenderer(eRenderer_BasicPrim));
 
-        auto entity = pWorld->CreateEntity<TransformComponent, MeshFilterComponent, MeshRendererComponent>(posComp, meshFilterComp, meshRendererComp);
+        auto entity = pWorld->CreateEntity<TransformComponent, MeshFilterComponent, MeshRendererComponent>(entityPosComp, meshFilterComp, meshRendererComp);
+
+        // Camera
+        TransformComponent cameraPosComp;
+        CameraComponent cameraComp;
+
+        cameraPosComp.SetPosition(Vec3<float>(0.0f, 0.0f, -5.0f));
+
+        auto camera = pWorld->CreateEntity<TransformComponent, CameraComponent>(cameraPosComp, cameraComp);
+
     }
 };
 

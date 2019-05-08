@@ -2,7 +2,7 @@
 
 using namespace Engine;
 
-std::shared_ptr<IMesh> MeshFilterComponent::GetMesh()
+std::shared_ptr<IMesh> MeshFilterComponent::GetMesh() const
 {
     return m_pMesh;
 }

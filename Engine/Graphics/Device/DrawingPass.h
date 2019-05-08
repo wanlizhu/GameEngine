@@ -141,12 +141,12 @@ namespace Engine
             DynamicResourceSlotTable();
             ~DynamicResourceSlotTable();
 
-            void UpdateConstants(std::shared_ptr<DrawingEffect> effect);
-            void UpdateTextures(std::shared_ptr<DrawingEffect> effect);
-            void UpdateTexBuffers(std::shared_ptr<DrawingEffect> effect);
-            void UpdateRWBuffers(std::shared_ptr<DrawingEffect> effect);
-            void UpdateBuffers(std::shared_ptr<DrawingEffect> effect);
-            void UpdateSamplers(std::shared_ptr<DrawingEffect> effect);
+            void UpdateConstants(std::shared_ptr<DrawingEffect> pEffect);
+            void UpdateTextures(std::shared_ptr<DrawingEffect> pEffect);
+            void UpdateTexBuffers(std::shared_ptr<DrawingEffect> pEffect);
+            void UpdateRWBuffers(std::shared_ptr<DrawingEffect> pEffect);
+            void UpdateBuffers(std::shared_ptr<DrawingEffect> pEffect);
+            void UpdateSamplers(std::shared_ptr<DrawingEffect> pEffect);
         };
 
         class StaticResourceSlotTable : public ResourceSlotTable

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <math.h>
+
 namespace Engine
 {
     template<typename T>
@@ -43,6 +45,41 @@ namespace Engine
     T& Vec3<T>::operator[](size_type index)
     {
         return const_cast<T&>(static_cast<const Vec3&>(*this)[index]);
+    }
+
+    template<typename T>
+    Vec3<T> Vec3<T>::Normalize() const
+    {
+        Vec3<T> ret;
+
+        auto length2 = x * x + y * y + z * z;
+        ret.x = x / sqrt(length2);
+        ret.y = y / sqrt(length2);
+        ret.z = z / sqrt(length2);
+
+        return ret;
+    }
+
+    template<typename T>
+    Vec3<T> Vec3<T>::Cross(const Vec3<T>& vec) const
+    {
+        Vec3<T> ret;
+
+        ret.x = y * vec.z - z * vec.y;
+        ret.y = -(x * vec.z - z * vec.x);
+        ret.z = x * vec.y - y * vec.x;
+
+        return ret;
+    }
+
+    template<typename T>
+    T Vec3<T>::Dot(const Vec3& vec) const
+    {
+        T ret;
+
+        ret = x * vec.x + y * vec.y + z * vec.z;
+
+        return ret;
     }
 
     template<typename T>

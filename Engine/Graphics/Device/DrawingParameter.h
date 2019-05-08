@@ -62,8 +62,6 @@ namespace Engine
         eBasic_Count,
     };
 
-    static const uint32_t BasicTypeSize[eBasic_Count];
-
     #define SET_BITS(val, bits, offset) ((val & ((0x1 << bits) - 1)) << offset)
 
     #define COMPOSE_TYPE(object, dataset, basic, array, row, col)       \
@@ -143,7 +141,7 @@ namespace Engine
     {
     public:
         DrawingParameter();
-        DrawingParameter(const std::shared_ptr<std::string> pName, uint32_t type, void* pInitVal, const std::shared_ptr<std::string> pSemantic);
+        DrawingParameter(const std::shared_ptr<std::string> pName, uint32_t type, void* pInitVal = nullptr, const std::shared_ptr<std::string> pSemantic = nullptr);
         virtual ~DrawingParameter();
 
         static const uint32_t GetBitsValue(uint32_t val, uint32_t bits, uint32_t offset);
@@ -157,6 +155,9 @@ namespace Engine
 
         std::shared_ptr<std::string> GetName() const;
         void SetName(std::shared_ptr<std::string> pName);
+
+        bool IsDirty() const;
+        void SetDirty(bool bDirty);
 
         std::shared_ptr<std::string> GetSemantic() const;
         void SetSemantic(std::shared_ptr<std::string> pSemantic);
@@ -320,6 +321,9 @@ namespace Engine
         const DrawingRawSamplerState* const* AsSamplerArray(uint32_t& array_size) const;
         void AsSamplerArray(const DrawingRawSamplerState** pState, uint32_t array_size);
 
+    public:
+        static const uint32_t BasicTypeSize[eBasic_Count];
+
     private:
         void CreateParameter(uint32_t type, void* pInitVal);
         void CreateObjectParameter(uint32_t type, void* pInitVal);
@@ -377,6 +381,7 @@ namespace Engine
         void* m_pValue;
         uint32_t m_size;
         uint32_t m_type;
+        bool m_bDirty;
     };
 
     class DrawingParameterSet

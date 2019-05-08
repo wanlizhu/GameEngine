@@ -170,6 +170,12 @@ namespace Engine
         virtual ~DrawingRawIndexBuffer() = default;
     };
 
+    class DrawingRawConstantBuffer
+    {
+    public:
+        virtual ~DrawingRawConstantBuffer() = default;
+    };
+
     class DrawingRawTarget
     {
     public:

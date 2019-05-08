@@ -428,13 +428,22 @@ DrawingPass::DynamicResourceSlotTable::~DynamicResourceSlotTable()
 {
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateConstants(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateConstants(std::shared_ptr<DrawingEffect> pEffect)
 {
+    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&pEffect](const ResourceSlotTableType::value_type& aElem)
+    {
+        if (aElem.second.mType == ResourceSlot_ConstBuffer)
+        {
+            auto pBuffer = std::dynamic_pointer_cast<DrawingConstantBuffer>(GetSlotDeviceResource(&aElem.second));
+            if (pBuffer != nullptr)
+                pBuffer->UpdateEffect(pEffect);
+        }
+    });
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateTextures(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateTextures(std::shared_ptr<DrawingEffect> pEffect)
 {
-    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&effect](const ResourceSlotTableType::value_type& aElem)
+    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&pEffect](const ResourceSlotTableType::value_type& aElem)
     {
         if (aElem.second.mType == ResourceSlot_Texture)
         {
@@ -442,15 +451,15 @@ void DrawingPass::DynamicResourceSlotTable::UpdateTextures(std::shared_ptr<Drawi
             if (pTex != nullptr)
             {
                 auto pDevice = pTex->GetDevice();
-                pDevice->UpdateEffectTexture(pTex, aElem.second.mpKey, effect);
+                pDevice->UpdateEffectTexture(pTex, aElem.second.mpKey, pEffect);
             }
         }
     });
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateTexBuffers(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateTexBuffers(std::shared_ptr<DrawingEffect> pEffect)
 {
-    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&effect](const ResourceSlotTableType::value_type& aElem)
+    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&pEffect](const ResourceSlotTableType::value_type& aElem)
     {
         if (aElem.second.mType == ResourceSlot_TexBuffer)
         {
@@ -465,14 +474,14 @@ void DrawingPass::DynamicResourceSlotTable::UpdateTexBuffers(std::shared_ptr<Dra
                 {
                     auto pTexBuffer = std::dynamic_pointer_cast<DrawingTexBuffer>(pRes);
                     if (pTexBuffer != nullptr)
-                        pDevice->UpdateEffectTexBuffer(pTexBuffer, aElem.second.mpKey, effect);
+                        pDevice->UpdateEffectTexBuffer(pTexBuffer, aElem.second.mpKey, pEffect);
                     break;
                 }
                 case eResource_RWBuffer:
                 {
                     auto pRWBuffer = std::dynamic_pointer_cast<DrawingRWBuffer>(pRes);
                     if (pRWBuffer != nullptr)
-                        pDevice->UpdateEffectRWBuffer(pRWBuffer, aElem.second.mpKey, effect);
+                        pDevice->UpdateEffectRWBuffer(pRWBuffer, aElem.second.mpKey, pEffect);
                     break;
                 }
                 default:
@@ -483,9 +492,9 @@ void DrawingPass::DynamicResourceSlotTable::UpdateTexBuffers(std::shared_ptr<Dra
     });
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateRWBuffers(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateRWBuffers(std::shared_ptr<DrawingEffect> pEffect)
 {
-    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&effect](const ResourceSlotTableType::value_type& aElem)
+    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&pEffect](const ResourceSlotTableType::value_type& aElem)
     {
         if (aElem.second.mType == ResourceSlot_RWBuffer_Input || aElem.second.mType == ResourceSlot_RWBuffer_Output)
         {
@@ -494,19 +503,19 @@ void DrawingPass::DynamicResourceSlotTable::UpdateRWBuffers(std::shared_ptr<Draw
             {
                 auto pDevice = pRWBuffer->GetDevice();
                 if (aElem.second.mType == ResourceSlot_RWBuffer_Input)
-                    pDevice->UpdateEffectInputRWBuffer(pRWBuffer, aElem.second.mpKey, effect);
+                    pDevice->UpdateEffectInputRWBuffer(pRWBuffer, aElem.second.mpKey, pEffect);
                 else if (aElem.second.mType == ResourceSlot_RWBuffer_Output)
-                    pDevice->UpdateEffectOutputRWBuffer(pRWBuffer, aElem.second.mpKey, effect);
+                    pDevice->UpdateEffectOutputRWBuffer(pRWBuffer, aElem.second.mpKey, pEffect);
             }
         }
     });
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateBuffers(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateBuffers(std::shared_ptr<DrawingEffect> pEffect)
 {
 }
 
-void DrawingPass::DynamicResourceSlotTable::UpdateSamplers(std::shared_ptr<DrawingEffect> effect)
+void DrawingPass::DynamicResourceSlotTable::UpdateSamplers(std::shared_ptr<DrawingEffect> pEffect)
 {
 }
 

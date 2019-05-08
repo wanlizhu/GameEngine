@@ -9,6 +9,7 @@
 #include <string>
 
 #include "DrawingConstants.h"
+#include "DrawingParameter.h"
 
 namespace Engine
 {
@@ -248,6 +249,36 @@ namespace Engine
 
         EDrawingResourceType GetType() const override;
         DrawingResourceDesc* Clone() const override;
+    };
+
+    class DrawingConstantBufferDesc : public DrawingResourceDesc
+    {
+    public:
+        DrawingConstantBufferDesc();
+        DrawingConstantBufferDesc(const DrawingConstantBufferDesc& desc);
+        DrawingConstantBufferDesc(DrawingConstantBufferDesc&& desc);
+        virtual ~DrawingConstantBufferDesc();
+
+        DrawingConstantBufferDesc& operator= (const DrawingConstantBufferDesc& rhs);
+
+        EDrawingResourceType GetType() const override;
+        DrawingResourceDesc* Clone() const override;
+
+    public:
+        struct ParamDesc
+        {
+            ParamDesc();
+            ParamDesc(const ParamDesc& desc);
+            ParamDesc(ParamDesc&& desc);
+            virtual ~ParamDesc();
+
+            ParamDesc& operator= (const ParamDesc& rhs);
+
+            std::shared_ptr<std::string> mpName;
+            EParamType mType;
+        };
+
+        std::vector<ParamDesc> mParameters;
     };
 
     class DrawingBlendStateDesc : public DrawingResourceDesc

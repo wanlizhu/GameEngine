@@ -37,25 +37,28 @@ namespace Engine
         void MapResources(DrawingResourceTable& resTable) override;
 
     public:
+        // vertex format
         FuncResourceName(DefaultVertexFormat);
-
+        // vertex buffer
         FuncResourceName(DefaultPositionBuffer);
         FuncResourceName(DefaultNormalBuffer);
-
-        FuncResourceName(PerVertexIndexBuffer);
-
+        // index buffer
+        FuncResourceName(DefaultIndexBuffer);
+        // constant buffer
+        FuncResourceName(DefaultWorldMatrix);
+        FuncResourceName(DefaultViewMatrix);
+        FuncResourceName(DefaultProjectionMatrix);
+        // render target
         FuncResourceName(ScreenTarget);
         FuncResourceName(ScreenDepthBuffer);
-
+        // render state
         FuncResourceName(DefaultDepthState);
         FuncResourceName(DefaultBlendState);
         FuncResourceName(DefaultRasterState);
-
+        // varing states
         FuncResourceName(DefaultVaringStates);
-
+        // primitive
         FuncResourceName(DefaultPrimitive);
-
-        FuncResourceName(DefaultCommandList);
 
     protected:
         static const uint32_t MAX_VERTEX_COUNT = 65536 * 4;
@@ -106,6 +109,10 @@ namespace Engine
         void DefineStaticVertexBuffer(std::shared_ptr<std::string> pName, uint32_t stride, uint32_t count, const void* data, uint32_t size, DrawingResourceTable& resTable);
         void DefineStaticIndexBuffer(std::shared_ptr<std::string> pName, uint32_t count, const void* data, uint32_t size, DrawingResourceTable& resTable);
 
+        void DefineWorldMatrixConstantBuffer(DrawingResourceTable& resTable);
+        void DefineViewMatrixConstantBuffer(DrawingResourceTable& resTable);
+        void DefineProjectionMatrixConstantBuffer(DrawingResourceTable& resTable);
+
         void DefineDefaultDepthState(DrawingResourceTable& resTable);
         void DefineDefaultBlendState(DrawingResourceTable& resTable);
         void DefineDefaultRasterState(DrawingResourceTable& resTable);
@@ -130,9 +137,13 @@ namespace Engine
         void BindVaringStates(DrawingPass& pass, std::shared_ptr<std::string> pName);
         void BindPipelineState(DrawingPass& pass, std::shared_ptr<std::string> pName);
 
+        void BindConstant(DrawingPass& pass, std::shared_ptr<std::string> pName);
+
         void BindInputs(DrawingPass& pass);
         void BindStates(DrawingPass& pass);
         void BindOutput(DrawingPass& pass);
+
+        void BindConstants(DrawingPass& pass);
 
         std::shared_ptr<DrawingStage> CreateStage(std::shared_ptr<std::string> pName);
         std::shared_ptr<DrawingPass> CreatePass(std::shared_ptr<std::string> pName);

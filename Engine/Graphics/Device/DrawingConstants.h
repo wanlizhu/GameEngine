@@ -16,6 +16,8 @@ namespace Engine
         eResource_Vertex_Buffer = 1,
         eResource_Index_Buffer,
 
+        eResource_Constant_Buffer,
+
         eResource_Vertex_Format,
 
         eResource_Vertex_Shader,

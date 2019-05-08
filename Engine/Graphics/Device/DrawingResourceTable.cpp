@@ -30,6 +30,7 @@ bool DrawingResourceFactory::CreateResource(const std::shared_ptr<DrawingResourc
     case eResource_Vertex_Format:   result = CreateVertexFormat(pDesc, pRes); break;
     case eResource_Vertex_Buffer:   result = CreateVertexBuffer(pDesc, pRes, pData, size); break;
     case eResource_Index_Buffer:    result = CreateIndexBuffer(pDesc, pRes, pData, size); break;
+    case eResource_Constant_Buffer: result = CreateConstantBuffer(pDesc, pRes); break;
     case eResource_Texture:         result = CreateTexture(pDesc, pRes, pData, size); break;
     case eResource_Blend_State:     result = CreateBlendState(pDesc, pRes); break;
     case eResource_Depth_State:     result = CreateDepthState(pDesc, pRes); break;
@@ -129,6 +130,20 @@ bool DrawingResourceFactory::CreateTexture(const std::shared_ptr<DrawingResource
     std::shared_ptr<DrawingTexture> pTexture;
     bool result = m_pDevice->CreateTexture(*pTextureDesc, pTexture, pData, size);
     pRes = pTexture;
+
+    return result;
+}
+
+
+bool DrawingResourceFactory::CreateConstantBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const
+{
+    auto pConstantBufferDesc = std::static_pointer_cast<const DrawingConstantBufferDesc>(pDesc);
+    if (pConstantBufferDesc == nullptr)
+        return false;
+
+    std::shared_ptr<DrawingConstantBuffer> pConstantBuffer;
+    bool result = m_pDevice->CreateConstantBuffer(*pConstantBufferDesc, pConstantBuffer);
+    pRes = pConstantBuffer;
 
     return result;
 }
