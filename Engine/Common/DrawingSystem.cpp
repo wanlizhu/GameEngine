@@ -258,10 +258,10 @@ float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)
     float3 y = z.Cross(x);
 
     float4x4 ret = {
-        x.x, x.y, x.z, -x.Dot(pos),
-        y.x, y.y, y.z, -y.Dot(pos),
-        z.x, z.y, z.z, -z.Dot(pos),
-        0.f, 0.f, 0.f, 1.f
+        x.x, y.x, z.x, 0.f,
+        x.y, y.y, z.y, 0.f,
+        x.z, y.z, z.z, 0.f,
+        -x.Dot(pos), -y.Dot(pos), -z.Dot(pos), 1.f
     };
 
     return ret;
@@ -281,8 +281,8 @@ float4x4 DrawingSystem::UpdateProjectionMatrix(CameraComponent* pCamera)
     float4x4 ret = {
         xScale, 0.0f, 0.0f, 0.0f,
         0.0f, yScale, 0.0f, 0.0f,
-        0.0f, 0.0f, zf / (zf - zn), -zn * zf / (zf - zn),
-        0.0f, 0.0f, 1.0f, 0.0f
+        0.0f, 0.0f, zf / (zf - zn), 1.0f,
+        0.0f, 0.0f, -zn * zf / (zf - zn), 0.0f
     };
 
     return ret;

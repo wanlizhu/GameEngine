@@ -1,8 +1,8 @@
 #include "basic.h"
 
-float4x4 gWorldMatrix : WORLD;
-float4x4 gViewMatrix : VIEW;
-float4x4 gProjectionView : PROJECTION;
+row_major float4x4 gWorldMatrix : WORLD;
+row_major float4x4 gViewMatrix : VIEW;
+row_major float4x4 gProjectionView : PROJECTION;
 
 BasicPrimitive_VertexAttr BasicPrimitive_VS(BasicPrimitive_Input input)
 {

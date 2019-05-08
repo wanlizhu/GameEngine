@@ -20,7 +20,7 @@ namespace Engine
         union
         {
             T mData[4][4];
-            std::array<col_type, 4> mArray;
+            std::array<row_type, 4> mArray;
             struct
             {
                 T x00, x01, x02, x03,
@@ -38,14 +38,14 @@ namespace Engine
                const T& val10, const T& val11, const T& val12, const T& val13,
                const T& val20, const T& val21, const T& val22, const T& val23,
                const T& val30, const T& val31, const T& val32, const T& val33);
-        Mat4x4(const col_type& vec0, const col_type& vec1, const col_type& vec2, const col_type& vec3);
+        Mat4x4(const row_type& vec0, const row_type& vec1, const row_type& vec2, const row_type& vec3);
 
         size_type Size() const;
 
         void Identity();
 
-        const col_type& operator[] (size_type index) const;
-        col_type& operator[](size_type index);
+        const row_type& operator[] (size_type index) const;
+        row_type& operator[](size_type index);
 
         Mat4x4& operator= (const Mat4x4& mat);
         template<typename U>

@@ -23,10 +23,10 @@ namespace Engine
 
     template<typename T>
     Mat4x4<T>::Mat4x4(const T& val) : mArray{
-        col_type(val, 0, 0, 0),
-        col_type(0, val, 0, 0),
-        col_type(0, 0, val, 0),
-        col_type(0, 0, 0, val)}
+        row_type(val, 0, 0, 0),
+        row_type(0, val, 0, 0),
+        row_type(0, 0, val, 0),
+        row_type(0, 0, 0, val)}
     {
     }
 
@@ -35,15 +35,15 @@ namespace Engine
                       const T& val10, const T& val11, const T& val12, const T& val13,
                       const T& val20, const T& val21, const T& val22, const T& val23,
                       const T& val30, const T& val31, const T& val32, const T& val33) : mArray{
-        col_type(val00, val01, val02, val03),
-        col_type(val10, val11, val12, val13),
-        col_type(val20, val21, val22, val23),
-        col_type(val30, val31, val32, val33)}
+        row_type(val00, val01, val02, val03),
+        row_type(val10, val11, val12, val13),
+        row_type(val20, val21, val22, val23),
+        row_type(val30, val31, val32, val33)}
     {
     }
 
     template<typename T>
-    Mat4x4<T>::Mat4x4(const col_type& vec0, const col_type& vec1, const col_type& vec2, const col_type& vec3) : mArray{vec0, vec1, vec2, vec3}
+    Mat4x4<T>::Mat4x4(const row_type& vec0, const row_type& vec1, const row_type& vec2, const row_type& vec3) : mArray{vec0, vec1, vec2, vec3}
     {
     }
 
@@ -57,23 +57,23 @@ namespace Engine
     void Mat4x4<T>::Identity()
     {
         mArray = {
-            col_type(1, 0, 0, 0),
-            col_type(0, 1, 0, 0),
-            col_type(0, 0, 1, 0),
-            col_type(0, 0, 0, 1)
+            row_type(1, 0, 0, 0),
+            row_type(0, 1, 0, 0),
+            row_type(0, 0, 1, 0),
+            row_type(0, 0, 0, 1)
         };
     }
 
     template<typename T>
-    const typename Mat4x4<T>::col_type& Mat4x4<T>::operator[] (size_type index) const
+    const typename Mat4x4<T>::row_type& Mat4x4<T>::operator[] (size_type index) const
     {
         return mArray[index];
     }
 
     template<typename T>
-    typename Mat4x4<T>::col_type& Mat4x4<T>::operator[] (size_type index)
+    typename Mat4x4<T>::row_type& Mat4x4<T>::operator[] (size_type index)
     {
-        return const_cast<col_type&>(static_cast<const Mat4x4&>(*this)[index]);
+        return const_cast<row_type&>(static_cast<const Mat4x4&>(*this)[index]);
     }
 
     template<typename T>
@@ -87,10 +87,10 @@ namespace Engine
     template<typename U>
     Mat4x4<T>& Mat4x4<T>::operator= (const Mat4x4<U>& mat)
     {
-        mArray[0] = static_cast<col_type>(mat[0]);
-        mArray[1] = static_cast<col_type>(mat[1]);
-        mArray[2] = static_cast<col_type>(mat[2]);
-        mArray[3] = static_cast<col_type>(mat[3]);
+        mArray[0] = static_cast<row_type>(mat[0]);
+        mArray[1] = static_cast<row_type>(mat[1]);
+        mArray[2] = static_cast<row_type>(mat[2]);
+        mArray[3] = static_cast<row_type>(mat[3]);
         return *this;
     }
 
@@ -109,10 +109,10 @@ namespace Engine
     template<typename U>
     Mat4x4<T>& Mat4x4<T>::operator+= (const Mat4x4<U>& mat)
     {
-        mArray[0] += static_cast<col_type>(mat[0]);
-        mArray[1] += static_cast<col_type>(mat[1]);
-        mArray[2] += static_cast<col_type>(mat[2]);
-        mArray[3] += static_cast<col_type>(mat[3]);
+        mArray[0] += static_cast<row_type>(mat[0]);
+        mArray[1] += static_cast<row_type>(mat[1]);
+        mArray[2] += static_cast<row_type>(mat[2]);
+        mArray[3] += static_cast<row_type>(mat[3]);
         return *this;
     }
 
@@ -131,10 +131,10 @@ namespace Engine
     template<typename U>
     Mat4x4<T>& Mat4x4<T>::operator-= (const Mat4x4<U>& mat)
     {
-        mArray[0] -= static_cast<col_type>(mat[0]);
-        mArray[1] -= static_cast<col_type>(mat[1]);
-        mArray[2] -= static_cast<col_type>(mat[2]);
-        mArray[3] -= static_cast<col_type>(mat[3]);
+        mArray[0] -= static_cast<row_type>(mat[0]);
+        mArray[1] -= static_cast<row_type>(mat[1]);
+        mArray[2] -= static_cast<row_type>(mat[2]);
+        mArray[3] -= static_cast<row_type>(mat[3]);
         return *this;
     }
 
@@ -153,10 +153,10 @@ namespace Engine
     template<typename U>
     Mat4x4<T>& Mat4x4<T>::operator*= (const Mat4x4<U>& mat)
     {
-        mArray[0] *= static_cast<col_type>(mat[0]);
-        mArray[1] *= static_cast<col_type>(mat[1]);
-        mArray[2] *= static_cast<col_type>(mat[2]);
-        mArray[3] *= static_cast<col_type>(mat[3]);
+        mArray[0] *= static_cast<row_type>(mat[0]);
+        mArray[1] *= static_cast<row_type>(mat[1]);
+        mArray[2] *= static_cast<row_type>(mat[2]);
+        mArray[3] *= static_cast<row_type>(mat[3]);
         return *this;
     }
 
@@ -175,10 +175,10 @@ namespace Engine
     template<typename U>
     Mat4x4<T>& Mat4x4<T>::operator/= (const Mat4x4<U>& mat)
     {
-        mArray[0] /= static_cast<col_type>(mat[0]);
-        mArray[1] /= static_cast<col_type>(mat[1]);
-        mArray[2] /= static_cast<col_type>(mat[2]);
-        mArray[3] /= static_cast<col_type>(mat[3]);
+        mArray[0] /= static_cast<row_type>(mat[0]);
+        mArray[1] /= static_cast<row_type>(mat[1]);
+        mArray[2] /= static_cast<row_type>(mat[2]);
+        mArray[3] /= static_cast<row_type>(mat[3]);
         return *this;
     }
 
