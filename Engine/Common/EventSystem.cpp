@@ -18,7 +18,7 @@ void EventSystem::Shutdown()
     m_eventListeners.clear();
 }
 
-void EventSystem::Tick()
+void EventSystem::Tick(float elapsedTime)
 {
     ProcessEvents();
 }

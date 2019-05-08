@@ -20,7 +20,7 @@ void WindowsApplication::Shutdown()
     BaseApplication::Shutdown();
 }
 
-void WindowsApplication::Tick()
+void WindowsApplication::Tick(float elapsedTime)
 {
     MSG msg;
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -29,8 +29,7 @@ void WindowsApplication::Tick()
         DispatchMessage(&msg); 
     }
 
-    BaseApplication::Tick();
-
+    BaseApplication::Tick(elapsedTime);
 }
 
 void WindowsApplication::CreateMainWindow()

@@ -9,6 +9,8 @@ void ECSWorld::Initialize()
 {
     Flush();
     IECSWorld::Initialize();
+
+    m_bEntityChanged = false;
 }
 
 void ECSWorld::Shutdown()
@@ -16,10 +18,10 @@ void ECSWorld::Shutdown()
     IECSWorld::Shutdown();
 }
 
-void ECSWorld::Tick()
+void ECSWorld::Tick(float elapsedTime)
 {
     Flush();
-    IECSWorld::Tick();
+    IECSWorld::Tick(elapsedTime);
 }
 
 std::shared_ptr<IEntity> ECSWorld::CreateEntity(const std::vector<IComponent*>& pComponents, const std::vector<CompID>& ids)
@@ -36,6 +38,9 @@ std::shared_ptr<IEntity> ECSWorld::CreateEntity(const std::vector<IComponent*>& 
 
 void ECSWorld::Flush()
 {
+    if (!m_bEntityChanged)
+        return;
+
     for (auto& system : m_systemPool)
         for (auto& entity : m_entityPool)
             system->FlushEntity(entity);

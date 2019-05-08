@@ -27,14 +27,10 @@ void BaseApplication::Shutdown()
         m_pWorld->Shutdown();
 }
 
-void BaseApplication::Tick()
+void BaseApplication::Tick(float elapsedTime)
 {
-    gpGlobal->GetFPSCounter().BeginTick();
-
     if (m_pWorld)
-        m_pWorld->Tick();
-
-    gpGlobal->GetFPSCounter().EndTick();
+        m_pWorld->Tick(elapsedTime);
 }
 
 bool BaseApplication::IsQuit() const

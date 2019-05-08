@@ -59,7 +59,7 @@ namespace Platform
 
         void Initialize() override;
         void Shutdown() override;
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
         static void PeekWindowsInputMessage(UINT message, WPARAM wParam, LPARAM lParam);
     };

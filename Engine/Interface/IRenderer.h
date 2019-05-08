@@ -16,7 +16,7 @@ namespace Engine
         virtual void Initialize() override = 0;
         virtual void Shutdown() override = 0;
 
-        virtual void Tick() override = 0;
+        virtual void Tick(float elapsedTime) override = 0;
 
         virtual void DefineResources(DrawingResourceTable& resTable) = 0;
         virtual void SetupStages() = 0;

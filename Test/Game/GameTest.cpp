@@ -1,10 +1,12 @@
 #include "WindowsApplication.h"
 #include "EventSystem.h"
+#include "AnimationSystem.h"
 #include "DrawingSystem.h"
 #include "SceneSystem.h"
 #include "InputSystem.h"
 #include "LogSystem.h"
 
+#include "AnimationComponent.h"
 #include "CameraComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
@@ -33,6 +35,7 @@ public:
         gpGlobal->RegisterRuntimeModule<InputSystem>(eSystem_Input);
         gpGlobal->RegisterRuntimeModule<EventSystem>(eSystem_Event);
         gpGlobal->RegisterRuntimeModule<SceneSystem>(eSystem_Scene);
+        gpGlobal->RegisterRuntimeModule<AnimationSystem>(eSystem_Animation);
         gpGlobal->RegisterRuntimeModule<DrawingSystem>(eSystem_Drawing);
         gpGlobal->RegisterRuntimeModule<LogSystem>(eSystem_Log);
 
@@ -43,6 +46,7 @@ public:
         // ECSSystem
         pWorld->AddECSSystem(gpGlobal->GetInputSystem());
         pWorld->AddECSSystem(gpGlobal->GetEventSystem());
+        pWorld->AddECSSystem(gpGlobal->GetAnimationSystem());
         pWorld->AddECSSystem(gpGlobal->GetDrawingSystem());
         pWorld->AddECSSystem(gpGlobal->GetLogSystem());
 
@@ -50,6 +54,7 @@ public:
         TransformComponent entityPosComp;
         MeshFilterComponent meshFilterComp;
         MeshRendererComponent meshRendererComp;
+        AnimationComponent animationComp;
 
         entityPosComp.SetPosition(Vec3<float>(1.0f, 1.0f, 1.0f));
 
@@ -57,7 +62,19 @@ public:
         auto pMesh = std::make_shared<GLTF2Mesh>("Asset/Scene/Test/DamagedHelmet.gltf");
         meshFilterComp.SetMesh(pMesh);
 
-        auto entity = pWorld->CreateEntity<TransformComponent, MeshFilterComponent, MeshRendererComponent>(entityPosComp, meshFilterComp, meshRendererComp);
+        auto entity = pWorld->CreateEntity<TransformComponent, MeshFilterComponent, MeshRendererComponent, AnimationComponent>(entityPosComp, meshFilterComp, meshRendererComp, animationComp);
+
+        AnimationComponent::AnimationFunc func = [entity](float elapsedTime) -> void
+        {
+            float second = elapsedTime / 1000;
+
+            auto pTrans = entity->GetComponent<TransformComponent>();
+            auto rotate = pTrans->GetRotate();
+            rotate.y += second * 1.f;
+            pTrans->SetRotate(rotate);
+        };
+
+        entity->GetComponent<AnimationComponent>()->SetAnimationFunc(func);
 
         // Camera
         TransformComponent cameraPosComp;

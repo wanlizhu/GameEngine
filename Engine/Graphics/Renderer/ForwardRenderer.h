@@ -13,7 +13,7 @@ namespace Engine
         void Initialize() override;
         void Shutdown() override;
 
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
         void DefineResources(DrawingResourceTable& resTable) override;
         void SetupStages() override;

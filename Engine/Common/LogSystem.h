@@ -20,7 +20,7 @@ namespace Engine
         void Initialize() override;
         void Shutdown() override;
 
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
         void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
 

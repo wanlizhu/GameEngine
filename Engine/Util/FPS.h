@@ -7,8 +7,9 @@ class FPSCounter
 public:
     typedef std::chrono::time_point<std::chrono::system_clock> time;
     typedef std::chrono::duration<float, std::milli> ms;
+    typedef std::chrono::duration<float> second;
 
-    FPSCounter() : m_fpsCurrent(0), m_fpsAvgSec(0), m_oneSecTicks(0), m_oneSecDuration(std::chrono::milliseconds::zero()){}
+    FPSCounter() : m_fpsCurrent(0), m_fpsAvgSec(0), m_oneSecTicks(0), m_oneTickDuration(std::chrono::milliseconds::zero()), m_oneSecDuration(std::chrono::milliseconds::zero()){}
     ~FPSCounter() = default;
 
     int GetFPSCurrent() { return m_fpsCurrent; }
@@ -37,6 +38,11 @@ public:
         m_oneSecTicks++;
     }
 
+    float GetElapsedTime()
+    {
+        return m_oneTickDuration.count();
+    }
+
 private:
     int m_fpsCurrent;
     int m_fpsAvgSec;
@@ -48,5 +54,4 @@ private:
 
     ms m_oneTickDuration;
     ms m_oneSecDuration;
-
 };

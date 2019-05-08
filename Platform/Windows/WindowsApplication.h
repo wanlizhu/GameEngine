@@ -17,7 +17,7 @@ namespace Platform
         void Initialize() override;
         void Shutdown() override;
 
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
     private:
         void CreateMainWindow();

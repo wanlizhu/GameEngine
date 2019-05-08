@@ -15,7 +15,7 @@ void ForwardRenderer::Shutdown()
 {
 }
 
-void ForwardRenderer::Tick()
+void ForwardRenderer::Tick(float elapsedTime)
 {
 }
 

@@ -5,6 +5,7 @@
 #include "IRenderer.h"
 
 #include "IEventSystem.h"
+#include "IAnimationSystem.h"
 #include "IDrawingSystem.h"
 #include "ISceneSystem.h"
 #include "IInputSystem.h"
@@ -42,6 +43,13 @@ std::shared_ptr<IEventSystem> Global::GetEventSystem()
     auto& pModule = GetRuntimeModule(eSystem_Event);
     auto pEventSystem = std::dynamic_pointer_cast<IEventSystem>(pModule);
     return pEventSystem;
+}
+
+std::shared_ptr<IAnimationSystem> Global::GetAnimationSystem()
+{
+    auto& pModule = GetRuntimeModule(eSystem_Animation);
+    auto pAnimationSystem = std::dynamic_pointer_cast<IAnimationSystem>(pModule);
+    return pAnimationSystem;
 }
 
 std::shared_ptr<IDrawingSystem> Global::GetDrawingSystem()

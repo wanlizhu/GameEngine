@@ -13,7 +13,7 @@ namespace Engine
         virtual void Initialize() override = 0;
         virtual void Shutdown() override = 0;
 
-        virtual void Tick() override = 0;
+        virtual void Tick(float elapsedTime) override = 0;
 
         virtual bool IsQuit() const = 0;
     };

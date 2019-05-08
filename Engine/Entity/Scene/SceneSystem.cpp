@@ -12,7 +12,7 @@ void SceneSystem::Shutdown()
 {
 }
 
-void SceneSystem::Tick()
+void SceneSystem::Tick(float elapsedTime)
 {
 }
 

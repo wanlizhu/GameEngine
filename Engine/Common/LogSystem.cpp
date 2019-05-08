@@ -30,7 +30,7 @@ void LogSystem::Shutdown()
     DISPATCH_EVENT(eEv_Input_KeyUp, m_LogInputKeyUpFunc);
 }
 
-void LogSystem::Tick()
+void LogSystem::Tick(float elapsedTime)
 {
 }
 

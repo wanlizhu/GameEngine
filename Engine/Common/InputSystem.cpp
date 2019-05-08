@@ -19,7 +19,7 @@ void InputSystem::Shutdown()
         m_inputQueue.pop();
 }
 
-void InputSystem::Tick()
+void InputSystem::Tick(float elapsedTime)
 {
     while (!m_inputQueue.empty())
     {

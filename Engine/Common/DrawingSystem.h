@@ -27,7 +27,7 @@ namespace Engine
 
         void Initialize() override;
         void Shutdown() override;
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
         void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
 
@@ -57,8 +57,6 @@ namespace Engine
         uint2 m_deviceSize;
         EDeviceType m_deviceType;
 
-        bool m_bEntityChanged = true;
-
         std::shared_ptr<DrawingDevice> m_pDevice;
         std::shared_ptr<DrawingContext> m_pContext;
 
@@ -67,6 +65,7 @@ namespace Engine
         std::shared_ptr<DrawingResourceTable> m_pResourceTable;
 
         std::vector<std::shared_ptr<IEntity>> m_pCameraList;
+        std::vector<std::shared_ptr<IEntity>> m_pMeshList;
 
         typedef std::unordered_map<ERendererType, std::shared_ptr<IRenderer>> RendererTable;
         RendererTable m_rendererTable;

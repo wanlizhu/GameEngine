@@ -260,7 +260,7 @@ void BaseRenderer::DefineDefaultDepthState(DrawingResourceTable& resTable)
 
     pDesc->mDepthState.mDepthEnable = true;
     pDesc->mDepthState.mDepthWriteEnable = false;
-    pDesc->mDepthState.mDepthFunc = eComparison_Always;
+    pDesc->mDepthState.mDepthFunc = eComparison_Never;
 
     pDesc->mStencilState.mStencilEnable = false;
     pDesc->mStencilState.mStencilReadMask = 0;

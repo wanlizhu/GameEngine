@@ -24,7 +24,7 @@ namespace Engine
         void Initialize() override;
         void Shutdown() override;
 
-        void Tick() override;
+        void Tick(float elapsedTime) override;
 
         bool IsQuit() const override;
 

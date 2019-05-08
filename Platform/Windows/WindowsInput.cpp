@@ -15,7 +15,7 @@ void WindowsInput::Shutdown()
 {
 }
 
-void WindowsInput::Tick()
+void WindowsInput::Tick(float elapsedTime)
 {
 }
 

@@ -1,6 +1,7 @@
 #include <memory>
 #include <stdexcept>
 #include <iostream>
+#include <chrono>
 
 #include "Global.h"
 #include "IApplication.h"
@@ -26,7 +27,11 @@ int main(int argc, char** argv)
     while (!g_pApp->IsQuit()) {
         try
         {
-            g_pApp->Tick();
+            auto& fpsCounter = gpGlobal->GetFPSCounter();
+
+            fpsCounter.BeginTick();
+            g_pApp->Tick(fpsCounter.GetElapsedTime());
+            fpsCounter.EndTick();
         }
         catch (const std::runtime_error& e)
         {

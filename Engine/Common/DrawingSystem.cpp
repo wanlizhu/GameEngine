@@ -1,5 +1,3 @@
-#pragma once
-
 #include <assert.h>
 #include <fstream>
 
@@ -34,8 +32,6 @@ void DrawingSystem::Initialize()
 {
     if (!EstablishConfiguration())
         return;
-
-    m_bEntityChanged = false;
 }
 
 void DrawingSystem::Shutdown()
@@ -43,26 +39,32 @@ void DrawingSystem::Shutdown()
     m_rendererTable.clear();
 }
 
-void DrawingSystem::Tick()
+void DrawingSystem::Tick(float elapsedTime)
 {
     for (auto& camera : m_pCameraList)
     {
         auto pCameraComponent = camera->GetComponent<CameraComponent>();
         auto pTransformComponent = camera->GetComponent<TransformComponent>();
 
-        auto trans = float4x4();
         auto proj = UpdateProjectionMatrix(pCameraComponent);
         auto view = UpdateViewMatrix(pTransformComponent);
 
         m_pContext->UpdateContext(*m_pResourceTable);
-        m_pContext->UpdateTransform(*m_pResourceTable, trans);
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
 
         m_pDevice->ClearTarget(m_pContext->GetSwapChain(), gpGlobal->GetConfiguration().background);
 
         auto& pRenderer = gpGlobal->GetRenderer(pCameraComponent->GetRendererType());
         if (pRenderer != nullptr)
-            pRenderer->Draw(*m_pResourceTable);
+        {
+            for (auto& pEntity : m_pMeshList)
+            {
+                auto pTrans = pEntity->GetComponent<TransformComponent>();
+                auto trans = UpdateWorldMatrix(pTrans);
+                m_pContext->UpdateTransform(*m_pResourceTable, trans);
+                pRenderer->Draw(*m_pResourceTable);
+            }
+        }
     }
 
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
@@ -70,9 +72,6 @@ void DrawingSystem::Tick()
 
 void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
 {
-    if (!m_bEntityChanged)
-        return;
-
     if (pEntity->HasComponent<CameraComponent>() && pEntity->HasComponent<TransformComponent>())
         m_pCameraList.emplace_back(pEntity);
 
@@ -81,6 +80,7 @@ void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
         auto meshFilter = pEntity->GetComponent<MeshFilterComponent>();
         auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
         pRenderer->AttachMesh(meshFilter->GetMesh());
+        m_pMeshList.emplace_back(pEntity);
     }
 }
 
@@ -243,7 +243,18 @@ bool DrawingSystem::PostConfiguration()
 
 float4x4 DrawingSystem::UpdateWorldMatrix(TransformComponent* pTransform)
 {
-    float4x4 ret;
+    float3 rotate = pTransform->GetRotate();
+
+    float cosR = std::cosf(rotate.y);
+    float sinR = std::sinf(rotate.y);
+
+    float4x4 ret = {
+        cosR, 0.f, sinR, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        -sinR, 0.f, cosR, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+
     return ret;
 }
 
