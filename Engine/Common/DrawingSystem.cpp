@@ -190,7 +190,7 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
     //desc.mMultiSampleCount = 4;
-    //desc.mMultiSampleQuality = 0;
+    desc.mMultiSampleQuality = 0;
 
     std::shared_ptr<DrawingTarget> pSwapChain;
 
@@ -264,7 +264,7 @@ float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)
     float3 at = float3(0.0f, 0.0f, 1.0f);
     float3 up = float3(0.0f, 1.0f, 0.0f);
 
-    float3 z = at.Normalize();
+    float3 z = (at - pos).Normalize();
     float3 x = up.Cross(z).Normalize();
     float3 y = z.Cross(x);
 

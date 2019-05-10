@@ -109,8 +109,7 @@ void BaseRenderer::DefineLinkedEffect(std::shared_ptr<std::string> pEffectName, 
 void BaseRenderer::DefinePipelineState(std::shared_ptr<std::string> pVertexFormatName,
                                        std::shared_ptr<std::string> pPipelineStateName, 
                                        std::shared_ptr<std::string> pPrimitiveName,
-                                       std::shared_ptr<std::string> pVSName,
-                                       std::shared_ptr<std::string> pPSName,
+                                       std::shared_ptr<std::string> pEffectName,
                                        std::shared_ptr<std::string> pBlendStateName,
                                        std::shared_ptr<std::string> pRasterStateName,
                                        std::shared_ptr<std::string> pDepthStencilStateName,
@@ -121,8 +120,7 @@ void BaseRenderer::DefinePipelineState(std::shared_ptr<std::string> pVertexForma
 
     pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_InputLayout, pVertexFormatName);
     pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_PrimitiveTopology, pPrimitiveName);
-    pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_Vs, pVSName);
-    pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_Ps, pPSName);
+    pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_Effect, pEffectName);
     pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_BlendState, pBlendStateName);
     pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_RasterState, pRasterStateName);
     pDesc->AttachSubobject(DrawingPipelineStateDesc::ePipelineStateSubobjectType_DepthStencilState, pDepthStencilStateName);
@@ -259,20 +257,20 @@ void BaseRenderer::DefineDefaultDepthState(DrawingResourceTable& resTable)
     auto pDesc = std::make_shared<DrawingDepthStateDesc>();
 
     pDesc->mDepthState.mDepthEnable = true;
-    pDesc->mDepthState.mDepthWriteEnable = false;
-    pDesc->mDepthState.mDepthFunc = eComparison_Never;
+    pDesc->mDepthState.mDepthWriteEnable = true;
+    pDesc->mDepthState.mDepthFunc = eComparison_Less;
 
-    pDesc->mStencilState.mStencilEnable = false;
+    pDesc->mStencilState.mStencilEnable = true;
     pDesc->mStencilState.mStencilReadMask = 0;
     pDesc->mStencilState.mStencilWriteMask = 0;
 
     pDesc->mStencilState.mFrontFace.mStencilPassOp = eStencilOp_Keep;
-    pDesc->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Incr;
     pDesc->mStencilState.mFrontFace.mStencilDepthFailOp = eStencilOp_Keep;
     pDesc->mStencilState.mFrontFace.mStencilFunc = eComparison_Always;
 
     pDesc->mStencilState.mBackFace.mStencilPassOp = eStencilOp_Keep;
-    pDesc->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Decr;
     pDesc->mStencilState.mBackFace.mStencilDepthFailOp = eStencilOp_Keep;
     pDesc->mStencilState.mBackFace.mStencilFunc = eComparison_Always;
 
@@ -288,14 +286,14 @@ void BaseRenderer::DefineDefaultBlendState(DrawingResourceTable& resTable)
 
     for (uint32_t i = 0; i < MAX_TARGETS; ++i)
     {
-        pDesc->mTargets[i].mBlendEnable = false;
+        pDesc->mTargets[i].mBlendEnable = true;
 
-        pDesc->mTargets[i].mColorBlend.mBlendSrc = eBlend_One;
-        pDesc->mTargets[i].mColorBlend.mBlendDst = eBlend_Zero;
+        pDesc->mTargets[i].mColorBlend.mBlendSrc = eBlend_SrcAlpha;
+        pDesc->mTargets[i].mColorBlend.mBlendDst = eBlend_InvSrcAlpha;
         pDesc->mTargets[i].mColorBlend.mBlendOp = eBlendOp_Add;
 
-        pDesc->mTargets[i].mAlphaBlend.mBlendSrc = eBlend_One;
-        pDesc->mTargets[i].mAlphaBlend.mBlendDst = eBlend_Zero;
+        pDesc->mTargets[i].mAlphaBlend.mBlendSrc = eBlend_SrcAlpha;
+        pDesc->mTargets[i].mAlphaBlend.mBlendDst = eBlend_InvSrcAlpha;
         pDesc->mTargets[i].mAlphaBlend.mBlendOp = eBlendOp_Add;
 
         pDesc->mTargets[i].mRenderTargetWriteMask = DrawingBlendStateDesc::BlendTarget::WriteMast_All;
@@ -315,10 +313,10 @@ void BaseRenderer::DefineDefaultRasterState(DrawingResourceTable& resTable)
     pDesc->mSlopeScaledDepthBias = 0.0f;
     pDesc->mDepthBias = 0;
 
-    pDesc->mCullMode = eCullMode_Front;
+    pDesc->mCullMode = eCullMode_Back;
     pDesc->mFillMode = eFillMode_Solid;
 
-    pDesc->mFrontCounterClockwise = true;
+    pDesc->mFrontCounterClockwise = false;
     pDesc->mMultisampleEnable = true;
     pDesc->mScissorEnable = false;
 

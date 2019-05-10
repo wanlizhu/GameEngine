@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 #include <assert.h>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "DrawingParameter.h"
 
@@ -140,6 +142,88 @@ namespace Engine
         DrawingRawShaderType GetShaderType() const override { return RawShader_CS; }
     };
 
+    class DrawingRawShader_Common
+    {
+    public:
+        DrawingRawShader_Common() = default;
+        virtual ~DrawingRawShader_Common()
+        {
+            mCBTable.clear();
+            mTextureTable.clear();
+            mTexBufferTable.clear();
+            mUVATable.clear();
+            mSamplerTable.clear();
+
+            mVariableTable.clear();
+        }
+
+        struct ShaderResourceDesc
+        {
+            ShaderResourceDesc() : mpName(nullptr), mStartSlot(0), mCount(0), mSizeInBytes(0) {}
+
+            std::shared_ptr<std::string> mpName;
+
+            uint32_t mStartSlot;
+            uint32_t mCount;
+            uint32_t mSizeInBytes;
+        };
+
+        struct VariableDesc
+        {
+            VariableDesc() : mpName(nullptr), mpCBName(nullptr), mOffset(0), mSizeInBytes(0), mCBSizeInBytes(0), mParamType(0) {}
+
+            std::shared_ptr<std::string> mpName;
+            std::shared_ptr<std::string> mpCBName;
+
+            uint32_t mOffset;
+            uint32_t mSizeInBytes;
+            uint32_t mCBSizeInBytes;
+            uint32_t mParamType;
+        };
+
+        typedef std::unordered_map<std::shared_ptr<std::string>, ShaderResourceDesc> ShaderResourceTableType;
+        typedef std::unordered_map<std::shared_ptr<std::string>, VariableDesc> VariableTableType;
+
+        const ShaderResourceTableType& GetConstanceBufferTable() const
+        {
+            return mCBTable;
+        }
+
+        const ShaderResourceTableType& GetTextureTable() const
+        {
+            return mTextureTable;
+        }
+
+        const ShaderResourceTableType& GetTexBufferTable() const
+        {
+            return mTexBufferTable;
+        }
+
+        const ShaderResourceTableType& GetUVATable() const
+        {
+            return mUVATable;
+        }
+
+        const ShaderResourceTableType& GetSamplerTable() const
+        {
+            return mSamplerTable;
+        }
+
+        const VariableTableType& GetVariableTable() const
+        {
+            return mVariableTable;
+        }
+
+    protected:
+        ShaderResourceTableType mCBTable;
+        ShaderResourceTableType mTextureTable;
+        ShaderResourceTableType mTexBufferTable;
+        ShaderResourceTableType mUVATable;
+        ShaderResourceTableType mSamplerTable;
+
+        VariableTableType mVariableTable;
+    };
+
     class DrawingRawTexBuffer
     {
     public:
@@ -173,7 +257,33 @@ namespace Engine
     class DrawingRawConstantBuffer
     {
     public:
+        DrawingRawConstantBuffer(uint32_t sizeInBytes) : m_sizeInBytes(sizeInBytes) {}
         virtual ~DrawingRawConstantBuffer() = default;
+
+        virtual void SetValue(uint32_t offset, const void* pVal, uint32_t size)
+        {
+            assert(m_pData != nullptr);
+            assert(offset + size <= m_sizeInBytes);
+            assert(pVal != nullptr);
+
+            if (memcmp(pVal, m_pData + offset, size) != 0)
+            {
+                memcpy(m_pData + offset, pVal, size);
+                m_bDirty = true;
+            }
+        }
+
+        virtual void UpdateToHardware() = 0;
+
+        bool IsDirty() const
+        {
+            return m_bDirty;
+        }
+
+    protected:
+        char* m_pData;
+        uint32_t m_sizeInBytes;
+        bool m_bDirty;
     };
 
     class DrawingRawTarget

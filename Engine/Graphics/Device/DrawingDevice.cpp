@@ -5,6 +5,8 @@
 
 using namespace Engine;
 
+uint32_t DrawingDevice::s_gConstantBufferID = 0;
+
 DrawingResource::DrawingResource(const std::shared_ptr<DrawingDevice>& pDevice) : m_pDevice(pDevice),
     m_pName(nullptr), m_pDesc(nullptr)
 {
@@ -559,4 +561,29 @@ bool DrawingDevice::CreateVaringStates(const DrawingVaringStatesDesc& desc, std:
 
     pRes = pVaringStates;
     return true;
+}
+
+DrawingDevice::ConstBufferProp* DrawingDevice::FindConstantBuffer(const DrawingDevice::ConstBufferProp& prop)
+{
+    ConstBufferProp* pCBProp = nullptr;
+
+    std::for_each(m_constantBufferPool.begin(), m_constantBufferPool.end(), [this, &prop, &pCBProp](ConstBufferPropTable::value_type& aElem) {
+        auto& devProp = aElem.second;
+        if (devProp.IsEqual(prop))
+            pCBProp = &devProp;
+    });
+    return pCBProp;
+}
+
+void DrawingDevice::AddConstantBuffer(const ConstBufferProp& prop)
+{
+    auto pName = strPtr(std::to_string(s_gConstantBufferID));
+    s_gConstantBufferID++;
+
+    m_constantBufferPool.emplace(pName, prop);
+}
+
+void DrawingDevice::ClearConstantBuffers()
+{
+    m_constantBufferPool.clear();
 }

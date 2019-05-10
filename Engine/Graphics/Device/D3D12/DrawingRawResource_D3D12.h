@@ -18,16 +18,21 @@ using namespace Microsoft::WRL;
 
 namespace Engine
 {
-    class DrawingRawShader_D3D12
+    class DrawingRawShader_D3D12 : public DrawingRawShader_Common
     {
     public:
-        DrawingRawShader_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, std::shared_ptr<ID3D12ShaderReflection> pReflection, std::shared_ptr<ID3DBlob> pShaderBlob) : m_pDevice(pDevice), m_pReflection(pReflection), m_pShaderBlob(pShaderBlob) {}
+        DrawingRawShader_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, std::shared_ptr<ID3D12ShaderReflection> pReflection, std::shared_ptr<ID3DBlob> pShaderBlob) : DrawingRawShader_Common(), m_pDevice(pDevice), m_pReflection(pReflection), m_pShaderBlob(pShaderBlob) {}
         virtual ~DrawingRawShader_D3D12() {}
+
+        void BuildResourceBindingTable(DrawingRawShader::DrawingRawShaderType type);
 
         std::shared_ptr<ID3DBlob> GetBlob() const
         {
             return m_pShaderBlob;
         }
+
+    private:
+        void ProcessVariables(std::shared_ptr<std::string> pName, uint32_t size, ID3D12ShaderReflectionConstantBuffer* pBuffer, uint32_t count);
 
     protected:
         std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
@@ -42,6 +47,7 @@ namespace Engine
             DrawingRawVertexShader(pShaderName), m_pShaderImpl(std::make_shared<DrawingRawShader_D3D12>(pDevice, pReflection, pShaderBlob))
         {
             assert(m_pShaderImpl != nullptr);
+            m_pShaderImpl->BuildResourceBindingTable(GetShaderType());
         }
 
         virtual ~DrawingRawVertexShader_D3D12() = default;
@@ -49,6 +55,11 @@ namespace Engine
         std::shared_ptr<ID3DBlob> Get() const
         {
             return m_pShaderImpl->GetBlob();
+        }
+
+        DrawingRawShader_D3D12* GetShaderImpl() const
+        {
+            return m_pShaderImpl.get();
         }
 
     private:
@@ -62,6 +73,7 @@ namespace Engine
             DrawingRawPixelShader(pShaderName), m_pShaderImpl(std::make_shared<DrawingRawShader_D3D12>(pDevice, pReflection, pShaderBlob))
         {
             assert(m_pShaderImpl != nullptr);
+            m_pShaderImpl->BuildResourceBindingTable(GetShaderType());
         }
 
         virtual ~DrawingRawPixelShader_D3D12() = default;
@@ -69,6 +81,11 @@ namespace Engine
         std::shared_ptr<ID3DBlob> Get() const
         {
             return m_pShaderImpl->GetBlob();
+        }
+
+        DrawingRawShader_D3D12* GetShaderImpl() const
+        {
+            return m_pShaderImpl.get();
         }
 
     private:
@@ -93,10 +110,17 @@ namespace Engine
             return m_byteCodeLength;
         }
 
+        std::shared_ptr<ID3D12RootSignature> GetRootSignature()
+        {
+            return m_pRootSignature;
+        }
+
     protected:
         std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
         const void* m_pInputSignature;
         uint64_t m_byteCodeLength;
+
+        std::shared_ptr<ID3D12RootSignature> m_pRootSignature;
     };
 
     class DrawingRawShaderEffect_D3D12 : public DrawingRawEffect_D3D12
@@ -106,6 +130,77 @@ namespace Engine
 
         void Apply() override;
         void Terminate() override;
+
+        std::shared_ptr<DrawingRawShader> GetRawShader(DrawingRawShader::DrawingRawShaderType type)
+        {
+            return m_shaderBlocks[type];
+        }
+
+    private:
+        struct SConstBuffer
+        {
+            std::shared_ptr<std::string> mpName = nullptr;
+            uint32_t mSizeInBytes = 0;
+
+            std::array<uint32_t, DrawingRawShader::RawShader_Count> mStartSlot;
+            std::shared_ptr<DrawingRawConstantBuffer> mpCB;
+            SConstBuffer()
+            {
+                mStartSlot.fill(EMPTY_SLOT);
+            }
+        };
+
+        struct SParamRes
+        {
+            std::shared_ptr<DrawingParameter> mpParam = nullptr;
+            uint32_t mCount = 0;
+
+            std::array<uint32_t, DrawingRawShader::RawShader_Count> mStartSlot;
+
+            SParamRes()
+            {
+                mStartSlot.fill(EMPTY_SLOT);
+            }
+        };
+
+        struct SParamVar
+        {
+            std::shared_ptr<DrawingParameter> mpParam = nullptr;
+            uint32_t mSizeInBytes = 0;
+
+            std::array<uint32_t, DrawingRawShader::RawShader_Count> mOffset;
+            std::array<std::shared_ptr<DrawingRawConstantBuffer>, DrawingRawShader::RawShader_Count> mpCB;
+
+            SParamVar()
+            {
+                mOffset.fill(0);
+            }
+
+            void UpdateValues(void);
+        };
+
+        void LoadShaderInfo(const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        void LoadConstantBufferFromShader(const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        bool CreateRootSignature();
+
+        void UpdateParameterValues();
+        void UpdateConstantBuffers();
+
+        void BindConstantBuffer(DrawingDevice::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        void GenerateParameters(const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+
+        static constexpr const int32_t EMPTY_SLOT = -1;
+
+        std::array<std::shared_ptr<DrawingRawShader>, DrawingRawShader::RawShader_Count> m_shaderBlocks;
+
+        std::vector<CD3DX12_ROOT_PARAMETER1> m_rootParameters;
+
+        std::unordered_map<std::shared_ptr<std::string>, SParamRes> mTexTable;
+        std::unordered_map<std::shared_ptr<std::string>, SParamRes> mSamplerTable;
+        std::unordered_map<std::shared_ptr<std::string>, SParamRes> mTexBufferTable;
+        std::unordered_map<std::shared_ptr<std::string>, SParamRes> mRWBufferTable;
+        std::unordered_map<std::shared_ptr<std::string>, SConstBuffer> mConstBufferTable;
+        std::unordered_map<std::shared_ptr<std::string>, SParamVar> mVarTable;
     };
 
     class DrawingRawVertexFormat_D3D12 : public DrawingRawVertexFormat
@@ -289,6 +384,41 @@ namespace Engine
         DXGI_FORMAT m_format;
 
         D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+    };
+
+    class DrawingRawConstantBuffer_D3D12 : public DrawingRawConstantBuffer
+    {
+    public:
+        DrawingRawConstantBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, uint32_t sizeInBytes, uint32_t rootParameterIndex) :
+            DrawingRawConstantBuffer(sizeInBytes), m_pDevice(pDevice), m_rootParameterIndex(rootParameterIndex)
+        {
+            m_pData = new char[sizeInBytes];
+            memset(m_pData, 0, sizeof(char) * sizeInBytes);
+        }
+
+        virtual ~DrawingRawConstantBuffer_D3D12() = default;
+
+        void UpdateToHardware() override
+        {
+            assert(m_pDevice != nullptr);
+            assert(m_pData != nullptr);
+
+            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
+            auto pCommandList = pCommandManager->GetCommandList();
+            auto pUploadAllocator = m_pDevice->GetUploadAllocator();
+
+            assert(pCommandList != nullptr);
+            assert(pUploadAllocator != nullptr);
+
+            auto heapAllocation = pUploadAllocator->Allocate(m_sizeInBytes, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+            memcpy(heapAllocation.pCPUData, m_pData, m_sizeInBytes);
+
+            pCommandList->SetGraphicsRootConstantBufferView(m_rootParameterIndex, heapAllocation.pGPUAddr);
+        }
+
+    private:
+        std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
+        uint32_t m_rootParameterIndex;
     };
 
     class DrawingRawTarget_D3D12 : public DrawingRawTarget
@@ -477,14 +607,14 @@ namespace Engine
     class DrawingRawPipelineState_D3D12 : public DrawingRawPipelineState
     {
     public:
-        DrawingRawPipelineState_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, ID3D12RootSignature* pRootSignature, D3D12_GRAPHICS_PIPELINE_STATE_DESC desc) : m_pDevice(pDevice)
+        DrawingRawPipelineState_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, std::shared_ptr<DrawingRawEffect_D3D12> pEffect, D3D12_GRAPHICS_PIPELINE_STATE_DESC desc) : m_pDevice(pDevice)
         {
             ID3D12PipelineState* pPipelineStateRaw = nullptr;
             HRESULT hr = m_pDevice->GetDevice()->CreateGraphicsPipelineState(&desc, __uuidof(ID3D12PipelineState), (void**)&pPipelineStateRaw);
             assert(SUCCEEDED(hr));
 
             m_pPipelineState = std::shared_ptr<ID3D12PipelineState>(pPipelineStateRaw, D3D12Releaser<ID3D12PipelineState>);
-            m_pRootSignature = std::shared_ptr<ID3D12RootSignature>(pRootSignature, D3D12Releaser<ID3D12RootSignature>);
+            m_pEffect = pEffect;
         }
 
         virtual ~DrawingRawPipelineState_D3D12() = default;
@@ -494,14 +624,14 @@ namespace Engine
             return m_pPipelineState;
         }
 
-        std::shared_ptr<ID3D12RootSignature> GetRootSignature() const
+        std::shared_ptr<DrawingRawEffect_D3D12> GetEffect() const
         {
-            return m_pRootSignature;
+            return m_pEffect;
         }
 
     private:
         std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
+        std::shared_ptr<DrawingRawEffect_D3D12> m_pEffect;
         std::shared_ptr<ID3D12PipelineState> m_pPipelineState;
-        std::shared_ptr<ID3D12RootSignature> m_pRootSignature;
     };
 }

@@ -31,6 +31,8 @@ void DrawingDevice_D3D12::Initialize()
     m_pDirectCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Direct);
     m_pComputeCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Compute);
     m_pCopyCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Copy);
+
+    m_pUploadAllocator = std::make_shared<DrawingUploadAllocator_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()));
 }
 
 void DrawingDevice_D3D12::Shutdown()
@@ -286,6 +288,8 @@ bool DrawingDevice_D3D12::CreatePixelShaderFromBuffer(const void* pData, uint32_
 bool DrawingDevice_D3D12::CreatePipelineState(const DrawingPipelineStateDesc& desc, const DrawingPipelineState::SubobjectResourceTable& subobjectResources, std::shared_ptr<DrawingPipelineState>& pRes)
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc = {};
+    std::shared_ptr<DrawingRawEffect_D3D12> pEffectRaw = nullptr;
+
     for (const auto& subobjectResource : subobjectResources)
     {
         switch (subobjectResource.first)
@@ -296,12 +300,21 @@ bool DrawingDevice_D3D12::CreatePipelineState(const DrawingPipelineStateDesc& de
             case DrawingPipelineStateDesc::ePipelineStateSubobjectType_PrimitiveTopology:
                 pipelineDesc.PrimitiveTopologyType = D3D12Enum(std::dynamic_pointer_cast<DrawingPrimitive>(subobjectResource.second)->GetPrimitiveType(), pipelineDesc.PrimitiveTopologyType);
                 break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_Vs:
-                pipelineDesc.VS = CD3DX12_SHADER_BYTECODE(std::dynamic_pointer_cast<DrawingRawVertexShader_D3D12>(std::dynamic_pointer_cast<DrawingVertexShader>(subobjectResource.second)->GetResource())->Get().get());
+            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_Effect:
+            {
+                pEffectRaw = std::dynamic_pointer_cast<DrawingRawEffect_D3D12>(std::dynamic_pointer_cast<DrawingEffect>(subobjectResource.second)->GetResource());
+                auto pShaderEffectRaw = std::dynamic_pointer_cast<DrawingRawShaderEffect_D3D12>(pEffectRaw);
+                assert(pShaderEffectRaw != nullptr);
+                auto pVSShaderRaw = std::dynamic_pointer_cast<DrawingRawVertexShader_D3D12>(pShaderEffectRaw->GetRawShader(DrawingRawShader::RawShader_VS));
+                auto pPSShaderRaw = std::dynamic_pointer_cast<DrawingRawPixelShader_D3D12>(pShaderEffectRaw->GetRawShader(DrawingRawShader::RawShader_PS));
+                auto pRootSignature = pShaderEffectRaw->GetRootSignature();
+                assert(pVSShaderRaw != nullptr);
+                assert(pPSShaderRaw != nullptr);
+                pipelineDesc.VS = CD3DX12_SHADER_BYTECODE(pVSShaderRaw->Get().get());
+                pipelineDesc.PS = CD3DX12_SHADER_BYTECODE(pPSShaderRaw->Get().get());
+                pipelineDesc.pRootSignature = pRootSignature.get();
                 break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_Ps:
-                pipelineDesc.PS = CD3DX12_SHADER_BYTECODE(std::dynamic_pointer_cast<DrawingRawPixelShader_D3D12>(std::dynamic_pointer_cast<DrawingPixelShader>(subobjectResource.second)->GetResource())->Get().get());
-                break;
+            }
             case DrawingPipelineStateDesc::ePipelineStateSubobjectType_BlendState:
                 pipelineDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
                 pipelineDesc.SampleMask = UINT_MAX;
@@ -326,22 +339,8 @@ bool DrawingDevice_D3D12::CreatePipelineState(const DrawingPipelineStateDesc& de
         }
     }
 
-    /* ----------------- TODO ----------------- */
-    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-    rootSignatureDescription.Init_1_1(0, nullptr, 0, nullptr, rootSignatureFlags);
-
-    ID3D12RootSignature* m_RootSignature = nullptr;
-    ID3DBlob* rootSignatureBlob;
-    ID3DBlob* errorBlob;
-    HRESULT hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, D3D_ROOT_SIGNATURE_VERSION_1_1, &rootSignatureBlob, &errorBlob);
-
-    hr = GetDevice()->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)&m_RootSignature);
-    pipelineDesc.pRootSignature = m_RootSignature;
-    /* ----------------- TODO ----------------- */
-
     auto pPipelineState = std::make_shared<DrawingPipelineState>(shared_from_this());
-    std::shared_ptr<DrawingRawPipelineState> pPipelineStateRaw = std::make_shared<DrawingRawPipelineState_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), m_RootSignature, pipelineDesc);
+    std::shared_ptr<DrawingRawPipelineState> pPipelineStateRaw = std::make_shared<DrawingRawPipelineState_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), pEffectRaw, pipelineDesc);
 
     pPipelineState->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
     pPipelineState->SetResource(pPipelineStateRaw);
@@ -429,7 +428,7 @@ void DrawingDevice_D3D12::SetPipelineState(std::shared_ptr<DrawingPipelineState>
         auto commandList = m_pDirectCommandManager->GetCommandList();
         commandList->SetPipelineState(pPipelineStateRaw->GetPipelineState().get());
 
-        auto rootSignature = pPipelineStateRaw->GetRootSignature();
+        auto rootSignature = pPipelineStateRaw->GetEffect()->GetRootSignature();
         commandList->SetGraphicsRootSignature(rootSignature.get());
     }
 }
@@ -517,6 +516,12 @@ void DrawingDevice_D3D12::SetTargets(std::shared_ptr<DrawingTarget> pTarget[], u
 
 bool DrawingDevice_D3D12::UpdateEffectParameter(std::shared_ptr<DrawingParameter> pParam, std::shared_ptr<DrawingEffect> pEffect)
 {
+    assert(pEffect != nullptr);
+    auto pRawEffect = std::dynamic_pointer_cast<DrawingRawEffect_D3D12>(pEffect->GetResource());
+    assert(pRawEffect != nullptr);
+
+    pRawEffect->UpdateParameter(pParam);
+
     return true;
 }
 
@@ -557,10 +562,22 @@ bool DrawingDevice_D3D12::UpdateEffectOutputRWBuffer(std::shared_ptr<DrawingRWBu
 
 void DrawingDevice_D3D12::BeginEffect(DrawingContext& dc, std::shared_ptr<DrawingEffect> pEffect)
 {
+    assert(pEffect != nullptr);
+
+    auto pRawEffect = std::dynamic_pointer_cast<DrawingRawEffect_D3D12>(pEffect->GetResource());
+    assert(pRawEffect != nullptr);
+
+    pRawEffect->Apply();
 }
 
 void DrawingDevice_D3D12::EndEffect(DrawingContext& dc, std::shared_ptr<DrawingEffect> pEffect)
 {
+    assert(pEffect != nullptr);
+
+    auto pRawEffect = std::dynamic_pointer_cast<DrawingRawEffect_D3D12>(pEffect->GetResource());
+    assert(pRawEffect != nullptr);
+
+    pRawEffect->Terminate();
 }
 
 bool DrawingDevice_D3D12::DrawPrimitive(std::shared_ptr<DrawingPrimitive> pRes)
@@ -643,6 +660,11 @@ std::shared_ptr<DrawingCommandManager_D3D12> DrawingDevice_D3D12::GetCommandMana
             assert(false);
     }
     return nullptr;
+}
+
+std::shared_ptr<DrawingUploadAllocator_D3D12> DrawingDevice_D3D12::GetUploadAllocator() const
+{
+    return m_pUploadAllocator;
 }
 
 bool DrawingDevice_D3D12::DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes)

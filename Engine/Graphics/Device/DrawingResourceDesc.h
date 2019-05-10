@@ -592,12 +592,7 @@ namespace Engine
         enum EPipelineStateSubobjectType
         {
             ePipelineStateSubobjectType_RootSignature = 0,
-            ePipelineStateSubobjectType_Vs,
-            ePipelineStateSubobjectType_Ps,
-            ePipelineStateSubobjectType_Ds,
-            ePipelineStateSubobjectType_Hs,
-            ePipelineStateSubobjectType_Gs,
-            ePipelineStateSubobjectType_Cs,
+            ePipelineStateSubobjectType_Effect,
             ePipelineStateSubobjectType_StreamOutput,
             ePipelineStateSubobjectType_BlendState,
             ePipelineStateSubobjectType_RasterState,

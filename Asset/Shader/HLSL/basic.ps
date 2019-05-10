@@ -4,7 +4,7 @@ float4 BasicPrimitive_PS(BasicPrimitive_VertexAttr input) : SV_Target
 {
     float ambientStrength = 0.5f;
 
-    float3 lightDir = -float3(1.f, -1.5f, -1.f);
+    float3 lightDir = -float3(1.f, -1.5f, 1.f);
     float3 lightColor = float3(0.5f, 0.5f, 0.5f);
 
     float3 ambient = ambientStrength * lightColor;

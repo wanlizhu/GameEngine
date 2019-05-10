@@ -1,8 +1,11 @@
 #include "basic.h"
 
-row_major float4x4 gWorldMatrix : WORLD;
-row_major float4x4 gViewMatrix : VIEW;
-row_major float4x4 gProjectionView : PROJECTION;
+cbuffer TransformCB : register(b0)
+{
+    row_major float4x4 gWorldMatrix : WORLD;
+    row_major float4x4 gViewMatrix : VIEW;
+    row_major float4x4 gProjectionView : PROJECTION;
+};
 
 BasicPrimitive_VertexAttr BasicPrimitive_VS(BasicPrimitive_Input input)
 {
@@ -15,7 +18,7 @@ BasicPrimitive_VertexAttr BasicPrimitive_VS(BasicPrimitive_Input input)
     output.position = mul(output.position, gViewMatrix);
     output.position = mul(output.position, gProjectionView);
 
-    output.normal = input.Normal;
+    output.normal = mul(input.Normal, (float3x3)gWorldMatrix);
 
     return output;
 }

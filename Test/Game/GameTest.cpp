@@ -28,7 +28,7 @@ public:
         gpGlobal->GetConfiguration().appName = "Game Test";
         gpGlobal->GetConfiguration().width = 1080;
         gpGlobal->GetConfiguration().height = 1080;
-        gpGlobal->GetConfiguration().type = eDevice_D3D11;
+        gpGlobal->GetConfiguration().type = eDevice_D3D12;
 
         gpGlobal->RegisterApp<WindowsApplication>();
 
@@ -55,15 +55,11 @@ public:
         MeshFilterComponent meshFilterComp;
         MeshRendererComponent meshRendererComp;
         AnimationComponent animationComp;
-
         entityPosComp.SetPosition(Vec3<float>(1.0f, 1.0f, 1.0f));
-
-        //auto pMesh = std::make_shared<CubeMesh>();
-        auto pMesh = std::make_shared<GLTF2Mesh>("Asset/Scene/Test/DamagedHelmet.gltf");
+        auto pMesh = std::make_shared<CubeMesh>();
+        //auto pMesh = std::make_shared<GLTF2Mesh>("Asset/Scene/Test/DamagedHelmet.gltf");
         meshFilterComp.SetMesh(pMesh);
-
         auto entity = pWorld->CreateEntity<TransformComponent, MeshFilterComponent, MeshRendererComponent, AnimationComponent>(entityPosComp, meshFilterComp, meshRendererComp, animationComp);
-
         AnimationComponent::AnimationFunc func = [entity](float elapsedTime) -> void
         {
             float second = elapsedTime / 1000;
@@ -73,17 +69,13 @@ public:
             rotate.y += second * 1.f;
             pTrans->SetRotate(rotate);
         };
-
         entity->GetComponent<AnimationComponent>()->SetAnimationFunc(func);
 
         // Camera
         TransformComponent cameraPosComp;
         CameraComponent cameraComp;
-
-        cameraPosComp.SetPosition(Vec3<float>(0.0f, 0.0f, -5.0f));
-
+        cameraPosComp.SetPosition(Vec3<float>(0.0f, 2.0f, -5.0f));
         auto camera = pWorld->CreateEntity<TransformComponent, CameraComponent>(cameraPosComp, cameraComp);
-
     }
 };
 

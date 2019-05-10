@@ -11,6 +11,7 @@
 #include "DrawingType.h"
 #include "DrawingDevice.h"
 #include "DrawingCommandManager_D3D12.h"
+#include "DrawingUploadAllocator_D3D12.h"
 #include "DrawingResourceStateTracker_D3D12.h"
 #include "DrawingUtil_D3D12.h"
 
@@ -19,6 +20,7 @@ namespace Engine
     class DrawingDevice_D3D12;
     class DrawingRawVertexShader_D3D12;
     class DrawingRawPixelShader_D3D12;
+    class DrawingRawConstantBuffer_D3D12;
     class DrawingDevice_D3D12 : public DrawingDevice
     {
     public:
@@ -102,6 +104,7 @@ namespace Engine
         std::shared_ptr<IDXGIFactory4> GetDXGIFactory() const;
 
         std::shared_ptr<DrawingCommandManager_D3D12> GetCommandManager(EDrawingCommandListType type) const;
+        std::shared_ptr<DrawingUploadAllocator_D3D12> GetUploadAllocator() const;
 
     private:
         bool DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes);
@@ -127,6 +130,8 @@ namespace Engine
         std::shared_ptr<DrawingCommandManager_D3D12> m_pDirectCommandManager;
         std::shared_ptr<DrawingCommandManager_D3D12> m_pComputeCommandManager;
         std::shared_ptr<DrawingCommandManager_D3D12> m_pCopyCommandManager;
+
+        std::shared_ptr<DrawingUploadAllocator_D3D12> m_pUploadAllocator;
 
         uint64_t m_fenceValues[BUFFER_COUNT] = {};
     };

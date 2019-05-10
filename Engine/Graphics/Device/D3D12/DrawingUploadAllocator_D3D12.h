@@ -11,7 +11,7 @@ namespace Engine
     class DrawingUploadAllocator_D3D12
     {
     public:
-        DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> device, uint64_t pageSizeInBytes);
+        DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> device, uint64_t pageSizeInBytes = 2 * 1024 * 1024);
         virtual ~DrawingUploadAllocator_D3D12();
 
         struct Allocation

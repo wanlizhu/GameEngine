@@ -118,14 +118,6 @@ namespace Engine
         std::shared_ptr<ID3D11DeviceContext> GetDeviceContext() const;
         std::shared_ptr<IDXGIFactory> GetDXGIFactory() const;
 
-        template<typename DescType>
-        static uint32_t GetParamType(const DescType& type, uint32_t& size);
-
-        struct ConstBufferProp;
-        ConstBufferProp* FindConstantBuffer(const ConstBufferProp& prop);
-        void AddConstantBuffer(const ConstBufferProp& prop);
-        void ClearConstantBuffers();
-
     private:
         bool DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes);
 
@@ -143,52 +135,6 @@ namespace Engine
         std::shared_ptr<DrawingRawVertexShader_D3D11> CreateVertexShaderFromString(std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pEntryName, std::shared_ptr<std::string> pSourceName, const char* pSrc, uint32_t size);
         std::shared_ptr<DrawingRawPixelShader_D3D11> CreatePixelShaderFromString(std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pEntryName, std::shared_ptr<std::string> pSourceName, const char* pSrc, uint32_t size);
 
-    public:
-        struct VarProp
-        {
-            VarProp() :mpName(nullptr), mOffset(0), mSizeInBytes(0), mType(0)
-            {}
-
-            std::shared_ptr<std::string> mpName;
-            uint32_t mOffset;
-            uint32_t mSizeInBytes;
-            uint32_t mType;
-        };
-
-        typedef std::vector<VarProp> VarPropTable;
-        struct ConstBufferProp
-        {
-            ConstBufferProp() : mpName(nullptr), mSizeInBytes(0), mpCB(nullptr)
-            {}
-
-            ~ConstBufferProp()
-            {
-                mpCB = nullptr;
-                mVarProps.clear();
-            }
-
-            bool IsEqual(const ConstBufferProp& prop)
-            {
-                if (mSizeInBytes != prop.mSizeInBytes)
-                    return false;
-
-                if (mVarProps.size() != prop.mVarProps.size())
-                    return false;
-
-                if (memcmp(mVarProps.data(), prop.mVarProps.data(), sizeof(VarProp) * mVarProps.size()) != 0)
-                    return false;
-
-                return true;
-            }
-
-            std::shared_ptr<std::string> mpName;
-            uint32_t mSizeInBytes;
-            std::shared_ptr<DrawingRawConstantBuffer_D3D11> mpCB;
-            VarPropTable mVarProps;
-        };
-
-        typedef std::unordered_map<std::shared_ptr<std::string>, ConstBufferProp> ConstBufferPropTable;
-
     private:
         std::shared_ptr<ID3D11Device> m_pDevice;
         std::shared_ptr<ID3D11DeviceContext> m_pDeviceContext;
@@ -199,9 +145,6 @@ namespace Engine
         std::stack<BlendState> m_blendStates;
         std::stack<DepthState> m_depthStates;
         std::stack<RasterState> m_rasterStates;
-
-        ConstBufferPropTable m_constantBufferPool;
-        static uint32_t s_gConstantBufferID;
     };
 
     template<>
