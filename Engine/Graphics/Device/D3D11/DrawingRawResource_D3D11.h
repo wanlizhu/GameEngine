@@ -141,10 +141,10 @@ namespace Engine
     {
     public:
         typedef ID3D11Texture1D TextureType;
-        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, const D3D11_SUBRESOURCE_DATA& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture1D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture1D(&desc, &data, &pTextureRaw);
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture1D(&desc, data.data(), &pTextureRaw);
             assert(SUCCEEDED(hr));
             m_pTexture1D = std::shared_ptr<ID3D11Texture1D>(pTextureRaw, D3D11Releaser<ID3D11Texture1D>);
 
@@ -167,10 +167,10 @@ namespace Engine
     {
     public:
         typedef ID3D11Texture2D TextureType;
-        DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE2D_DESC& desc, const D3D11_SUBRESOURCE_DATA& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE2D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture2D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture2D(&desc, &data, &pTextureRaw);
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture2D(&desc, data.data(), &pTextureRaw);
             assert(SUCCEEDED(hr));
             m_pTexture2D = std::shared_ptr<ID3D11Texture2D>(pTextureRaw, D3D11Releaser<ID3D11Texture2D>);
 
@@ -193,10 +193,10 @@ namespace Engine
     {
     public:
         typedef ID3D11Texture3D TextureType;
-        DrawingRawTexture3D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE3D_DESC& desc, const D3D11_SUBRESOURCE_DATA& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        DrawingRawTexture3D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE3D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture3D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture3D(&desc, &data, &pTextureRaw);
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture3D(&desc, data.data(), &pTextureRaw);
             assert(SUCCEEDED(hr));
             m_pTexture3D = std::shared_ptr<ID3D11Texture3D>(pTextureRaw, D3D11Releaser<ID3D11Texture3D>);
 
@@ -573,10 +573,12 @@ namespace Engine
                 mUAVSlots.fill(nullptr);
             }
         };
+        void CheckAndAddResource(const DrawingRawShader_Common::ShaderResourceDesc& desc, uint32_t paramType, const DrawingRawShader::DrawingRawShaderType shaderType, std::unordered_map<std::shared_ptr<std::string>, SParamRes>& resTable) const;
 
         void LoadShaderInfo(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
 
         void LoadConstantBufferFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        void LoadTexturesFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
 
         void UpdateParameterValues();
         void UpdateConstantBuffers();

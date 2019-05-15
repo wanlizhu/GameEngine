@@ -1,3 +1,5 @@
+#include <random>
+
 #include "WindowsApplication.h"
 #include "EventSystem.h"
 #include "AnimationSystem.h"
@@ -11,11 +13,13 @@
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
 #include "TransformComponent.h"
+#include "PolylineRendererComponent.h"
 
 #include "CubeMesh.h"
 #include "GLTF2Mesh.h"
 
 #include "ForwardRenderer.h"
+#include "PolylineRenderer.h"
 
 using namespace Engine;
 using namespace Platform;
@@ -28,7 +32,7 @@ public:
         gpGlobal->GetConfiguration().appName = "Game Test";
         gpGlobal->GetConfiguration().width = 1080;
         gpGlobal->GetConfiguration().height = 1080;
-        gpGlobal->GetConfiguration().type = eDevice_D3D12;
+        gpGlobal->GetConfiguration().type = eDevice_D3D11;
 
         gpGlobal->RegisterApp<WindowsApplication>();
 
@@ -39,7 +43,8 @@ public:
         gpGlobal->RegisterRuntimeModule<DrawingSystem>(eSystem_Drawing);
         gpGlobal->RegisterRuntimeModule<LogSystem>(eSystem_Log);
 
-        gpGlobal->RegisterRenderer<ForwardRenderer>(eRenderer_Forward);
+        //gpGlobal->RegisterRenderer<ForwardRenderer>(eRenderer_Forward);
+        gpGlobal->RegisterRenderer<PolylineRenderer>(eRenderer_Polyline);
 
         auto& pWorld = gpGlobal->GetECSWorld();
 
@@ -76,6 +81,27 @@ public:
         CameraComponent cameraComp;
         cameraPosComp.SetPosition(Vec3<float>(0.0f, 2.0f, -5.0f));
         auto camera = pWorld->CreateEntity<TransformComponent, CameraComponent>(cameraPosComp, cameraComp);
+
+        // LineSegment
+        PolylineRendererComponent polylineRendererComp;
+        PolylineRendererComponent::LineSegmentGeom geom;
+
+        const int LINE_TEST_COUNT = 1000;
+
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<std::mt19937::result_type> distWidth(0, gpGlobal->GetConfiguration().width);
+        std::uniform_int_distribution<std::mt19937::result_type> distHeight(0, gpGlobal->GetConfiguration().height);
+
+        for (uint32_t i = 0; i < LINE_TEST_COUNT; i ++)
+        {
+            geom.startPoint = float2((float)distWidth(rng), (float)distHeight(rng));
+            geom.endPoint = float2((float)distWidth(rng), (float)distHeight(rng));
+            geom.color = 100;
+            geom.drawZ = 1.0f;
+            polylineRendererComp.SetGeometry(geom);
+            auto segment = pWorld->CreateEntity<PolylineRendererComponent>(polylineRendererComp);
+        }
     }
 };
 

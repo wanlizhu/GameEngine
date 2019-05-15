@@ -20,18 +20,21 @@ void DrawingResourceFactory::SetEffectPool(const std::weak_ptr<DrawingEffectPool
     m_pEffectPool = pEffectPool;
 }
 
-bool DrawingResourceFactory::CreateResource(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, DrawingResourceTable& resTable, const void* pData, uint32_t size) const
+bool DrawingResourceFactory::CreateResource(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, DrawingResourceTable& resTable, const void* pData[], uint32_t size[], uint32_t slices) const
 {
     bool result = false;
+
+    const void* pInitData = (slices == 0) ? nullptr : pData[0];
+    uint32_t initDataSize = (slices == 0) ? 0 : size[0];
 
     switch (pDesc->GetType())
     {
     case eResource_Effect:          result = CreateEffect(pDesc, pRes); break;
     case eResource_Vertex_Format:   result = CreateVertexFormat(pDesc, pRes); break;
-    case eResource_Vertex_Buffer:   result = CreateVertexBuffer(pDesc, pRes, pData, size); break;
-    case eResource_Index_Buffer:    result = CreateIndexBuffer(pDesc, pRes, pData, size); break;
+    case eResource_Vertex_Buffer:   result = CreateVertexBuffer(pDesc, pRes, pInitData, initDataSize); break;
+    case eResource_Index_Buffer:    result = CreateIndexBuffer(pDesc, pRes, pInitData, initDataSize); break;
     case eResource_Constant_Buffer: result = CreateConstantBuffer(pDesc, pRes); break;
-    case eResource_Texture:         result = CreateTexture(pDesc, pRes, pData, size); break;
+    case eResource_Texture:         result = CreateTexture(pDesc, pRes, pData, size, slices); break;
     case eResource_Blend_State:     result = CreateBlendState(pDesc, pRes); break;
     case eResource_Depth_State:     result = CreateDepthState(pDesc, pRes); break;
     case eResource_Raster_State:    result = CreateRasterState(pDesc, pRes); break;
@@ -121,14 +124,14 @@ bool DrawingResourceFactory::CreateIndexBuffer(const std::shared_ptr<DrawingReso
     return result;
 }
 
-bool DrawingResourceFactory::CreateTexture(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData, uint32_t size) const
+bool DrawingResourceFactory::CreateTexture(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData[], uint32_t size[], uint32_t slices) const
 {
     auto pTextureDesc = std::static_pointer_cast<const DrawingTextureDesc>(pDesc);
     if (pTextureDesc == nullptr)
         return false;
 
     std::shared_ptr<DrawingTexture> pTexture;
-    bool result = m_pDevice->CreateTexture(*pTextureDesc, pTexture, pData, size);
+    bool result = m_pDevice->CreateTexture(*pTextureDesc, pTexture, pData, size, slices);
     pRes = pTexture;
 
     return result;
@@ -342,7 +345,7 @@ bool DrawingResourceTable::ResourceEntry::CreateResource()
 
     LoadPrecedingResources();
 
-    if (!m_factory.CreateResource(m_pDesc, pRes, m_resTable, m_pData, m_size))
+    if (!m_factory.CreateResource(m_pDesc, pRes, m_resTable, m_pData, m_size, m_slices))
         return false;
 
     m_pRes = pRes;
@@ -369,10 +372,10 @@ void DrawingResourceTable::ResourceEntry::SetDesc(std::shared_ptr<DrawingResourc
     }
 }
 
-void DrawingResourceTable::ResourceEntry::SetInitData(const void* pData, uint32_t size)
+void DrawingResourceTable::ResourceEntry::SetInitData(uint32_t index, const void* pData, uint32_t size)
 {
-    m_pData = pData;
-    m_size = size;
+    m_pData[index] = pData;
+    m_size[index] = size;
 }
 
 void DrawingResourceTable::ResourceEntry::SetInitDataSlices(uint32_t slices)
@@ -396,7 +399,7 @@ bool DrawingResourceTable::ResourceEntry::SetExternalResource(std::shared_ptr<Dr
 }
 
 DrawingResourceTable::ResourceEntry::ResourceEntry(std::shared_ptr<DrawingResourceDesc> pDesc, const DrawingResourceFactory& factory, DrawingResourceTable& table) :
-    m_pDesc(pDesc), m_pRes(nullptr), m_pData(nullptr), m_size(0), m_factory(factory), m_resTable(table)
+    m_pDesc(pDesc), m_pRes(nullptr), m_factory(factory), m_resTable(table)
 {
 }
 

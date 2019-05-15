@@ -19,13 +19,13 @@ namespace Engine
 
         void SetEffectPool(const std::weak_ptr<DrawingEffectPool> pEffectPool);
 
-        bool CreateResource(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, DrawingResourceTable& resTable, const void* pData = nullptr, uint32_t size = 0) const;
+        bool CreateResource(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, DrawingResourceTable& resTable, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) const;
 
         bool CreateEffect(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const;
         bool CreateVertexFormat(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const;
         bool CreateVertexBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData = nullptr, uint32_t size = 0) const;
         bool CreateIndexBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData = nullptr, uint32_t size = 0) const;
-        bool CreateTexture(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData = nullptr, uint32_t size = 0) const;
+        bool CreateTexture(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) const;
 
         bool CreateConstantBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const;
 
@@ -64,7 +64,7 @@ namespace Engine
             const std::shared_ptr<DrawingResourceDesc> GetDesc() const;
 
             void SetDesc(std::shared_ptr<DrawingResourceDesc> pDesc);
-            void SetInitData(const void* pData, uint32_t size);
+            void SetInitData(uint32_t index, const void* pData, uint32_t size);
             void SetInitDataSlices(uint32_t slices);
 
             bool SetExternalResource(std::shared_ptr<DrawingResource> pRes); 
@@ -77,9 +77,11 @@ namespace Engine
             std::shared_ptr<DrawingResourceDesc> m_pDesc;
             std::shared_ptr<DrawingResource> m_pRes;
 
-            const void* m_pData;
-            uint32_t m_size;
-            uint32_t m_slices;
+            static const uint32_t MAX_INIT_SLICES = 256;
+
+            const void* m_pData[MAX_INIT_SLICES] = { nullptr };
+            uint32_t m_size[MAX_INIT_SLICES] = { 0 };
+            uint32_t m_slices = 0;
 
             const DrawingResourceFactory& m_factory;
             DrawingResourceTable& m_resTable;

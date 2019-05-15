@@ -59,10 +59,10 @@ void BaseRenderer::AttachMesh(std::shared_ptr<IMesh> pMesh)
 void BaseRenderer::DefineDefaultResources(DrawingResourceTable& resTable)
 {
     DefineDefaultVertexFormat(resTable);
-    DefineStaticVertexBuffer(DefaultPositionBuffer(), PositionOffset, m_vertexCount, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Position], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Position], resTable);
-    DefineStaticVertexBuffer(DefaultNormalBuffer(), NormalOffset, m_vertexCount, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Normal], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Normal], resTable);
+    DefineStaticVertexBuffer(DefaultPositionBuffer(), PositionOffset, MAX_VERTEX_COUNT, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Position], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Position], resTable);
+    DefineStaticVertexBuffer(DefaultNormalBuffer(), NormalOffset, MAX_VERTEX_COUNT, &m_sVertexID[(uint32_t)Attribute::ESemanticType::Normal], m_vertexOffset[(uint32_t)Attribute::ESemanticType::Normal], resTable);
 
-    DefineStaticIndexBuffer(DefaultIndexBuffer(), m_indexCount, &m_sIndexID, m_indexOffset, resTable);
+    DefineStaticIndexBuffer(DefaultIndexBuffer(), MAX_INDEX_COUNT, &m_sIndexID, m_indexOffset, resTable);
 
     DefineWorldMatrixConstantBuffer(resTable);
     DefineViewMatrixConstantBuffer(resTable);
@@ -189,7 +189,7 @@ void BaseRenderer::DefineStaticVertexBuffer(std::shared_ptr<std::string> pName, 
         auto pEntry = resTable.GetResourceEntry(pName);
         if (pEntry != nullptr)
         {
-            pEntry->SetInitData(data, size);
+            pEntry->SetInitData(0, data, size);
             pEntry->SetInitDataSlices(1);
         }
     }
@@ -210,7 +210,7 @@ void BaseRenderer::DefineStaticIndexBuffer(std::shared_ptr<std::string> pName, u
         auto pEntry = resTable.GetResourceEntry(pName);
         if (pEntry != nullptr)
         {
-            pEntry->SetInitData(data, size);
+            pEntry->SetInitData(0, data, size);
             pEntry->SetInitDataSlices(1);
         }
     }
@@ -341,6 +341,49 @@ void BaseRenderer::DefineExternalDepthBuffer(std::shared_ptr<std::string> pName,
     resTable.AddResourceEntry(pName, pDesc);
 }
 
+bool BaseRenderer::DefineDynamicTexture(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingTextureDesc>();
+
+    uint32_t texelBytes = m_pDevice->FormatBytes(format);
+    uint32_t rowCount = elementCount / DYNAMIC_TEX_ROW_SIZE;
+    if ((elementCount % DYNAMIC_TEX_ROW_SIZE) != 0)
+        rowCount += 1;
+
+    pDesc->mType = eTexture_2D;
+    pDesc->mFormat = format;
+
+    pDesc->mWidth = DYNAMIC_TEX_ROW_SIZE;
+    pDesc->mHeight = rowCount;
+    pDesc->mDepth = 1;
+    pDesc->mArraySize = 1;
+    pDesc->mMipLevels = 1;
+
+    pDesc->mBytesPerRow = texelBytes * DYNAMIC_TEX_ROW_SIZE;
+    pDesc->mBytesPerSlice = texelBytes * DYNAMIC_TEX_ROW_SIZE * rowCount;
+
+    pDesc->mUsage = eUsage_Dynamic;
+    pDesc->mAccess = eAccess_Write;
+    pDesc->mFlags = 0;
+
+    if (!resTable.AddResourceEntry(pName, pDesc))
+        return false;
+
+    return true;
+}
+
+void BaseRenderer::DefineDynamicTextureWithInit(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, void* pData, uint32_t size, DrawingResourceTable& resTable)
+{
+    if (DefineDynamicTexture(pName, format, elementCount, resTable))
+    {
+        auto pEntry = resTable.GetResourceEntry(pName);
+        if (pEntry != nullptr)
+        {
+            pEntry->SetInitData(0, pData, size);
+            pEntry->SetInitDataSlices(1);
+        }
+    }
+}
 
 void BaseRenderer::DefineVaringStates(DrawingResourceTable& resTable)
 {
@@ -428,10 +471,16 @@ void BaseRenderer::BindPipelineState(DrawingPass& pass, std::shared_ptr<std::str
     pass.BindResource(DrawingPass::PipelineStateSlotName(), pName);
 }
 
-void BaseRenderer::BindConstant(DrawingPass& pass, std::shared_ptr<std::string> pName)
+void BaseRenderer::AddConstantSlot(DrawingPass& pass, std::shared_ptr<std::string> pName)
 {
     pass.AddResourceSlot(pName, ResourceSlot_ConstBuffer);
     pass.BindResource(pName, pName);
+}
+
+void BaseRenderer::AddTextureSlot(DrawingPass& pass, std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pParamName)
+{
+    pass.AddResourceSlot(pName, ResourceSlot_Texture, pParamName);
+    
 }
 
 void BaseRenderer::BindInputs(DrawingPass& pass)
@@ -457,9 +506,9 @@ void BaseRenderer::BindOutput(DrawingPass& pass)
 
 void BaseRenderer::BindConstants(DrawingPass& pass)
 {
-    BindConstant(pass, DefaultWorldMatrix());
-    BindConstant(pass, DefaultViewMatrix());
-    BindConstant(pass, DefaultProjectionMatrix());
+    AddConstantSlot(pass, DefaultWorldMatrix());
+    AddConstantSlot(pass, DefaultViewMatrix());
+    AddConstantSlot(pass, DefaultProjectionMatrix());
 }
 
 std::shared_ptr<DrawingStage> BaseRenderer::CreateStage(std::shared_ptr<std::string> pName)

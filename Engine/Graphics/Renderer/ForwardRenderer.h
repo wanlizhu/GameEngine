@@ -38,8 +38,6 @@ namespace Engine
         FuncResourceName(BasicPrimitiveStage);
         // Define effect resource names
         FuncResourceName(BasicPrimitiveDefaultPass);
-        // Define index buffer resource names
-        FuncResourceName(BasicPrimitiveIndexBuffer);
 
     protected:
         void DefineShaderResource(DrawingResourceTable& resTable);
@@ -48,7 +46,6 @@ namespace Engine
     private:
         std::shared_ptr<DrawingPass> CreateDefaultPass(
             std::shared_ptr<std::string> pPassName,
-            std::shared_ptr<std::string> pEffectName,
-            std::shared_ptr<std::string> pIndexName);
+            std::shared_ptr<std::string> pEffectName);
     };
 }

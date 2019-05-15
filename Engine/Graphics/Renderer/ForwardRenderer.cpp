@@ -29,7 +29,7 @@ void ForwardRenderer::DefineResources(DrawingResourceTable& resTable)
 void ForwardRenderer::SetupStages()
 {
     auto pStage = CreateStage(BasicPrimitiveStage());
-    pStage->AppendDrawingPass(CreateDefaultPass(BasicPrimitiveDefaultPass(), BasicPrimitiveEffect(), BasicPrimitiveIndexBuffer()));
+    pStage->AppendDrawingPass(CreateDefaultPass(BasicPrimitiveDefaultPass(), BasicPrimitiveEffect()));
 
     m_stageTable.AddDrawingStage(pStage->GetName(), pStage);
 }
@@ -99,8 +99,7 @@ void ForwardRenderer::DefinePipelineStateResource(DrawingResourceTable& resTable
 
 std::shared_ptr<DrawingPass> ForwardRenderer::CreateDefaultPass(
     std::shared_ptr<std::string> pPassName,
-    std::shared_ptr<std::string> pEffectName,
-    std::shared_ptr<std::string> pIndexName)
+    std::shared_ptr<std::string> pEffectName)
 {
     auto pPass = CreatePass(pPassName);
 

@@ -120,7 +120,7 @@ bool DrawingDevice_D3D12::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     return true;
 }
 
-bool DrawingDevice_D3D12::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData, uint32_t size)
+bool DrawingDevice_D3D12::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[], uint32_t size[], uint32_t slices)
 {
     return true;
 }
@@ -141,8 +141,8 @@ bool DrawingDevice_D3D12::CreateTarget(const DrawingTargetDesc& desc, std::share
         SwapChainDesc.BufferDesc.Format = D3D12Enum(desc.mFormat);
         SwapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
         SwapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        SwapChainDesc.SampleDesc.Count = desc.mMultiSampleCount;
-        SwapChainDesc.SampleDesc.Quality = desc.mMultiSampleQuality;
+        SwapChainDesc.SampleDesc.Count = 1;
+        SwapChainDesc.SampleDesc.Quality = 0;
         SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         SwapChainDesc.BufferCount = BUFFER_COUNT;
         SwapChainDesc.OutputWindow = (HWND)desc.mHwnd;
@@ -635,6 +635,10 @@ void DrawingDevice_D3D12::Flush()
     m_pComputeCommandManager->WaitForFenceValue(fenceValue);
 }
 
+uint32_t DrawingDevice_D3D12::FormatBytes(EDrawingFormatType type)
+{
+    return D3D12FormatBytes(type);
+}
 
 std::shared_ptr<ID3D12Device2> DrawingDevice_D3D12::GetDevice() const
 {

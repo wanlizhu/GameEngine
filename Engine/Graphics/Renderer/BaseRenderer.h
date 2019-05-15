@@ -61,6 +61,8 @@ namespace Engine
         FuncResourceName(DefaultPrimitive);
 
     protected:
+        static const uint32_t DYNAMIC_TEX_ROW_SIZE = 1024;
+
         static const uint32_t MAX_VERTEX_COUNT = 65536 * 4;
         static const uint32_t MAX_INDEX_COUNT = 65536 * 4;
 
@@ -119,6 +121,8 @@ namespace Engine
         void DefineExternalTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
         void DefineExternalDepthBuffer(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
 
+        bool DefineDynamicTexture(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, DrawingResourceTable& resTable);
+        void DefineDynamicTextureWithInit(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, void* pData, uint32_t size, DrawingResourceTable& resTable);
         void DefineVaringStates(DrawingResourceTable& resTable);
         void DefinePrimitive(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
 
@@ -136,7 +140,8 @@ namespace Engine
         void BindVaringStates(DrawingPass& pass, std::shared_ptr<std::string> pName);
         void BindPipelineState(DrawingPass& pass, std::shared_ptr<std::string> pName);
 
-        void BindConstant(DrawingPass& pass, std::shared_ptr<std::string> pName);
+        void AddConstantSlot(DrawingPass& pass, std::shared_ptr<std::string> pName);
+        void AddTextureSlot(DrawingPass& pass, std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pParamName);
 
         void BindInputs(DrawingPass& pass);
         void BindStates(DrawingPass& pass);

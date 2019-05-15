@@ -347,6 +347,52 @@ namespace Engine
         return "float4";
     }
 
+    inline uint8_t D3D11FormatBytes(EDrawingFormatType format)
+    {
+        switch (format)
+        {
+        case eFormat_R32_UINT:
+        case eFormat_R32_SINT:
+        case eFormat_R32_FLOAT:
+            return 4U;
+        case eFormat_R32G32_UINT:
+        case eFormat_R32G32_SINT:
+        case eFormat_R32G32_FLOAT:
+            return 8U;
+        case eFormat_R32G32B32_UINT:
+        case eFormat_R32G32B32_SINT:
+        case eFormat_R32G32B32_FLOAT:
+            return 12U;
+        case eFormat_R32G32B32A32_UINT:
+        case eFormat_R32G32B32A32_SINT:
+        case eFormat_R32G32B32A32_FLOAT:
+            return 16U;
+        }
+
+        return 0U;
+    }
+
+    inline UINT D3D11ResourceMiscFlag(uint32_t flags)
+    {
+        UINT d3d11MiscFlags = 0;
+        if ((d3d11MiscFlags & eResource_Gen_Mips) != 0)
+            d3d11MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+        if ((d3d11MiscFlags & eResource_Cube_Map) != 0)
+            d3d11MiscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+        if ((d3d11MiscFlags & eResource_Raw_Buf) != 0)
+            d3d11MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+
+        if ((d3d11MiscFlags & eResource_Struct_Buf) != 0)
+            d3d11MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+
+        if ((d3d11MiscFlags & eResource_Draw_Indirect) != 0)
+            d3d11MiscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+
+        return d3d11MiscFlags;
+    }
+
     inline const DrawingToD3DEnum_D3D11& D3D11Enum(void)
     {
         const static DrawingToD3DEnum_D3D11 d3dEnum;

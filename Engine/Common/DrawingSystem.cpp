@@ -6,6 +6,9 @@
 #include "TransformComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
+#include "PolylineRendererComponent.h"
+
+#include "PolylineRenderer.h"
 
 #include "DrawingSystem.h"
 #include "D3D11/DrawingDevice_D3D11.h"
@@ -67,6 +70,10 @@ void DrawingSystem::Tick(float elapsedTime)
         }
     }
 
+    auto& pPolyLineRenderer = gpGlobal->GetRenderer(eRenderer_Polyline);
+    if (pPolyLineRenderer != nullptr)
+        pPolyLineRenderer->Draw(*m_pResourceTable);
+
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
 }
 
@@ -79,8 +86,18 @@ void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
     {
         auto meshFilter = pEntity->GetComponent<MeshFilterComponent>();
         auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
-        pRenderer->AttachMesh(meshFilter->GetMesh());
-        m_pMeshList.emplace_back(pEntity);
+        if (pRenderer != nullptr)
+        {
+            pRenderer->AttachMesh(meshFilter->GetMesh());
+            m_pMeshList.emplace_back(pEntity);
+        }
+    }
+
+    if (pEntity->HasComponent<PolylineRendererComponent>())
+    {
+        auto& pRenderer = std::dynamic_pointer_cast<PolylineRenderer>(gpGlobal->GetRenderer(eRenderer_Polyline));
+        if (pRenderer != nullptr)
+            pRenderer->AttachSegment(pEntity->GetComponent<PolylineRendererComponent>()->GetGeometry());
     }
 }
 
@@ -189,7 +206,7 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
-    //desc.mMultiSampleCount = 4;
+    desc.mMultiSampleCount = 4;
     desc.mMultiSampleQuality = 0;
 
     std::shared_ptr<DrawingTarget> pSwapChain;

@@ -26,7 +26,8 @@ namespace Engine
     {
         eRenderer_Start = 0,
         eRenderer_Forward = 0,
-        eRenderer_End = 1,
+        eRenderer_Polyline,
+        eRenderer_End,
     };
 
     enum EDeviceType

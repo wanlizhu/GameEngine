@@ -108,7 +108,7 @@ bool DrawingDevice_D3D11::CreateVertexFormat(const DrawingVertexFormatDesc& desc
 
 bool DrawingDevice_D3D11::CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData, uint32_t size)
 {
-    if ((pData != nullptr) && (size < desc.mSizeInBytes))
+    if ((pData != nullptr) && (size > desc.mSizeInBytes))
         return false;
 
     D3D11_BUFFER_DESC bufferDesc;
@@ -135,7 +135,7 @@ bool DrawingDevice_D3D11::CreateVertexBuffer(const DrawingVertexBufferDesc& desc
 
 bool DrawingDevice_D3D11::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData, uint32_t size)
 {
-    if ((pData != nullptr) && (size < desc.mSizeInBytes))
+    if ((pData != nullptr) && (size > desc.mSizeInBytes))
         return false;
 
     D3D11_BUFFER_DESC bufferDesc;
@@ -160,8 +160,70 @@ bool DrawingDevice_D3D11::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     return true;
 }
 
-bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData, uint32_t size)
+bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[], uint32_t size[], uint32_t slices)
 {
+    auto pTexture = std::make_shared<DrawingTexture>(shared_from_this());
+    std::shared_ptr<DrawingRawTexture> pRawTexture = nullptr;
+
+    std::vector<D3D11_SUBRESOURCE_DATA> subResData(slices);
+    switch (desc.mType)
+    {
+        case eTexture_1D:
+        case eTexture_1DArray:
+        {
+            break;
+        }
+        case eTexture_2D:
+        case eTexture_2DArray:
+        case eTexture_Cube:
+        {
+            D3D11_TEXTURE2D_DESC texture2DDesc;
+            texture2DDesc.Width = desc.mWidth;
+            texture2DDesc.Height = desc.mHeight;
+            texture2DDesc.MipLevels = desc.mMipLevels;
+            texture2DDesc.ArraySize = desc.mArraySize;
+            texture2DDesc.Format = D3D11Enum(desc.mFormat);
+            texture2DDesc.SampleDesc.Count = desc.mSampleCount;
+            texture2DDesc.SampleDesc.Quality = desc.mSampleQuality;
+            texture2DDesc.Usage = D3D11Enum(desc.mUsage);
+            texture2DDesc.BindFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE;
+            texture2DDesc.CPUAccessFlags = D3D11Enum(desc.mAccess);
+            texture2DDesc.MiscFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11ResourceMiscFlag(desc.mFlags);
+
+            if ((desc.mUsage != eUsage_Staging) && (desc.mFlags & eResource_Gen_Mips))
+                texture2DDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+
+            if (desc.mType == eTexture_Cube)
+            {
+                texture2DDesc.ArraySize = 6;
+                texture2DDesc.MiscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+            }
+
+            if (!subResData.empty())
+            {
+                auto mipLevels = slices / desc.mArraySize;
+                for (uint32_t index = 0; index < desc.mArraySize; ++index)
+                {
+                    auto bytesPerRow = desc.mBytesPerRow;
+                    for (uint32_t level = 0; level < mipLevels; ++level)
+                    {
+                        auto LOD = index * level + level;
+                        ZeroMemory(&subResData[LOD], sizeof(D3D11_SUBRESOURCE_DATA));
+                        subResData[LOD].pSysMem = *(pData++);
+                        subResData[LOD].SysMemPitch = bytesPerRow;
+                        bytesPerRow = bytesPerRow > 1U ? bytesPerRow >> 1 : 1U;
+                    }
+                }
+            }
+            pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), texture2DDesc, subResData);
+        }
+    }
+
+    pTexture->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
+    pTexture->SetResource(pRawTexture);
+
+    pRes = pTexture;
+
     return true;
 }
 
@@ -857,6 +919,11 @@ void DrawingDevice_D3D11::Flush()
     m_pDeviceContext->Flush();
 }
 
+uint32_t DrawingDevice_D3D11::FormatBytes(EDrawingFormatType type)
+{
+    return D3D11FormatBytes(type);
+}
+
 std::shared_ptr<ID3D11Device> DrawingDevice_D3D11::GetDevice() const
 {
     return m_pDevice;
@@ -1020,7 +1087,7 @@ std::shared_ptr<DrawingRawVertexShader_D3D11> DrawingDevice_D3D11::CreateVertexS
     if (!SUCCEEDED(hr))
     {
         auto err = pErrorBlob->GetBufferPointer();
-        return false;
+        return nullptr;
     }
 
     return CreateVertexShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
@@ -1037,7 +1104,10 @@ std::shared_ptr<DrawingRawPixelShader_D3D11> DrawingDevice_D3D11::CreatePixelSha
 
     HRESULT hr = D3DCompile(pSrc, size, pSourceName.get()->c_str(), nullptr, pInclude, pEntryName.get()->c_str(), "ps_5_0", flags, 0, &pShaderBlob, &pErrorBlob);
     if (!SUCCEEDED(hr))
+    {
+        auto err = pErrorBlob->GetBufferPointer();
         return nullptr;
+    }
 
     return CreatePixelShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
 }
