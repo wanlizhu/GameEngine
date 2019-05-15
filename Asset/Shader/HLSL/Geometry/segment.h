@@ -93,8 +93,8 @@ void load_single_segment_info(uint instanceID, out SegmentAttr attr)
     val = gLineSegmentTex.Load(int3(index_offset, 0));
 
     attr.endPoint.y = val.x;
-    attr.color = asuint(val.z);
-    attr.drawZ = abs(val.y);
+    attr.color = asuint(val.y);
+    attr.drawZ = abs(val.z);
     attr.flag = 0;
 }
 

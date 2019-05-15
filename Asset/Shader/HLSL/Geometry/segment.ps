@@ -3,7 +3,7 @@
 float4 Segment_PS(VertexAttr_Segment input) : SV_Target
 {
     float4 color;
-    color = compute_final_color(get_extended_dist_to_center(abs(input.dist)), get_extended_line_weight(SINGLE_LINE_WIDTH), input.color, 0);
+    color = compute_final_color(get_extended_dist_to_center(abs(input.dist)), get_extended_line_weight(SINGLE_LINE_WIDTH), input.color);
 
     return color;
 }

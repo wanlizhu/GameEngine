@@ -93,16 +93,28 @@ public:
         std::uniform_int_distribution<std::mt19937::result_type> distWidth(0, gpGlobal->GetConfiguration().width);
         std::uniform_int_distribution<std::mt19937::result_type> distHeight(0, gpGlobal->GetConfiguration().height);
 
+        std::uniform_int_distribution<std::mt19937::result_type> distColor(0, 255);
+
         for (uint32_t i = 0; i < LINE_TEST_COUNT; i ++)
         {
             geom.startPoint = float2((float)distWidth(rng), (float)distHeight(rng));
             geom.endPoint = float2((float)distWidth(rng), (float)distHeight(rng));
-            geom.color = 100;
+            geom.color = pack_color(uint4(distColor(rng), distColor(rng), distColor(rng), 255));
             geom.drawZ = 1.0f;
             polylineRendererComp.SetGeometry(geom);
             auto segment = pWorld->CreateEntity<PolylineRendererComponent>(polylineRendererComp);
         }
     }
+
+private:
+    uint32_t pack_color(uint4 color)
+    {
+        return (color.z & 0x000000ff) |
+        ((color.y & 0x000000ff) << 8) |
+        ((color.x & 0x000000ff) << 16) |
+        ((color.w & 0x000000ff) << 24);
+    }
+
 };
 
 static GameSetup setup;

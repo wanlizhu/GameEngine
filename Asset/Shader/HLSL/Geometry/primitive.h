@@ -77,14 +77,22 @@ float get_antialiasing_val(float dist, float weight)
     return adjust_single_line_alpha(weight, val);
 }
 
+float4 unpack_color(uint color)
+{
+    return float4(((color & 0x00ff0000) >> 16) / 255.0f,
+        ((color & 0x0000ff00) >> 8) / 255.0f,
+        ((color & 0x000000ff) >> 0) / 255.0f,
+        ((color & 0xff000000) >> 24) / 255.0f);
+}
+
 float4 get_formatted_color(uint color, float alpha)
 {
-    float4 result = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float4 result = unpack_color(color);
     result.a *= alpha;
     return result;
 }
 
-float4 compute_final_color(float dist, float weight, uint color, uint glowColor)
+float4 compute_final_color(float dist, float weight, uint color)
 {
     float4 final_color;
 
