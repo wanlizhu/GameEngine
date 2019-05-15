@@ -43,7 +43,7 @@ public:
         gpGlobal->RegisterRuntimeModule<DrawingSystem>(eSystem_Drawing);
         gpGlobal->RegisterRuntimeModule<LogSystem>(eSystem_Log);
 
-        //gpGlobal->RegisterRenderer<ForwardRenderer>(eRenderer_Forward);
+        gpGlobal->RegisterRenderer<ForwardRenderer>(eRenderer_Forward);
         gpGlobal->RegisterRenderer<PolylineRenderer>(eRenderer_Polyline);
 
         auto& pWorld = gpGlobal->GetECSWorld();
@@ -86,7 +86,7 @@ public:
         PolylineRendererComponent polylineRendererComp;
         PolylineRendererComponent::LineSegmentGeom geom;
 
-        const int LINE_TEST_COUNT = 1000;
+        const int LINE_TEST_COUNT = 2000;
 
         std::random_device dev;
         std::mt19937 rng(dev());

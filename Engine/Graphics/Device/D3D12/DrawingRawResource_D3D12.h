@@ -277,7 +277,7 @@ namespace Engine
             HRESULT hr = m_pDevice->GetDevice()->CreateCommittedResource( 
                 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
                 D3D12_HEAP_FLAG_NONE,
-                &CD3DX12_RESOURCE_DESC::Buffer(data.RowPitch),
+                &desc,
                 D3D12_RESOURCE_STATE_GENERIC_READ,
                 nullptr,
                 __uuidof(ID3D12Resource),

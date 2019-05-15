@@ -70,7 +70,7 @@ bool DrawingDevice_D3D12::CreateVertexFormat(const DrawingVertexFormatDesc& desc
 
 bool DrawingDevice_D3D12::CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData, uint32_t size)
 {
-    if ((pData != nullptr) && (size < desc.mSizeInBytes))
+    if ((pData != nullptr) && (size > desc.mSizeInBytes))
         return false;
 
     auto& resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mSizeInBytes, D3D12_RESOURCE_FLAG_NONE);
@@ -96,7 +96,7 @@ bool DrawingDevice_D3D12::CreateVertexBuffer(const DrawingVertexBufferDesc& desc
 
 bool DrawingDevice_D3D12::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData, uint32_t size)
 {
-    if ((pData != nullptr) && (size < desc.mSizeInBytes))
+    if ((pData != nullptr) && (size > desc.mSizeInBytes))
         return false;
 
     auto& resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(desc.mSizeInBytes, D3D12_RESOURCE_FLAG_NONE);
