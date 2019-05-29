@@ -13,7 +13,7 @@ cbuffer ScreenCB : register(b0)
     float2 gInvScreenSize;
 }
 
-Texture2D<float3> gLineSegmentTex : LineSegmentTexture;
+Texture2D<float3> gLineSegmentTex : register(t0);
 
 struct VertexAttr_Segment
 {

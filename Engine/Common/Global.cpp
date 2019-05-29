@@ -113,6 +113,8 @@ std::shared_ptr<IECSSystem> Global::GetRuntimeModule(ESystemType e)
         auto& system = it->second;
         auto result = std::dynamic_pointer_cast<IECSSystem>(system);
         return result;
+
+        
     }
 }
 

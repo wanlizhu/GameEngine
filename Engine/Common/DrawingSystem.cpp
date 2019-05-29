@@ -206,7 +206,7 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
-    desc.mMultiSampleCount = 4;
+    desc.mMultiSampleCount = 1;
     desc.mMultiSampleQuality = 0;
 
     std::shared_ptr<DrawingTarget> pSwapChain;

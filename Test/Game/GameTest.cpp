@@ -32,7 +32,7 @@ public:
         gpGlobal->GetConfiguration().appName = "Game Test";
         gpGlobal->GetConfiguration().width = 1080;
         gpGlobal->GetConfiguration().height = 1080;
-        gpGlobal->GetConfiguration().type = eDevice_D3D11;
+        gpGlobal->GetConfiguration().type = eDevice_D3D12;
 
         gpGlobal->RegisterApp<WindowsApplication>();
 

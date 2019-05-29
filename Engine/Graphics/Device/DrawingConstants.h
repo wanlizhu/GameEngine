@@ -280,4 +280,13 @@ namespace Engine
         eCommandList_Copy,
         eCommandList_Count,
     };
+
+    enum EDrawingDescriptorHeapType
+    {
+        eDescriptorHeap_CBV_SRV_UVA,
+        eDescriptorHeap_Sampler,
+        eDescriptorHeap_RTV,
+        eDescriptorHeap_DSV,
+        eDescriptorHeap_Count,
+    };
 }

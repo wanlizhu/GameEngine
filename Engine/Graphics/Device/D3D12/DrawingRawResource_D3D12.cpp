@@ -128,6 +128,8 @@ void DrawingRawShaderEffect_D3D12::Apply()
 {
     UpdateParameterValues();
     UpdateConstantBuffers();
+    UpdateDescriptor();
+    UpdateDevice();
 }
 
 void DrawingRawShaderEffect_D3D12::Terminate()
@@ -150,9 +152,36 @@ void DrawingRawShaderEffect_D3D12::SParamVar::UpdateValues(void)
     }
 }
 
+void DrawingRawShaderEffect_D3D12::CheckAndAddResource(const DrawingRawShader_Common::ShaderResourceDesc& desc, uint32_t paramType, const DrawingRawShader::DrawingRawShaderType shaderType, std::unordered_map<std::shared_ptr<std::string>, SParamRes>& resTable) const
+{
+    auto paramIndex = m_pParamSet->IndexOfName(desc.mpName);
+
+    if (paramIndex != DrawingParameterSet::npos)
+    {
+        assert((*m_pParamSet)[paramIndex] != nullptr && (*m_pParamSet)[paramIndex]->GetType() == paramType);
+
+        auto iter = resTable.find(desc.mpName);
+        if (iter != resTable.end())
+            (iter->second).mStartSlot[shaderType] = desc.mStartSlot;
+    }
+    else
+    {
+        auto pParam = std::make_shared<DrawingParameter>(desc.mpName, paramType);
+        m_pParamSet->Add(pParam);
+
+        SParamRes paramRes;
+        paramRes.mpParam = pParam;
+        paramRes.mCount = desc.mCount;
+        paramRes.mStartSlot[shaderType] = desc.mStartSlot;
+
+        resTable.emplace(desc.mpName, paramRes);
+    }
+}
+
 void DrawingRawShaderEffect_D3D12::LoadShaderInfo(const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
 {
     LoadConstantBufferFromShader(pShader, shaderType);
+    LoadTexturesFromShader(pShader, shaderType);
 }
 
 static void CollectVariables(DrawingDevice::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D12* pShader)
@@ -221,22 +250,43 @@ void DrawingRawShaderEffect_D3D12::LoadConstantBufferFromShader(const DrawingRaw
     GenerateParameters(pShader, shaderType);
 }
 
+void DrawingRawShaderEffect_D3D12::LoadTexturesFromShader(const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    for (auto& item : pShader->GetTextureTable())
+    {
+        auto& desc = item.second;
+        auto paramType = COMPOSE_TYPE(eObject_Texture, eDataSet_Object, eBasic_FP32, desc.mCount <= 1 ? 0 : desc.mCount, 0, 0);
+        CheckAndAddResource(desc, paramType, shaderType, mTexTable);
+
+        CD3DX12_ROOT_PARAMETER1 param;
+        auto pDescriptorRange = new CD3DX12_DESCRIPTOR_RANGE1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, desc.mStartSlot);
+
+        if (shaderType == DrawingRawShader::RawShader_VS)
+            param.InitAsDescriptorTable(1, pDescriptorRange, D3D12_SHADER_VISIBILITY_VERTEX);
+        else if (shaderType == DrawingRawShader::RawShader_PS)
+            param.InitAsDescriptorTable(1, pDescriptorRange, D3D12_SHADER_VISIBILITY_PIXEL);
+        else
+            continue;
+
+        m_rootParameters.emplace_back(param);
+    }
+}
+
 bool DrawingRawShaderEffect_D3D12::CreateRootSignature()
 {
     D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
     rootSignatureDescription.Init_1_1((UINT)m_rootParameters.size(), m_rootParameters.data(), 0, nullptr, rootSignatureFlags);
 
-    ID3D12RootSignature* pRootSignatureRaw = nullptr;
-    ID3DBlob* rootSignatureBlob;
-    ID3DBlob* errorBlob;
-    HRESULT hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, D3D_ROOT_SIGNATURE_VERSION_1_1, &rootSignatureBlob, &errorBlob);
-    assert(SUCCEEDED(hr));
+    m_pRootSignature->SetRootSignatureDesc(rootSignatureDescription.Desc_1_1, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
-    hr = m_pDevice->GetDevice()->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), __uuidof(ID3D12RootSignature), (void**)&pRootSignatureRaw);
-    assert(SUCCEEDED(hr));
-    m_pRootSignature = std::shared_ptr<ID3D12RootSignature>(pRootSignatureRaw);
+    for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
+        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->ParseRootSignature(*m_pRootSignature);
 
     return true;
 }
@@ -257,6 +307,33 @@ void DrawingRawShaderEffect_D3D12::UpdateConstantBuffers()
     }
 }
 
+void DrawingRawShaderEffect_D3D12::UpdateDescriptor()
+{
+    for (auto& item : mTexTable)
+    {
+        auto& resDesc = item.second;
+
+        uint32_t arraySize{ 0 };
+        auto pTexArray = resDesc.mpParam->AsTextureArray(arraySize);
+        assert(arraySize == 0 || arraySize == resDesc.mCount);
+
+        for (uint32_t index = 0; index < resDesc.mCount; ++index)
+        {
+            auto pTex = static_cast<const DrawingRawTexture_D3D12*>(pTexArray[index]);
+            if (pTex == nullptr)
+                continue;
+
+            m_pDevice->GetDynamicDescriptorHeap(eDescriptorHeap_CBV_SRV_UVA)->StageDescriptors(1, 0, 1, pTex->GetShaderResourceView());
+        }
+    }
+}
+
+void DrawingRawShaderEffect_D3D12::UpdateDevice()
+{
+    for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
+        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->CommitStagedDescriptorsForDraw();
+}
+
 void DrawingRawShaderEffect_D3D12::BindConstantBuffer(DrawingDevice::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
 {
     for (auto& lItem : pShader->GetConstanceBufferTable())
@@ -270,6 +347,7 @@ void DrawingRawShaderEffect_D3D12::BindConstantBuffer(DrawingDevice::ConstBuffer
             param.InitAsConstantBufferView(desc.mStartSlot, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
         else
             continue;
+
         m_rootParameters.emplace_back(param);
 
         auto& cbPropIt = cbPropTable.find(desc.mpName);
@@ -326,6 +404,7 @@ void DrawingRawShaderEffect_D3D12::GenerateParameters(const DrawingRawShader_D3D
             mVarTable.emplace(desc.mpName, local_var_desc);
             m_pParamSet->Add(local_var_desc.mpParam);
         }
+        
         else
         {
             auto& var = varIt->second;

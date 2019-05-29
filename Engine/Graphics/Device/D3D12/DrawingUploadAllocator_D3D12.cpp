@@ -8,8 +8,8 @@
 
 using namespace Engine;
 
-DrawingUploadAllocator_D3D12::DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> device, uint64_t pageSizeInBytes) :
-    m_pDevice(device), m_pageSizeInBytes(pageSizeInBytes)
+DrawingUploadAllocator_D3D12::DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, uint64_t pageSizeInBytes) :
+    m_pDevice(pDevice), m_pageSizeInBytes(pageSizeInBytes)
 {
 }
 
@@ -22,7 +22,7 @@ DrawingUploadAllocator_D3D12::Allocation DrawingUploadAllocator_D3D12::Allocate(
     assert(sizeInBytes <= m_pageSizeInBytes);
 
     if (!m_pPageCur || !m_pPageCur->HasEnoughSpace(sizeInBytes, alignment))
-        m_pPageCur = GetNewPool();
+        m_pPageCur = GetNewPage();
 
     return m_pPageCur->Allocate(sizeInBytes, alignment);
 }
@@ -36,7 +36,7 @@ void DrawingUploadAllocator_D3D12::Reset()
         pPage->Reset();
 }
 
-std::shared_ptr<DrawingUploadAllocator_D3D12::Page> DrawingUploadAllocator_D3D12::GetNewPool()
+std::shared_ptr<DrawingUploadAllocator_D3D12::Page> DrawingUploadAllocator_D3D12::GetNewPage()
 {
     std::shared_ptr<Page> pPage;
 
@@ -80,15 +80,15 @@ DrawingUploadAllocator_D3D12::Page::Page(const std::weak_ptr<DrawingDevice_D3D12
 
     void* pCPUData = nullptr;
     m_pResource->Map(0, nullptr, &pCPUData);
-    m_startPtr.pCPUData = pCPUData;
-    m_startPtr.pGPUAddr = m_pResource->GetGPUVirtualAddress();
+    m_startPtr.m_pCPUData = pCPUData;
+    m_startPtr.m_pGPUAddr = m_pResource->GetGPUVirtualAddress();
 }
 
 DrawingUploadAllocator_D3D12::Page::~Page()
 {
     m_pResource->Unmap(0, nullptr);
-    m_startPtr.pCPUData = nullptr;
-    m_startPtr.pGPUAddr = D3D12_GPU_VIRTUAL_ADDRESS(0);
+    m_startPtr.m_pCPUData = nullptr;
+    m_startPtr.m_pGPUAddr = D3D12_GPU_VIRTUAL_ADDRESS(0);
 }
 
 bool DrawingUploadAllocator_D3D12::Page::HasEnoughSpace(uint64_t sizeInBytes, uint64_t alignment)
@@ -108,8 +108,8 @@ DrawingUploadAllocator_D3D12::Allocation DrawingUploadAllocator_D3D12::Page::All
     m_offset = AlignUp(m_offset, alignment);
 
     Allocation allocation;
-    allocation.pCPUData = static_cast<uint8_t*>(m_startPtr.pCPUData) + m_offset;
-    allocation.pGPUAddr = m_startPtr.pGPUAddr + m_offset;
+    allocation.m_pCPUData = static_cast<uint8_t*>(m_startPtr.m_pCPUData) + m_offset;
+    allocation.m_pGPUAddr = m_startPtr.m_pGPUAddr + m_offset;
 
     m_offset += alignedSize;
 

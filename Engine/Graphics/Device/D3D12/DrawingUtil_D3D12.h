@@ -165,6 +165,22 @@ namespace Engine
             }
             return D3D12_COMMAND_LIST_TYPE_DIRECT;
         }
+
+        D3D12_DESCRIPTOR_HEAP_TYPE operator[](EDrawingDescriptorHeapType type) const
+        {
+            switch (type)
+            {
+            case eDescriptorHeap_CBV_SRV_UVA:
+                return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+            case eDescriptorHeap_Sampler:
+                return D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+            case eDescriptorHeap_RTV:
+                return D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+            case eDescriptorHeap_DSV:
+                return D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+            }
+            return D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        }
     };
 
     inline uint8_t D3D12FormatBytes(EDrawingFormatType format)

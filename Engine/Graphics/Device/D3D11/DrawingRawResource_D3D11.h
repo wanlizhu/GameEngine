@@ -141,7 +141,7 @@ namespace Engine
     {
     public:
         typedef ID3D11Texture1D TextureType;
-        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture1D* pTextureRaw = nullptr;
             HRESULT hr = m_pDevice->GetDevice()->CreateTexture1D(&desc, data.data(), &pTextureRaw);

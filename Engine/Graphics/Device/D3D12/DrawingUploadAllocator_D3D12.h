@@ -11,17 +11,17 @@ namespace Engine
     class DrawingUploadAllocator_D3D12
     {
     public:
-        DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> device, uint64_t pageSizeInBytes = 2 * 1024 * 1024);
+        DrawingUploadAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, uint64_t pageSizeInBytes = 4 * 1024 * 1024);
         virtual ~DrawingUploadAllocator_D3D12();
 
         struct Allocation
         {
-            Allocation() : pCPUData(nullptr), pGPUAddr(D3D12_GPU_VIRTUAL_ADDRESS(0)) {}
-            Allocation(void* CPUData, D3D12_GPU_VIRTUAL_ADDRESS GPUAddr) : pCPUData(CPUData), pGPUAddr(GPUAddr) {}
+            Allocation() : m_pCPUData(nullptr), m_pGPUAddr(D3D12_GPU_VIRTUAL_ADDRESS(0)) {}
+            Allocation(void* CPUData, D3D12_GPU_VIRTUAL_ADDRESS GPUAddr) : m_pCPUData(CPUData), m_pGPUAddr(GPUAddr) {}
 
-            void* pCPUData;
-            D3D12_GPU_VIRTUAL_ADDRESS pGPUAddr;
-        };
+            void* m_pCPUData;
+            D3D12_GPU_VIRTUAL_ADDRESS m_pGPUAddr;
+        };  
 
         Allocation Allocate(uint64_t sizeInBytes, uint64_t alignment);
         void Reset();
@@ -47,13 +47,12 @@ namespace Engine
             mutable std::mutex m_mutex;
         };
 
-        std::shared_ptr<Page> GetNewPool();
+        std::shared_ptr<Page> GetNewPage();
 
     private:
         typedef std::deque<std::shared_ptr<Page>> PagePool;
 
         std::weak_ptr<DrawingDevice_D3D12> m_pDevice;
-
         PagePool m_pagePool;
         PagePool m_pagePoolAvail;
 
