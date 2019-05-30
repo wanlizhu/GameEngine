@@ -128,6 +128,7 @@ void DrawingRawShaderEffect_D3D12::Apply()
 {
     UpdateParameterValues();
     UpdateConstantBuffers();
+    UpdateRootSignature();
     UpdateDescriptor();
     UpdateDevice();
 }
@@ -285,9 +286,6 @@ bool DrawingRawShaderEffect_D3D12::CreateRootSignature()
 
     m_pRootSignature->SetRootSignatureDesc(rootSignatureDescription.Desc_1_1, D3D_ROOT_SIGNATURE_VERSION_1_1);
 
-    for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
-        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->ParseRootSignature(*m_pRootSignature);
-
     return true;
 }
 
@@ -305,6 +303,12 @@ void DrawingRawShaderEffect_D3D12::UpdateConstantBuffers()
         if (pCB->IsDirty())
             pCB->UpdateToHardware();
     }
+}
+
+void DrawingRawShaderEffect_D3D12::UpdateRootSignature()
+{
+    for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
+        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->ParseRootSignature(*m_pRootSignature);
 }
 
 void DrawingRawShaderEffect_D3D12::UpdateDescriptor()

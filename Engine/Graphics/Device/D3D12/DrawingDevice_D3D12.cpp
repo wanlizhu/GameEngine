@@ -36,8 +36,8 @@ void DrawingDevice_D3D12::Initialize()
 
     for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
     {
-        m_pDescriptorAllocators[i] = std::make_shared<DrawingDescriptorAllocator_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), D3D12Enum(static_cast<EDrawingDescriptorHeapType>(i)));
-        m_pDynamicDescriptorHeaps[i] = std::make_shared<DrawingDynamicDescriptorHeap_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), D3D12Enum(static_cast<EDrawingDescriptorHeapType>(i)));
+        m_pDescriptorAllocators[i] = std::make_shared<DrawingDescriptorAllocator_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), static_cast<EDrawingDescriptorHeapType>(i));
+        m_pDynamicDescriptorHeaps[i] = std::make_shared<DrawingDynamicDescriptorHeap_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), static_cast<EDrawingDescriptorHeapType>(i));
         m_pDescriptorHeaps[i] = nullptr;
     }
 }
@@ -489,6 +489,26 @@ void DrawingDevice_D3D12::SetPipelineState(std::shared_ptr<DrawingPipelineState>
     }
 }
 
+void DrawingDevice_D3D12::SetDescriptorHeap(EDrawingDescriptorHeapType type, std::shared_ptr<ID3D12DescriptorHeap> pHeap)
+{
+    //if (m_pDescriptorHeaps[type] == pHeap)
+    //    return;
+
+    m_pDescriptorHeaps[type] = pHeap;
+
+    uint32_t numDescriptorHeaps = 0;
+    ID3D12DescriptorHeap* pDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES] = {};
+    for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
+    {
+        auto pDescriptorHeap = m_pDescriptorHeaps[i].get();
+        if (pDescriptorHeap)
+            pDescriptorHeaps[numDescriptorHeaps++] = pDescriptorHeap;
+    }
+
+    auto commandList = m_pDirectCommandManager->GetCommandList();
+    commandList->SetDescriptorHeaps(numDescriptorHeaps, pDescriptorHeaps);
+}
+
 void DrawingDevice_D3D12::PushBlendState()
 {
 }
@@ -761,6 +781,11 @@ std::shared_ptr<DrawingDescriptorAllocator_D3D12> DrawingDevice_D3D12::GetDescri
 std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> DrawingDevice_D3D12::GetDynamicDescriptorHeap(EDrawingDescriptorHeapType type) const
 {
     return m_pDynamicDescriptorHeaps[type];
+}
+
+std::shared_ptr<ID3D12DescriptorHeap> DrawingDevice_D3D12::GetDescriptorHeap(EDrawingDescriptorHeapType type)
+{
+    return m_pDescriptorHeaps[type];
 }
 
 bool DrawingDevice_D3D12::DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes)

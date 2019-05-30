@@ -191,6 +191,7 @@ namespace Engine
 
         void UpdateParameterValues();
         void UpdateConstantBuffers();
+        void UpdateRootSignature();
         void UpdateDescriptor();
         void UpdateDevice();
 

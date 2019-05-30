@@ -53,6 +53,11 @@ std::shared_ptr<ID3D12GraphicsCommandList> DrawingCommandManager_D3D12::GetComma
     {
         m_commandListAwaitQueue.TryPop(pCommandList);
         assert(SUCCEEDED(pCommandList->Reset(pCommandAllocator.get(), nullptr)));
+        for (int i = 0; i < eDescriptorHeap_Count; ++i)
+        {
+            m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->Reset();
+            m_pDevice->GetDescriptorHeap((EDrawingDescriptorHeapType)i) = nullptr;
+        }
     }
     else
         pCommandList = CreateCommandList(pCommandAllocator);

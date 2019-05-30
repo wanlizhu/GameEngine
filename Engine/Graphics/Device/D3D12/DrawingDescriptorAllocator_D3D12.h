@@ -15,7 +15,7 @@ namespace Engine
     private:
         struct Page;
     public:
-        DrawingDescriptorAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorsPerPage = 256);
+        DrawingDescriptorAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, EDrawingDescriptorHeapType type, uint32_t numDescriptorsPerPage = 256);
         virtual ~DrawingDescriptorAllocator_D3D12();
 
         struct Allocation
@@ -39,15 +39,16 @@ namespace Engine
         };
 
         Allocation Allocate(uint32_t numDescriptors = 1);
+        void Reset();
 
     private:
         struct Page : public std::enable_shared_from_this<Page>
         {
-            Page(const std::weak_ptr<DrawingDevice_D3D12> device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+            Page(const std::weak_ptr<DrawingDevice_D3D12> device, EDrawingDescriptorHeapType type, uint32_t numDescriptors);
             ~Page();
 
             bool HasEnoughSpace(uint32_t numDescriptors) const;
-            D3D12_DESCRIPTOR_HEAP_TYPE GetDescriptorHeap() const;
+            EDrawingDescriptorHeapType GetDescriptorHeap() const;
             uint32_t GetNumFreeHandles() const;
             Allocation Allocate(uint32_t numDescriptors);
 
@@ -72,7 +73,7 @@ namespace Engine
             BlockListBySize m_blockListBySize;
 
             std::shared_ptr<ID3D12DescriptorHeap> m_pDescriptorHeap;
-            D3D12_DESCRIPTOR_HEAP_TYPE m_type;
+            EDrawingDescriptorHeapType m_type;
             D3D12_CPU_DESCRIPTOR_HANDLE m_currentHandle;
 
             uint32_t m_descriptorHandleIncrementSize;
@@ -87,7 +88,7 @@ namespace Engine
         std::shared_ptr<Page> GetNewPage();
 
         std::weak_ptr<DrawingDevice_D3D12> m_pDevice;
-        D3D12_DESCRIPTOR_HEAP_TYPE m_type;
+        EDrawingDescriptorHeapType m_type;
         uint32_t m_numDescriptorsPerPage;
         DescriptorPagePool m_pagePool;
         std::set<size_t> m_availPages;

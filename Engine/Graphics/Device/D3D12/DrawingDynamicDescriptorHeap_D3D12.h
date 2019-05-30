@@ -20,7 +20,7 @@ namespace Engine
 
         std::shared_ptr<ID3D12RootSignature> GetRootSignature() const;
         const D3D12_ROOT_SIGNATURE_DESC1& GetRootSignatureDesc() const;
-        uint32_t GetDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE type) const;
+        uint32_t GetDescriptorTableBitMask(EDrawingDescriptorHeapType type) const;
         uint32_t GetNumDescriptors(uint32_t index) const;
 
     private:
@@ -36,7 +36,7 @@ namespace Engine
     class DrawingDynamicDescriptorHeap_D3D12
     {
     public:
-        DrawingDynamicDescriptorHeap_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorsPerPage = 1024);
+        DrawingDynamicDescriptorHeap_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, EDrawingDescriptorHeapType type, uint32_t numDescriptorsPerPage = 1024);
         virtual ~DrawingDynamicDescriptorHeap_D3D12();
 
         void StageDescriptors(uint32_t rootParameterIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE srcDescriptors);
@@ -46,6 +46,7 @@ namespace Engine
         void CommitStagedDescriptorsForDispatch();
 
         void ParseRootSignature(const DrawingRootSignature_D3D12& rootSignature);
+        void Reset();
 
     private:
         std::shared_ptr<ID3D12DescriptorHeap> RequestDescriptorHeap();
@@ -69,7 +70,7 @@ namespace Engine
         };
 
         std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
-        D3D12_DESCRIPTOR_HEAP_TYPE m_type;
+        EDrawingDescriptorHeapType m_type;
 
         uint32_t m_numDescriptorsPerPage;
         uint32_t m_descriptorHandleIncrementSize;

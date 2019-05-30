@@ -69,7 +69,8 @@
         "xlocmon": "cpp",
         "xloctime": "cpp",
         "random": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "optional": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

@@ -5,7 +5,7 @@
 
 using namespace Engine;
 
-DrawingDescriptorAllocator_D3D12::DrawingDescriptorAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorsPerPage) :
+DrawingDescriptorAllocator_D3D12::DrawingDescriptorAllocator_D3D12(const std::shared_ptr<DrawingDevice_D3D12> pDevice, EDrawingDescriptorHeapType type, uint32_t numDescriptorsPerPage) :
     m_pDevice(pDevice), m_type(type), m_numDescriptorsPerPage(numDescriptorsPerPage)
 {
 }
@@ -52,11 +52,11 @@ std::shared_ptr<DrawingDescriptorAllocator_D3D12::Page> DrawingDescriptorAllocat
     return newPage;
 }
 
-DrawingDescriptorAllocator_D3D12::Page::Page(const std::weak_ptr<DrawingDevice_D3D12> device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors) :
+DrawingDescriptorAllocator_D3D12::Page::Page(const std::weak_ptr<DrawingDevice_D3D12> device, EDrawingDescriptorHeapType type, uint32_t numDescriptors) :
     m_pDevice(device), m_type(type), m_numDescriptorsInPage(numDescriptors)
 {
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-    desc.Type = m_type;
+    desc.Type = D3D12Enum(m_type);
     desc.NumDescriptors = m_numDescriptorsInPage;
 
     auto pDevice = m_pDevice.lock();
@@ -69,7 +69,7 @@ DrawingDescriptorAllocator_D3D12::Page::Page(const std::weak_ptr<DrawingDevice_D
     m_pDescriptorHeap = std::shared_ptr<ID3D12DescriptorHeap>(pDescriptorHeapRaw, D3D12Releaser<ID3D12DescriptorHeap>);
 
     m_currentHandle = m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    m_descriptorHandleIncrementSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(m_type);
+    m_descriptorHandleIncrementSize = pDevice->GetDevice()->GetDescriptorHandleIncrementSize(D3D12Enum(m_type));
     m_numFreeHandles = m_numDescriptorsInPage;
 
     AddBlock(0, m_numDescriptorsInPage);
@@ -84,7 +84,7 @@ bool DrawingDescriptorAllocator_D3D12::Page::HasEnoughSpace(uint32_t numDescript
     return m_blockListBySize.lower_bound(numDescriptors) != m_blockListBySize.end();
 }
 
-D3D12_DESCRIPTOR_HEAP_TYPE DrawingDescriptorAllocator_D3D12::Page::GetDescriptorHeap() const
+EDrawingDescriptorHeapType DrawingDescriptorAllocator_D3D12::Page::GetDescriptorHeap() const
 {
     return m_type;
 }
