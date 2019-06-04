@@ -1,14 +1,16 @@
 #include <d3dx12.h>
 #include <algorithm>
 
+#include "SafeQueue.h"
 #include "DrawingResourceStateTracker_D3D12.h"
+#include "DrawingCommandManager_D3D12.h"
 
 using namespace Engine;
 
 DrawingResourceStateTracker_D3D12::ResourceStates DrawingResourceStateTracker_D3D12::s_gStates;
 std::mutex DrawingResourceStateTracker_D3D12::m_mutex;
 
-void DrawingResourceStateTracker_D3D12::ResourceBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, const D3D12_RESOURCE_BARRIER& barrier)
+void DrawingResourceStateTracker_D3D12::ResourceBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, const D3D12_RESOURCE_BARRIER& barrier)
 {
     auto& barriers = m_barriersTable[pCommandList];
 
@@ -55,33 +57,33 @@ void DrawingResourceStateTracker_D3D12::ResourceBarrier(std::shared_ptr<ID3D12Gr
     }
 }
 
-void DrawingResourceStateTracker_D3D12::TransitionBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES stateAfter, UINT subResource)
+void DrawingResourceStateTracker_D3D12::TransitionBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES stateAfter, UINT subResource)
 {
     ResourceBarrier(pCommandList, CD3DX12_RESOURCE_BARRIER::Transition(pResource.get(), D3D12_RESOURCE_STATE_COMMON, stateAfter, subResource));
 }
 
-void DrawingResourceStateTracker_D3D12::AliasBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResourceBefore, std::shared_ptr<ID3D12Resource> pResourceAfter)
+void DrawingResourceStateTracker_D3D12::AliasBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResourceBefore, std::shared_ptr<ID3D12Resource> pResourceAfter)
 {
     ResourceBarrier(pCommandList, CD3DX12_RESOURCE_BARRIER::Aliasing(pResourceBefore ? pResourceBefore.get() : nullptr, pResourceAfter ? pResourceAfter.get() : nullptr));
 }
 
-void DrawingResourceStateTracker_D3D12::UAVBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResource)
+void DrawingResourceStateTracker_D3D12::UAVBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResource)
 {
     ResourceBarrier(pCommandList, CD3DX12_RESOURCE_BARRIER::UAV(pResource ? pResource.get() : nullptr));
 }
 
-void DrawingResourceStateTracker_D3D12::FlushBarriers(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList)
+void DrawingResourceStateTracker_D3D12::FlushBarriers(std::shared_ptr<DrawingCommandList_D3D12> pCommandList)
 {
     auto& barriers = m_barriersTable[pCommandList];
     UINT numBarriers = static_cast<UINT>(barriers.size());
     if (numBarriers > 0 )
     {
-        pCommandList->ResourceBarrier(numBarriers, barriers.data());
+        pCommandList->GetCommandList()->ResourceBarrier(numBarriers, barriers.data());
         barriers.clear();
     }
 }
 
-bool DrawingResourceStateTracker_D3D12::FlushPendingBarriers(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12GraphicsCommandList> pPendingCommandList)
+bool DrawingResourceStateTracker_D3D12::FlushPendingBarriers(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<DrawingCommandList_D3D12> pPendingCommandList)
 {
     auto& pendingBarriers = m_pendingBarriersTable[pCommandList];
     ResourceBarriers barriers;
@@ -123,13 +125,13 @@ bool DrawingResourceStateTracker_D3D12::FlushPendingBarriers(std::shared_ptr<ID3
 
     UINT numBarriers = static_cast<UINT>(barriers.size());
     if (numBarriers > 0)
-        pPendingCommandList->ResourceBarrier(numBarriers, barriers.data());
+        pPendingCommandList->GetCommandList()->ResourceBarrier(numBarriers, barriers.data());
 
     pendingBarriers.clear();
     return numBarriers > 0;
 }
 
-void DrawingResourceStateTracker_D3D12::CommitFinalResourceStates(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList)
+void DrawingResourceStateTracker_D3D12::CommitFinalResourceStates(std::shared_ptr<DrawingCommandList_D3D12> pCommandList)
 {
     auto& resourceStates = m_statesTable[pCommandList];
 

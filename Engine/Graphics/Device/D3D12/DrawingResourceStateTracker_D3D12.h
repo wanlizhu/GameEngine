@@ -9,21 +9,22 @@
 
 namespace Engine
 {
+    class DrawingCommandList_D3D12;
     class DrawingResourceStateTracker_D3D12
     {
     public:
         DrawingResourceStateTracker_D3D12() = default;
         virtual ~DrawingResourceStateTracker_D3D12() = default;
 
-        void ResourceBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, const D3D12_RESOURCE_BARRIER& barrier);
+        void ResourceBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, const D3D12_RESOURCE_BARRIER& barrier);
 
-        void TransitionBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES stateAfter, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-        void AliasBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResourceBefore = nullptr, std::shared_ptr<ID3D12Resource> pResourceAfter = nullptr);
-        void UAVBarrier(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12Resource> pResource = nullptr);
+        void TransitionBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES stateAfter, UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+        void AliasBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResourceBefore = nullptr, std::shared_ptr<ID3D12Resource> pResourceAfter = nullptr);
+        void UAVBarrier(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<ID3D12Resource> pResource = nullptr);
 
-        void FlushBarriers(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList);
-        bool FlushPendingBarriers(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList, std::shared_ptr<ID3D12GraphicsCommandList> pPendingCommandList);
-        void CommitFinalResourceStates(std::shared_ptr<ID3D12GraphicsCommandList> pCommandList);
+        void FlushBarriers(std::shared_ptr<DrawingCommandList_D3D12> pCommandList);
+        bool FlushPendingBarriers(std::shared_ptr<DrawingCommandList_D3D12> pCommandList, std::shared_ptr<DrawingCommandList_D3D12> pPendingCommandList);
+        void CommitFinalResourceStates(std::shared_ptr<DrawingCommandList_D3D12> pCommandList);
 
         static void AddGlobalResourceState(std::shared_ptr<ID3D12Resource> pResource, D3D12_RESOURCE_STATES state);
         static void RemoveGlobalResourceState(std::shared_ptr<ID3D12Resource> pResource);
@@ -61,8 +62,8 @@ namespace Engine
         typedef std::vector<D3D12_RESOURCE_BARRIER> ResourceBarriers;
         typedef std::unordered_map<ID3D12Resource*, ResourceState> ResourceStates;
 
-        typedef std::unordered_map<std::shared_ptr<ID3D12GraphicsCommandList>, ResourceBarriers> ResourceBarriersTable;
-        typedef std::unordered_map<std::shared_ptr<ID3D12GraphicsCommandList>, ResourceStates> ResourceStatesTable;
+        typedef std::unordered_map<std::shared_ptr<DrawingCommandList_D3D12>, ResourceBarriers> ResourceBarriersTable;
+        typedef std::unordered_map<std::shared_ptr<DrawingCommandList_D3D12>, ResourceStates> ResourceStatesTable;
 
         ResourceBarriersTable m_pendingBarriersTable;
         ResourceBarriersTable m_barriersTable;

@@ -246,7 +246,7 @@ namespace Engine
         {
             auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
             auto pCommandList = pCommandManager->GetCommandList();
-            auto pUploadAllocator = m_pDevice->GetUploadAllocator();
+            auto pUploadAllocator = pCommandList->GetUploadAllocator();
 
             assert(pCommandList != nullptr);
             assert(pUploadAllocator != nullptr);
@@ -376,7 +376,7 @@ namespace Engine
 
             auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
             auto pCommandList = pCommandManager->GetCommandList();
-            auto pUploadAllocator = m_pDevice->GetUploadAllocator();
+            auto pUploadAllocator = pCommandList->GetUploadAllocator();
 
             assert(pCommandList != nullptr);
             assert(pUploadAllocator != nullptr);
@@ -384,7 +384,7 @@ namespace Engine
             auto heapAllocation = pUploadAllocator->Allocate(m_sizeInBytes, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
             memcpy(heapAllocation.m_pCPUData, m_pData, m_sizeInBytes);
 
-            pCommandList->SetGraphicsRootConstantBufferView(m_rootParameterIndex, heapAllocation.m_pGPUAddr);
+            pCommandList->GetCommandList()->SetGraphicsRootConstantBufferView(m_rootParameterIndex, heapAllocation.m_pGPUAddr);
         }
 
     private:
@@ -412,7 +412,11 @@ namespace Engine
             assert(SUCCEEDED(hr));
 
             m_pResource = std::shared_ptr<ID3D12Resource>(pResourceRaw, D3D12Releaser<ID3D12Resource>);
-            m_allocation = m_pDevice->AllocationDescriptors(eDescriptorHeap_CBV_SRV_UVA);
+
+            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
+            auto pCommandList = pCommandManager->GetCommandList();
+
+            m_allocation = pCommandList->AllocationDescriptors(eDescriptorHeap_CBV_SRV_UVA);
 
             DrawingResourceStateTracker_D3D12::AddGlobalResourceState(m_pResource, D3D12_RESOURCE_STATE_COMMON);
             CopySubresource(data);
@@ -423,8 +427,8 @@ namespace Engine
             auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
             auto pCommandList = pCommandManager->GetCommandList();
 
-            pCommandManager->TransitionBarrier(m_pResource, D3D12_RESOURCE_STATE_COPY_DEST);
-            pCommandManager->FlushBarriers();
+            pCommandList->TransitionBarrier(m_pResource, D3D12_RESOURCE_STATE_COPY_DEST);
+            pCommandList->FlushBarriers();
 
             auto requiredSize = GetRequiredIntermediateSize(m_pResource.get(), 0, (UINT)data.size());
 
@@ -439,7 +443,7 @@ namespace Engine
                 (void**)&pUploadResourceRaw);
 
             assert(SUCCEEDED(hr));
-            UpdateSubresources(pCommandList.get(), m_pResource.get(), pUploadResourceRaw, 0, 0, (UINT)data.size(), data.data());
+            UpdateSubresources(pCommandList->GetCommandList().get(), m_pResource.get(), pUploadResourceRaw, 0, 0, (UINT)data.size(), data.data());
         }
 
         virtual D3D12_CPU_DESCRIPTOR_HANDLE GetShaderResourceView() const
@@ -515,7 +519,10 @@ namespace Engine
             hr = pDXGISwapChainRaw->QueryInterface(__uuidof(IDXGISwapChain3), (void**)&pDXGISwapChain3Raw);
             m_pDXGISwapChain = std::shared_ptr<IDXGISwapChain3>(pDXGISwapChain3Raw, D3D12Releaser<IDXGISwapChain>);
 
-            m_allocation = m_pDevice->AllocationDescriptors(eDescriptorHeap_RTV, BUFFER_COUNT);
+            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
+            auto pCommandList = pCommandManager->GetCommandList();
+            m_allocation = pCommandList->AllocationDescriptors(eDescriptorHeap_RTV, BUFFER_COUNT);
+    
             auto renderTargetViewHandle = m_allocation.m_pCPUHandle;
             auto renderTargetViewDescriptorSize = m_allocation.m_size;
 
@@ -583,7 +590,10 @@ namespace Engine
     public:
         DrawingRawDepthTarget_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_DEPTH_STENCIL_VIEW_DESC desc, uint32_t width, uint32_t height) : DrawingRawTarget_D3D12(pDevice)
         {
-            m_allocation = m_pDevice->AllocationDescriptors(eDescriptorHeap_DSV);
+            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
+            auto pCommandList = pCommandManager->GetCommandList();
+            m_allocation = pCommandList->AllocationDescriptors(eDescriptorHeap_DSV);
+
             auto depthStencilViewHandle = m_allocation.m_pCPUHandle;
 
             D3D12_CLEAR_VALUE clearValue = {};

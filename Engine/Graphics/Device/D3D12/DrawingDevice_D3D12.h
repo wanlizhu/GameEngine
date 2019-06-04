@@ -11,9 +11,6 @@
 #include "DrawingType.h"
 #include "DrawingDevice.h"
 #include "DrawingCommandManager_D3D12.h"
-#include "DrawingUploadAllocator_D3D12.h"
-#include "DrawingDescriptorAllocator_D3D12.h"
-#include "DrawingDynamicDescriptorHeap_D3D12.h"
 #include "DrawingResourceStateTracker_D3D12.h"
 #include "DrawingUtil_D3D12.h"
 
@@ -105,16 +102,10 @@ namespace Engine
 
         uint32_t FormatBytes(EDrawingFormatType type) override;
 
-        DrawingDescriptorAllocator_D3D12::Allocation AllocationDescriptors(EDrawingDescriptorHeapType type, uint32_t numDescriptors = 1);
-
         std::shared_ptr<ID3D12Device2> GetDevice() const;
         std::shared_ptr<IDXGIFactory4> GetDXGIFactory() const;
 
         std::shared_ptr<DrawingCommandManager_D3D12> GetCommandManager(EDrawingCommandListType type) const;
-        std::shared_ptr<DrawingUploadAllocator_D3D12> GetUploadAllocator() const;
-        std::shared_ptr<DrawingDescriptorAllocator_D3D12> GetDescriptorAllocator(EDrawingDescriptorHeapType type) const;
-        std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> GetDynamicDescriptorHeap(EDrawingDescriptorHeapType type) const;
-        std::shared_ptr<ID3D12DescriptorHeap> GetDescriptorHeap(EDrawingDescriptorHeapType type);
 
     private:
         bool DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes);
@@ -141,11 +132,7 @@ namespace Engine
         std::shared_ptr<DrawingCommandManager_D3D12> m_pComputeCommandManager;
         std::shared_ptr<DrawingCommandManager_D3D12> m_pCopyCommandManager;
 
-        std::shared_ptr<DrawingUploadAllocator_D3D12> m_pUploadAllocator;
-
-        std::shared_ptr<DrawingDescriptorAllocator_D3D12> m_pDescriptorAllocators[eDescriptorHeap_Count];
-        std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> m_pDynamicDescriptorHeaps[eDescriptorHeap_Count];
-        std::shared_ptr<ID3D12DescriptorHeap> m_pDescriptorHeaps[eDescriptorHeap_Count];
+        std::shared_ptr<ID3D12DescriptorHeap> m_pDescriptorHeaps[eDescriptorHeap_Count] = { nullptr };
 
         uint64_t m_fenceValues[BUFFER_COUNT] = {};
     };

@@ -27,6 +27,26 @@ namespace Engine
         return (mask >> (T)bit) & (T)1;
     }
 
+    template <typename T>
+    inline bool BitScan(uint32_t& index, T mask)
+    {
+        uint32_t count = sizeof(T) * 8;
+        for (index = 0; index != count; ++index)
+            if (mask >> index & 1)
+                return true;
+        return false;
+    }
+
+    template <typename T>
+    inline bool BitScanR(uint32_t& index, T mask)
+    {
+        uint32_t count = sizeof(T) * 8;
+        for (index = 0; index != count; ++index)
+            if (mask >> count - index - 1 & 1)
+                return true;
+        return false;
+    }
+
     /***************************************************************************
     * These functions were taken from the MiniEngine.
     * Source code available here:

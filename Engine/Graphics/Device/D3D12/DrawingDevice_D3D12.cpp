@@ -31,15 +31,6 @@ void DrawingDevice_D3D12::Initialize()
     m_pDirectCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Direct);
     m_pComputeCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Compute);
     m_pCopyCommandManager = std::make_shared<DrawingCommandManager_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), eCommandList_Copy);
-
-    m_pUploadAllocator = std::make_shared<DrawingUploadAllocator_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()));
-
-    for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
-    {
-        m_pDescriptorAllocators[i] = std::make_shared<DrawingDescriptorAllocator_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), static_cast<EDrawingDescriptorHeapType>(i));
-        m_pDynamicDescriptorHeaps[i] = std::make_shared<DrawingDynamicDescriptorHeap_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), static_cast<EDrawingDescriptorHeapType>(i));
-        m_pDescriptorHeaps[i] = nullptr;
-    }
 }
 
 void DrawingDevice_D3D12::Shutdown()
@@ -415,11 +406,11 @@ void DrawingDevice_D3D12::ClearTarget(std::shared_ptr<DrawingTarget> pTarget, co
     auto pTargetRaw = std::dynamic_pointer_cast<DrawingRawFragmentTarget_D3D12>(pTarget->GetResource());
     assert(pTargetRaw != nullptr);
 
-    auto commandList = m_pDirectCommandManager->GetCommandList();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
     auto renderTargetViewHandle = pTargetRaw->GetRenderTargetView();
 
-    m_pDirectCommandManager->TransitionBarrier(pTargetRaw->GetTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList->ClearRenderTargetView(renderTargetViewHandle, color.mData, 0, nullptr);
+    pCommandList->TransitionBarrier(pTargetRaw->GetTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    pCommandList->GetCommandList()->ClearRenderTargetView(renderTargetViewHandle, color.mData, 0, nullptr);
 }
 
 void DrawingDevice_D3D12::ClearDepthBuffer(std::shared_ptr<DrawingDepthBuffer> pDepthBuffer, float depth, uint8_t stencil, uint32_t flag)
@@ -442,12 +433,12 @@ void DrawingDevice_D3D12::SetVertexBuffer(std::shared_ptr<DrawingVertexBuffer> p
     }
 
     assert(count < D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT);
-    auto commandList = m_pDirectCommandManager->GetCommandList();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
 
     for (uint32_t index = 0; index < count; ++index)
     {
         if (pVertexBuffersRaw[index] != nullptr)
-            commandList->IASetVertexBuffers(index, 1, &pVertexBuffersRaw[index]->GetVertexBufferView());
+            pCommandList->GetCommandList()->IASetVertexBuffers(index, 1, &pVertexBuffersRaw[index]->GetVertexBufferView());
     }
 }
 
@@ -456,9 +447,9 @@ void DrawingDevice_D3D12::SetIndexBuffer(std::shared_ptr<DrawingIndexBuffer> pIB
     if (pIB != nullptr)
     {
         std::shared_ptr<DrawingRawIndexBuffer_D3D12> pIndexBuffersRaw = std::dynamic_pointer_cast<DrawingRawIndexBuffer_D3D12>(pIB->GetResource());
-        auto commandList = m_pDirectCommandManager->GetCommandList();
+        auto pCommandList = m_pDirectCommandManager->GetCommandList();
 
-        commandList->IASetIndexBuffer(&pIndexBuffersRaw->GetIndexBufferView());
+        pCommandList->GetCommandList()->IASetIndexBuffer(&pIndexBuffersRaw->GetIndexBufferView());
     }
 }
 
@@ -481,11 +472,11 @@ void DrawingDevice_D3D12::SetPipelineState(std::shared_ptr<DrawingPipelineState>
         auto pPipelineStateRaw = std::dynamic_pointer_cast<DrawingRawPipelineState_D3D12>(pPipelineState->GetResource()); 
         assert(pPipelineStateRaw != nullptr);
 
-        auto commandList = m_pDirectCommandManager->GetCommandList();
-        commandList->SetPipelineState(pPipelineStateRaw->GetPipelineState().get());
+        auto pCommandList = m_pDirectCommandManager->GetCommandList();
+        pCommandList->GetCommandList()->SetPipelineState(pPipelineStateRaw->GetPipelineState().get());
 
         auto rootSignature = pPipelineStateRaw->GetEffect()->GetRootSignature();
-        commandList->SetGraphicsRootSignature(rootSignature->GetRootSignature().get());
+        pCommandList->GetCommandList()->SetGraphicsRootSignature(rootSignature->GetRootSignature().get());
     }
 }
 
@@ -505,8 +496,8 @@ void DrawingDevice_D3D12::SetDescriptorHeap(EDrawingDescriptorHeapType type, std
             pDescriptorHeaps[numDescriptorHeaps++] = pDescriptorHeap;
     }
 
-    auto commandList = m_pDirectCommandManager->GetCommandList();
-    commandList->SetDescriptorHeaps(numDescriptorHeaps, pDescriptorHeaps);
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
+    pCommandList->GetCommandList()->SetDescriptorHeaps(numDescriptorHeaps, pDescriptorHeaps);
 }
 
 void DrawingDevice_D3D12::PushBlendState()
@@ -535,25 +526,25 @@ void DrawingDevice_D3D12::PopRasterState()
 
 void DrawingDevice_D3D12::SetViewport(Box2* vp)
 {
-    auto commandList = m_pDirectCommandManager->GetCommandList();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
     if (vp == nullptr)
-        commandList->RSSetViewports(1, nullptr);
+        pCommandList->GetCommandList()->RSSetViewports(1, nullptr);
     else
     {
         const auto& topLeft = vp->mMin;
         const D3D12_VIEWPORT viewport{ topLeft.x, topLeft.y, vp->Width(), vp->Height(), 0, 1.f };
-        commandList->RSSetViewports(1, &viewport);
+        pCommandList->GetCommandList()->RSSetViewports(1, &viewport);
     }
 
     auto m_ScissorRect = CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX);
-    commandList->RSSetScissorRects(1, &m_ScissorRect);
+    pCommandList->GetCommandList()->RSSetScissorRects(1, &m_ScissorRect);
 }
 
 void DrawingDevice_D3D12::SetTargets(std::shared_ptr<DrawingTarget> pTarget[], uint32_t maxTargets, std::shared_ptr<DrawingDepthBuffer> pDepthBuffer, std::shared_ptr<DrawingRWBuffer> pRWBuffer[], uint32_t maxRWBuffers)
 {
     assert(maxTargets <= MAX_RENDER_TARGET_COUNT);
 
-    auto commandList = m_pDirectCommandManager->GetCommandList();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
     auto pDepthBufferRaw = pDepthBuffer != nullptr ? std::dynamic_pointer_cast<DrawingRawDepthTarget_D3D12>(pDepthBuffer->GetResource()) : nullptr;
     std::shared_ptr<DrawingRawFragmentTarget_D3D12> pTargetsRaw[MAX_RENDER_TARGET_COUNT] = { nullptr };
 
@@ -575,7 +566,7 @@ void DrawingDevice_D3D12::SetTargets(std::shared_ptr<DrawingTarget> pTarget[], u
         {
             if (pTargetsRaw[i] != nullptr)
             {
-                m_pDirectCommandManager->TransitionBarrier(pTargetsRaw[i]->GetTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+                pCommandList->TransitionBarrier(pTargetsRaw[i]->GetTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
                 auto renderTargetViewHandle = pTargetsRaw[i]->GetRenderTargetView();
                 renderTargetDescriptors.push_back(renderTargetViewHandle);
@@ -586,7 +577,7 @@ void DrawingDevice_D3D12::SetTargets(std::shared_ptr<DrawingTarget> pTarget[], u
         if (pDepthBufferRaw != nullptr)
             depthStencilDescriptors = pDepthBufferRaw->GetDepthStencilView();
 
-        commandList->OMSetRenderTargets(static_cast<UINT>(renderTargetDescriptors.size()), renderTargetDescriptors.data(), false, &depthStencilDescriptors);
+        pCommandList->GetCommandList()->OMSetRenderTargets(static_cast<UINT>(renderTargetDescriptors.size()), renderTargetDescriptors.data(), false, &depthStencilDescriptors);
     }
 }
 
@@ -681,23 +672,23 @@ bool DrawingDevice_D3D12::DrawPrimitive(std::shared_ptr<DrawingPrimitive> pRes)
 {
     assert(pRes != nullptr);
 
-    auto commandList = m_pDirectCommandManager->GetCommandList();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
     auto indexCount = pRes->GetIndexCount();
     auto instanceCount = pRes->GetInstanceCount();
 
     D3D12_PRIMITIVE_TOPOLOGY primType = D3D12Enum(pRes->GetPrimitiveType(), primType);
-    commandList->IASetPrimitiveTopology(primType);
+    pCommandList->GetCommandList()->IASetPrimitiveTopology(primType);
 
-    m_pDirectCommandManager->FlushBarriers();
+    pCommandList->FlushBarriers();
 
     // In D3D12, it's get rid of DrawIndexed and Draw function and instance must be over then 0 to draw something.
     if (instanceCount == 0)
         instanceCount = 1;
 
     if (indexCount != 0)
-        commandList->DrawIndexedInstanced(indexCount, instanceCount, pRes->GetIndexOffset(), 0, pRes->GetInstanceOffset());
+        pCommandList->GetCommandList()->DrawIndexedInstanced(indexCount, instanceCount, pRes->GetIndexOffset(), 0, pRes->GetInstanceOffset());
     else
-        commandList->DrawInstanced(pRes->GetVertexCount(), pRes->GetInstanceCount(), pRes->GetVertexOffset(), pRes->GetInstanceOffset());
+        pCommandList->GetCommandList()->DrawInstanced(pRes->GetVertexCount(), pRes->GetInstanceCount(), pRes->GetVertexOffset(), pRes->GetInstanceOffset());
 
     return true;
 }
@@ -708,8 +699,9 @@ bool DrawingDevice_D3D12::Present(const std::shared_ptr<DrawingTarget> pTarget, 
     assert(pSwapChainRaw != nullptr);
 
     auto& backBuffer = pSwapChainRaw->GetTarget();
-    m_pDirectCommandManager->TransitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
-    m_fenceValues[pSwapChainRaw->GetCurrentIndex()] = m_pDirectCommandManager->ExecuteCommandLists();
+    auto pCommandList = m_pDirectCommandManager->GetCommandList();
+    pCommandList->TransitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    m_fenceValues[pSwapChainRaw->GetCurrentIndex()] = m_pDirectCommandManager->ExecuteAllCommandLists();
 
     HRESULT hr = pSwapChainRaw->Present(syncInterval);
     if (!SUCCEEDED(hr))
@@ -722,24 +714,19 @@ bool DrawingDevice_D3D12::Present(const std::shared_ptr<DrawingTarget> pTarget, 
 
 void DrawingDevice_D3D12::Flush()
 {
-    auto fenceValue = m_pDirectCommandManager->ExecuteCommandLists();
+    auto fenceValue = m_pDirectCommandManager->ExecuteAllCommandLists();
     m_pDirectCommandManager->WaitForFenceValue(fenceValue);
 
-    fenceValue = m_pCopyCommandManager->ExecuteCommandLists();
+    fenceValue = m_pCopyCommandManager->ExecuteAllCommandLists();
     m_pCopyCommandManager->WaitForFenceValue(fenceValue);
 
-    fenceValue = m_pComputeCommandManager->ExecuteCommandLists();
+    fenceValue = m_pComputeCommandManager->ExecuteAllCommandLists();
     m_pComputeCommandManager->WaitForFenceValue(fenceValue);
 }
 
 uint32_t DrawingDevice_D3D12::FormatBytes(EDrawingFormatType type)
 {
     return D3D12FormatBytes(type);
-}
-
-DrawingDescriptorAllocator_D3D12::Allocation DrawingDevice_D3D12::AllocationDescriptors(EDrawingDescriptorHeapType type, uint32_t numDescriptors)
-{
-    return m_pDescriptorAllocators[type]->Allocate(numDescriptors);
 }
 
 std::shared_ptr<ID3D12Device2> DrawingDevice_D3D12::GetDevice() const
@@ -766,26 +753,6 @@ std::shared_ptr<DrawingCommandManager_D3D12> DrawingDevice_D3D12::GetCommandMana
             assert(false);
     }
     return nullptr;
-}
-
-std::shared_ptr<DrawingUploadAllocator_D3D12> DrawingDevice_D3D12::GetUploadAllocator() const
-{
-    return m_pUploadAllocator;
-}
-
-std::shared_ptr<DrawingDescriptorAllocator_D3D12> DrawingDevice_D3D12::GetDescriptorAllocator(EDrawingDescriptorHeapType type) const
-{
-    return m_pDescriptorAllocators[type];
-}
-
-std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> DrawingDevice_D3D12::GetDynamicDescriptorHeap(EDrawingDescriptorHeapType type) const
-{
-    return m_pDynamicDescriptorHeaps[type];
-}
-
-std::shared_ptr<ID3D12DescriptorHeap> DrawingDevice_D3D12::GetDescriptorHeap(EDrawingDescriptorHeapType type)
-{
-    return m_pDescriptorHeaps[type];
 }
 
 bool DrawingDevice_D3D12::DoCreateEffect(const DrawingEffectDesc& desc, const void* pData, uint32_t size, std::shared_ptr<DrawingEffect>& pRes)

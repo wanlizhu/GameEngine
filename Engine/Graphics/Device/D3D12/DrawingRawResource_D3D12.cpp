@@ -308,7 +308,11 @@ void DrawingRawShaderEffect_D3D12::UpdateConstantBuffers()
 void DrawingRawShaderEffect_D3D12::UpdateRootSignature()
 {
     for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
-        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->ParseRootSignature(*m_pRootSignature);
+    {
+        auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
+        auto pCommandList = pCommandManager->GetCommandList();
+        pCommandList->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->ParseRootSignature(*m_pRootSignature);
+    }
 }
 
 void DrawingRawShaderEffect_D3D12::UpdateDescriptor()
@@ -327,7 +331,9 @@ void DrawingRawShaderEffect_D3D12::UpdateDescriptor()
             if (pTex == nullptr)
                 continue;
 
-            m_pDevice->GetDynamicDescriptorHeap(eDescriptorHeap_CBV_SRV_UVA)->StageDescriptors(1, 0, 1, pTex->GetShaderResourceView());
+            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
+            auto pCommandList = pCommandManager->GetCommandList();
+            pCommandList->GetDynamicDescriptorHeap(eDescriptorHeap_CBV_SRV_UVA)->StageDescriptors(1, 0, 1, pTex->GetShaderResourceView());
         }
     }
 }
@@ -335,7 +341,11 @@ void DrawingRawShaderEffect_D3D12::UpdateDescriptor()
 void DrawingRawShaderEffect_D3D12::UpdateDevice()
 {
     for (uint32_t i = 0; i < eDescriptorHeap_Count; ++i)
-        m_pDevice->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->CommitStagedDescriptorsForDraw();
+    {
+        auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
+        auto pCommandList = pCommandManager->GetCommandList();
+        pCommandList->GetDynamicDescriptorHeap((EDrawingDescriptorHeapType)i)->CommitStagedDescriptorsForDraw();
+    }
 }
 
 void DrawingRawShaderEffect_D3D12::BindConstantBuffer(DrawingDevice::ConstBufferPropTable& cbPropTable, const DrawingRawShader_D3D12* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
