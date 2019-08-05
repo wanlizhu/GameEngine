@@ -93,11 +93,6 @@ std::shared_ptr<IRenderer> Global::GetRenderer(ERendererType type)
     }
 }
 
-Configuration& Global::GetConfiguration()
-{
-    return m_config;
-}
-
 FPSCounter& Global::GetFPSCounter()
 {
     return m_fps;

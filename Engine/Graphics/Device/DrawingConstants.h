@@ -116,6 +116,8 @@ namespace Engine
         eAccess_Read,
         eAccess_Write,
         eAccess_RW,
+        eAccess_Write_Discard,
+        eAccess_Write_Append,
     };
 
     enum EDrawingTextureType

@@ -118,7 +118,6 @@ namespace Engine
     class DrawingRawTexture_D3D11 : public DrawingRawTexture
     {
     public:
-        typedef ID3D11Resource TextureType;
         DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) : m_pDevice(pDevice), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
         DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<ID3D11ShaderResourceView> pShaderResourceView, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) :
             m_pDevice(pDevice), m_pShaderResourceView(pShaderResourceView), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
@@ -128,7 +127,7 @@ namespace Engine
             return m_pShaderResourceView;
         }
 
-        virtual TextureType* GetBuffer() const = 0;
+        virtual std::shared_ptr<ID3D11Resource> GetBuffer() const = 0;
 
     protected:
         uint32_t m_sizeInBytes;
@@ -140,7 +139,6 @@ namespace Engine
     class DrawingRawTexture1D_D3D11 : public DrawingRawTexture_D3D11
     {
     public:
-        typedef ID3D11Texture1D TextureType;
         DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture1D* pTextureRaw = nullptr;
@@ -154,19 +152,18 @@ namespace Engine
             m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
         }
 
-        TextureType* GetBuffer() const override
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
         {
-            return m_pTexture1D.get();
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture1D);
         }
 
     private:
-        std::shared_ptr<TextureType> m_pTexture1D;
+        std::shared_ptr<ID3D11Texture1D> m_pTexture1D;
     };
 
     class DrawingRawTexture2D_D3D11 : public DrawingRawTexture_D3D11
     {
     public:
-        typedef ID3D11Texture2D TextureType;
         DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE2D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture2D* pTextureRaw = nullptr;
@@ -180,19 +177,18 @@ namespace Engine
             m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
         }
 
-        TextureType* GetBuffer() const override
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
         {
-            return m_pTexture2D.get();
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture2D);
         }
 
     private:
-        std::shared_ptr<TextureType> m_pTexture2D;
+        std::shared_ptr<ID3D11Texture2D> m_pTexture2D;
     };
 
     class DrawingRawTexture3D_D3D11 : public DrawingRawTexture_D3D11
     {
     public:
-        typedef ID3D11Texture3D TextureType;
         DrawingRawTexture3D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE3D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
         {
             ID3D11Texture3D* pTextureRaw = nullptr;
@@ -206,14 +202,14 @@ namespace Engine
             m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
         }
 
-        TextureType* GetBuffer() const override
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
         {
-            return m_pTexture3D.get();
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture3D);
         }
 
 
     private:
-        std::shared_ptr<TextureType> m_pTexture3D;
+        std::shared_ptr<ID3D11Texture3D> m_pTexture3D;
     };
 
     class DrawingRawShader_D3D11 : public DrawingRawShader_Common
@@ -235,8 +231,7 @@ namespace Engine
     class DrawingRawVertexShader_D3D11 : public DrawingRawVertexShader
     {
     public:
-        typedef ID3D11VertexShader ShaderType;
-        DrawingRawVertexShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ShaderType> pShader) :
+        DrawingRawVertexShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ID3D11VertexShader> pShader) :
             DrawingRawVertexShader(pShaderName), m_pShader(pShader), m_pShaderImpl(std::make_shared<DrawingRawShader_D3D11>(pDevice, pReflection))
         {
             assert(m_pShaderImpl != nullptr);
@@ -245,7 +240,7 @@ namespace Engine
 
         virtual ~DrawingRawVertexShader_D3D11() = default;
 
-        ShaderType* GetShader() const
+        ID3D11VertexShader* GetShader() const
         {
             return m_pShader.get();
         }
@@ -286,15 +281,14 @@ namespace Engine
         }
 
     private:
-        std::shared_ptr<ShaderType> m_pShader;
+        std::shared_ptr<ID3D11VertexShader> m_pShader;
         std::shared_ptr<DrawingRawShader_D3D11> m_pShaderImpl;
     };
 
     class DrawingRawPixelShader_D3D11 : public DrawingRawPixelShader
     {
     public:
-        typedef ID3D11PixelShader ShaderType;
-        DrawingRawPixelShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ShaderType> pShader) :
+        DrawingRawPixelShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ID3D11PixelShader> pShader) :
             DrawingRawPixelShader(pShaderName), m_pShader(pShader), m_pShaderImpl(std::make_shared<DrawingRawShader_D3D11>(pDevice, pReflection))
         {
             assert(m_pShaderImpl != nullptr);
@@ -303,7 +297,7 @@ namespace Engine
 
         virtual ~DrawingRawPixelShader_D3D11() = default;
 
-        ShaderType* GetShader() const
+        ID3D11PixelShader* GetShader() const
         {
             return m_pShader.get();
         }
@@ -344,15 +338,14 @@ namespace Engine
         }
 
     private:
-        std::shared_ptr<ShaderType> m_pShader;
+        std::shared_ptr<ID3D11PixelShader> m_pShader;
         std::shared_ptr<DrawingRawShader_D3D11> m_pShaderImpl;
     };
 
     class DrawingRawComputeShader_D3D11 : public DrawingRawComputeShader
     {
     public:
-        typedef ID3D11ComputeShader ShaderType;
-        DrawingRawComputeShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ShaderType> pShader) :
+        DrawingRawComputeShader_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<std::string> pShaderName, std::shared_ptr<ID3D11ShaderReflection> pReflection, std::shared_ptr<ID3D11ComputeShader> pShader) :
             DrawingRawComputeShader(pShaderName), m_pShader(pShader), m_pShaderImpl(std::make_shared<DrawingRawShader_D3D11>(pDevice, pReflection))
         {
             assert(m_pShaderImpl != nullptr);
@@ -361,7 +354,7 @@ namespace Engine
 
         virtual ~DrawingRawComputeShader_D3D11() = default;
 
-        ShaderType* GetShader() const
+        ID3D11ComputeShader* GetShader() const
         {
             return m_pShader.get();
         }
@@ -402,7 +395,7 @@ namespace Engine
         }
 
     private:
-        std::shared_ptr<ShaderType> m_pShader;
+        std::shared_ptr<ID3D11ComputeShader> m_pShader;
         std::shared_ptr<DrawingRawShader_D3D11> m_pShaderImpl;
     };
 
@@ -640,8 +633,10 @@ namespace Engine
             m_pDevice(pDevice), m_sizeInBytes(desc.ByteWidth), m_stride(stride), m_startOffset(offset)
         {
             ID3D11Buffer* pRaw = nullptr;
+
             HRESULT hr = m_pDevice->GetDevice()->CreateBuffer(&desc, nullptr, &pRaw);
             assert(SUCCEEDED(hr));
+
             m_pBuffer = std::shared_ptr<ID3D11Buffer>(pRaw, D3D11Releaser<ID3D11Buffer>);
         }
 
@@ -649,8 +644,14 @@ namespace Engine
             m_pDevice(pDevice), m_sizeInBytes(desc.ByteWidth), m_stride(stride), m_startOffset(offset)
         {
             ID3D11Buffer* pRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateBuffer(&desc, &data, &pRaw);
+
+            HRESULT hr;
+            if (data.pSysMem == nullptr)
+                hr = m_pDevice->GetDevice()->CreateBuffer(&desc, nullptr, &pRaw);
+            else
+                hr = m_pDevice->GetDevice()->CreateBuffer(&desc, &data, &pRaw);
             assert(SUCCEEDED(hr));
+
             m_pBuffer = std::shared_ptr<ID3D11Buffer>(pRaw, D3D11Releaser<ID3D11Buffer>);
         }
 

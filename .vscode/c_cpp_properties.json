@@ -31,7 +31,7 @@
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.17763.0",
-            "compilerPath": "C:/MSVS17/VC/Tools/MSVC/14.10.25017/bin/HostX64/x64/cl.exe",
+            "compilerPath": "C:/MSVS17/VC/Tools/MSVC/14.20.27508/bin/HostX64/x64/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"

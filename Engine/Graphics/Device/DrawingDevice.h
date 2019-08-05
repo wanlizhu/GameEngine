@@ -9,8 +9,8 @@
 #include "CameraComponent.h"
 #include "TransformComponent.h"
 
+#include "Box2.h"
 #include "DirtyData.h"
-#include "DrawingType.h"
 #include "DrawingParameter.h"
 #include "DrawingRawResource.h"
 #include "DrawingResourceDesc.h"
@@ -333,8 +333,8 @@ namespace Engine
         virtual void Shutdown() = 0;
 
         virtual bool CreateVertexFormat(const DrawingVertexFormatDesc& desc, std::shared_ptr<DrawingVertexFormat>& pRes) = 0;
-        virtual bool CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData = nullptr, uint32_t size = 0) = 0;
-        virtual bool CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData = nullptr, uint32_t size = 0) =  0;
+        virtual bool CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) = 0;
+        virtual bool CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) =  0;
         virtual bool CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) = 0;
         virtual bool CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes) = 0;
         virtual bool CreateDepthBuffer(const DrawingDepthBufferDesc& desc, std::shared_ptr<DrawingDepthBuffer>& pRes) = 0;
@@ -401,6 +401,9 @@ namespace Engine
         virtual bool DrawPrimitive(std::shared_ptr<DrawingPrimitive> pRes) = 0;
         virtual bool Present(const std::shared_ptr<DrawingTarget> pTarget, uint32_t syncInterval) = 0;
 
+        virtual void* Map(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch, uint32_t offset = 0, uint32_t sizeInBytes = 0) = 0;
+        virtual void UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t subID) = 0;
+
         virtual void Flush() = 0;
 
         virtual uint32_t FormatBytes(EDrawingFormatType type) = 0;
@@ -462,7 +465,7 @@ namespace Engine
         static uint32_t s_gConstantBufferID;
     };
 
-    template<EDeviceType type>
+    template<EConfigurationDeviceType type>
     static std::shared_ptr<DrawingDevice> CreateNativeDevice() { return nullptr; }
 
     template <typename DescType>

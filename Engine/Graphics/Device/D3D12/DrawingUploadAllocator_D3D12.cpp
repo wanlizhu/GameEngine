@@ -110,6 +110,9 @@ DrawingUploadAllocator_D3D12::Allocation DrawingUploadAllocator_D3D12::Page::All
     Allocation allocation;
     allocation.m_pCPUData = static_cast<uint8_t*>(m_startPtr.m_pCPUData) + m_offset;
     allocation.m_pGPUAddr = m_startPtr.m_pGPUAddr + m_offset;
+    allocation.m_page = this;
+    allocation.m_sizeInBytes = sizeInBytes;
+    allocation.m_offset = m_offset;
 
     m_offset += alignedSize;
 
@@ -119,4 +122,9 @@ DrawingUploadAllocator_D3D12::Allocation DrawingUploadAllocator_D3D12::Page::All
 void DrawingUploadAllocator_D3D12::Page::Reset()
 {
     m_offset = 0;
+}
+
+std::shared_ptr<ID3D12Resource> DrawingUploadAllocator_D3D12::Page::GetResource() const
+{
+    return m_pResource;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <Matrix.h>
 
 namespace Engine
 {
@@ -8,7 +9,7 @@ namespace Engine
     class Vec3;
 
     template<typename T>
-    class Mat3x3
+    class Mat3x3 : public Mat
     {
     public:
         typedef Mat3x3<T> type;
@@ -17,6 +18,8 @@ namespace Engine
         typedef T value_type;
         typedef size_t size_type;
 
+        constexpr static int COL = 3;
+        constexpr static int ROW = 3;
         union
         {
             T mData[3][3];
@@ -42,8 +45,14 @@ namespace Engine
 
         void Identity();
 
-        const row_type& operator[] (size_type index) const;
+        const row_type operator[] (size_type index) const;
         row_type& operator[](size_type index);
+
+        const row_type Row(size_type index) const;
+        row_type& Row(size_type index);
+
+        const col_type Col(size_type index) const;
+        col_type& Col(size_type index);
 
         Mat3x3& operator= (const Mat3x3& mat);
         template<typename U>

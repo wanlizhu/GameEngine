@@ -57,7 +57,7 @@ namespace Engine
     }
 
     template<typename T>
-    const typename Mat2x2<T>::row_type& Mat2x2<T>::operator[] (size_type index) const
+    const typename Mat2x2<T>::row_type Mat2x2<T>::operator[] (size_type index) const
     {
         return mArray[index];
     }
@@ -66,6 +66,30 @@ namespace Engine
     typename Mat2x2<T>::row_type& Mat2x2<T>::operator[] (size_type index)
     {
         return const_cast<row_type&>(static_cast<const Mat2x2&>(*this)[index]);
+    }
+
+    template<typename T>
+    const typename Mat2x2<T>::row_type Mat2x2<T>::Row(size_type index) const
+    {
+        return mArray[index];
+    }
+
+    template<typename T>
+    typename Mat2x2<T>::row_type& Mat2x2<T>::Row(size_type index)
+    {
+        return const_cast<row_type&>(static_cast<const Mat2x2&>(*this)[index]);
+    }
+
+    template<typename T>
+    const typename Mat2x2<T>::col_type Mat2x2<T>::Col(size_type index) const
+    {
+        return col_type(mData[0][index], mData[1][index]);
+    }
+
+    template<typename T>
+    typename Mat2x2<T>::col_type& Mat2x2<T>::Col(size_type index)
+    {
+        return const_cast<col_type&>(mData[0][index], mData[1][index]);
     }
 
     template<typename T>

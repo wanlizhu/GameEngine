@@ -2,32 +2,37 @@
 
 using namespace Engine;
 
-Vec3<float> TransformComponent::GetPosition() const
+TransformComponent::TransformComponent() : ComponentBase<TransformComponent>(),
+    m_scale(1.0f, 1.0f, 1.0f)
+{
+}
+
+float3 TransformComponent::GetPosition() const
 {
     return m_position;
 }
 
-void TransformComponent::SetPosition(Vec3<float>& pos)
+void TransformComponent::SetPosition(float3& pos)
 {
     m_position = pos;
 }
 
-Vec3<float> TransformComponent::GetRotate() const
+float3 TransformComponent::GetRotate() const
 {
     return m_rotate;
 }
 
-void TransformComponent::SetRotate(Vec3<float>& rotate)
+void TransformComponent::SetRotate(float3& rotate)
 {
     m_rotate = rotate;
 }
 
-Vec3<float> TransformComponent::GetScale() const
+float3 TransformComponent::GetScale() const
 {
     return m_scale;
 }
 
-void TransformComponent::SetScale(Vec3<float>& scale)
+void TransformComponent::SetScale(float3& scale)
 {
     m_scale = scale;
 }

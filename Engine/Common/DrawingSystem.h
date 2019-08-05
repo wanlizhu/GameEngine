@@ -8,10 +8,11 @@
 #include "Global.h"
 #include "ECSSystem.h"
 
+#include "Vector.h"
+#include "Matrix.h"
 #include "DrawingDevice.h"
 #include "DrawingEffectPool.h"
 #include "DrawingResourceTable.h"
-#include "DrawingType.h"
 #include "ForwardRenderer.h"
 
 namespace Engine
@@ -31,11 +32,8 @@ namespace Engine
 
         void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
 
-        void BeginFrame() override;
-        void EndFrame() override;
-
-        EDeviceType GetDeviceType() const override;
-        void SetDeviceType(EDeviceType type) override;
+        EConfigurationDeviceType GetDeviceType() const override;
+        void SetDeviceType(EConfigurationDeviceType type) override;
 
     private:
         bool EstablishConfiguration();
@@ -44,6 +42,9 @@ namespace Engine
         bool CreatePreResource();
         bool RegisterRenderer();
         bool PostConfiguration();
+
+        void CreateDataResources();
+        void MapResources();
 
         std::shared_ptr<DrawingTarget> CreateSwapChain();
         std::shared_ptr<DrawingDepthBuffer> CreateDepthBuffer();
@@ -55,7 +56,7 @@ namespace Engine
     private:
         void* m_window;
         uint2 m_deviceSize;
-        EDeviceType m_deviceType;
+        EConfigurationDeviceType m_deviceType;
 
         std::shared_ptr<DrawingDevice> m_pDevice;
         std::shared_ptr<DrawingContext> m_pContext;

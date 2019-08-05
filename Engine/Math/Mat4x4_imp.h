@@ -77,6 +77,18 @@ namespace Engine
     }
 
     template<typename T>
+    typename Mat4x4<T>::row_type Mat4x4<T>::Row(size_type index) const
+    {
+        return row_type(mData[index][0], mData[index][1], mData[index][2], mData[index][3]);
+    }
+
+    template<typename T>
+    typename Mat4x4<T>::col_type Mat4x4<T>::Col(size_type index) const
+    {
+        return col_type(mData[0][index], mData[1][index], mData[2][index], mData[3][index]);
+    }
+
+    template<typename T>
     Mat4x4<T>& Mat4x4<T>::operator= (const Mat4x4& mat)
     {
         mArray = mat.mArray;

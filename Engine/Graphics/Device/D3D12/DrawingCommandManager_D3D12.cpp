@@ -61,6 +61,11 @@ std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> DrawingCommandList_D3D12::Ge
     return m_pDynamicDescriptorHeaps[type];
 }
 
+DrawingUploadAllocator_D3D12::Allocation DrawingCommandList_D3D12::AllocationUpload(uint64_t sizeInBytes, uint64_t alignment)
+{
+    return m_pUploadAllocator->Allocate(sizeInBytes, alignment);
+}
+
 DrawingDescriptorAllocator_D3D12::Allocation DrawingCommandList_D3D12::AllocationDescriptors(EDrawingDescriptorHeapType type, uint32_t numDescriptors)
 {
     return m_pDescriptorAllocators[type]->Allocate(numDescriptors);

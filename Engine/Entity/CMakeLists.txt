@@ -6,6 +6,8 @@ file(GLOB SRC_ENTITY
 file(GLOB SRC_COMPONENT
     "Component/*.cpp"
     "Component/*.h"
+    "Component/Geometry/*.cpp"
+    "Component/Geometry/*.h"
 )
 
 file(GLOB SRC_MESH

@@ -4,91 +4,76 @@ using namespace Engine;
 
 CubeMesh::CubeMesh()
 {
-    Vec3<float> position[28] =
+    float3 position[] =
     {
         // Front
-        Vec3<float>(-1.f, -1.f, -1.f),
-        Vec3<float>(-1.f,  1.f, -1.f),
-        Vec3<float>( 1.f, -1.f, -1.f),
-        Vec3<float>( 1.f,  1.f, -1.f),
+        float3(-0.5f, -0.5f, -0.5f),
+        float3(-0.5f,  0.5f, -0.5f),
+        float3( 0.5f, -0.5f, -0.5f),
+        float3( 0.5f,  0.5f, -0.5f),
         // Back
-        Vec3<float>(-1.f, -1.f,  1.f),
-        Vec3<float>(-1.f,  1.f,  1.f),
-        Vec3<float>( 1.f, -1.f,  1.f),
-        Vec3<float>( 1.f,  1.f,  1.f),
+        float3(-0.5f, -0.5f,  0.5f),
+        float3(-0.5f,  0.5f,  0.5f),
+        float3( 0.5f, -0.5f,  0.5f),
+        float3( 0.5f,  0.5f,  0.5f),
         // Right
-        Vec3<float>( 1.f, -1.f, -1.f),
-        Vec3<float>( 1.f,  1.f, -1.f),
-        Vec3<float>( 1.f, -1.f,  1.f),
-        Vec3<float>( 1.f,  1.f,  1.f),
+        float3( 0.5f, -0.5f, -0.5f),
+        float3( 0.5f,  0.5f, -0.5f),
+        float3( 0.5f, -0.5f,  0.5f),
+        float3( 0.5f,  0.5f,  0.5f),
         // Left
-        Vec3<float>(-1.f, -1.f, -1.f),
-        Vec3<float>(-1.f,  1.f, -1.f),
-        Vec3<float>(-1.f, -1.f,  1.f),
-        Vec3<float>(-1.f,  1.f,  1.f),
+        float3(-0.5f, -0.5f, -0.5f),
+        float3(-0.5f,  0.5f, -0.5f),
+        float3(-0.5f, -0.5f,  0.5f),
+        float3(-0.5f,  0.5f,  0.5f),
         // Up
-        Vec3<float>(-1.f,  1.f, -1.f),
-        Vec3<float>(-1.f,  1.f,  1.f),
-        Vec3<float>( 1.f,  1.f, -1.f),
-        Vec3<float>( 1.f,  1.f,  1.f),
+        float3(-0.5f,  0.5f, -0.5f),
+        float3(-0.5f,  0.5f,  0.5f),
+        float3( 0.5f,  0.5f, -0.5f),
+        float3( 0.5f,  0.5f,  0.5f),
         // Down
-        Vec3<float>(-1.f, -1.f, -1.f),
-        Vec3<float>(-1.f, -1.f,  1.f),
-        Vec3<float>( 1.f, -1.f, -1.f),
-        Vec3<float>( 1.f, -1.f,  1.f),
-
-        //Plane
-        Vec3<float>(-5.f, -1.f, -5.f),
-        Vec3<float>(-5.f, -1.f,  5.f),
-        Vec3<float>( 5.f, -1.f, -5.f),
-        Vec3<float>( 5.f, -1.f,  5.f),
+        float3(-0.5f, -0.5f, -0.5f),
+        float3(-0.5f, -0.5f,  0.5f),
+        float3( 0.5f, -0.5f, -0.5f),
+        float3( 0.5f, -0.5f,  0.5f)
     };
 
-    Vec3<float> normal[28] = 
+    float3 normal[] = 
     {
         // Front
-        Vec3<float>(0.f, 0.f, -1.f),
-        Vec3<float>(0.f, 0.f, -1.f),
-        Vec3<float>(0.f, 0.f, -1.f),
-        Vec3<float>(0.f, 0.f, -1.f),
+        float3(0.f, 0.f, -1.f),
+        float3(0.f, 0.f, -1.f),
+        float3(0.f, 0.f, -1.f),
+        float3(0.f, 0.f, -1.f),
         // Back
-        Vec3<float>(0.f, 0.f,  1.f),
-        Vec3<float>(0.f, 0.f,  1.f),
-        Vec3<float>(0.f, 0.f,  1.f),
-        Vec3<float>(0.f, 0.f,  1.f),
+        float3(0.f, 0.f,  1.f),
+        float3(0.f, 0.f,  1.f),
+        float3(0.f, 0.f,  1.f),
+        float3(0.f, 0.f,  1.f),
         // Right
-        Vec3<float>(1.f, 0.f,  0.f),
-        Vec3<float>(1.f, 0.f,  0.f),
-        Vec3<float>(1.f, 0.f,  0.f),
-        Vec3<float>(1.f, 0.f,  0.f),
+        float3(1.f, 0.f,  0.f),
+        float3(1.f, 0.f,  0.f),
+        float3(1.f, 0.f,  0.f),
+        float3(1.f, 0.f,  0.f),
         // Left
-        Vec3<float>(-1.f, 0.f, 0.f),
-        Vec3<float>(-1.f, 0.f, 0.f),
-        Vec3<float>(-1.f, 0.f, 0.f),
-        Vec3<float>(-1.f, 0.f, 0.f),
+        float3(-1.f, 0.f, 0.f),
+        float3(-1.f, 0.f, 0.f),
+        float3(-1.f, 0.f, 0.f),
+        float3(-1.f, 0.f, 0.f),
         // Up
-        Vec3<float>(0.f,  1.f, 0.f),
-        Vec3<float>(0.f,  1.f, 0.f),
-        Vec3<float>(0.f,  1.f, 0.f),
-        Vec3<float>(0.f,  1.f, 0.f),
+        float3(0.f,  1.f, 0.f),
+        float3(0.f,  1.f, 0.f),
+        float3(0.f,  1.f, 0.f),
+        float3(0.f,  1.f, 0.f),
         // Down
-        Vec3<float>(0.f, -1.f, 0.f),
-        Vec3<float>(0.f, -1.f, 0.f),
-        Vec3<float>(0.f, -1.f, 0.f),
-        Vec3<float>(0.f, -1.f, 0.f),
-
-        //Plane
-        Vec3<float>(0.f, 1.f, 0.f),
-        Vec3<float>(0.f, 1.f, 0.f),
-        Vec3<float>(0.f, 1.f, 0.f),
-        Vec3<float>(0.f, 1.f, 0.f),
+        float3(0.f, -1.f, 0.f),
+        float3(0.f, -1.f, 0.f),
+        float3(0.f, -1.f, 0.f),
+        float3(0.f, -1.f, 0.f)
     };
 
-    short indices[42] = 
+    short indices[] = 
     {
-        27, 24, 25,
-        27, 26, 24,
-
         0, 1, 3,
         0, 3, 2,
         6, 7, 5,
@@ -105,9 +90,9 @@ CubeMesh::CubeMesh()
         23, 20, 22,
     };
 
-    AttachVertexData<Vec3<float>>(position, 28, Attribute::ESemanticType::Position, Attribute::EFormatType::Float3, "POSITION");
-    AttachVertexData<Vec3<float>>(normal, 28, Attribute::ESemanticType::Normal, Attribute::EFormatType::Float3, "NORMAL");
-    AttachIndexData<short>(indices, 42);
+    AttachVertexData<float3>(position, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Position, Attribute::EFormatType::Float3, "POSITION");
+    AttachVertexData<float3>(normal, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Normal, Attribute::EFormatType::Float3, "NORMAL");
+    AttachIndexData<short>(indices, sizeof(indices) / sizeof(short));
 }
 
 CubeMesh::~CubeMesh()

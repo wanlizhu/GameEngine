@@ -116,7 +116,7 @@ bool DrawingDevice_D3D11::CreateVertexBuffer(const DrawingVertexBufferDesc& desc
     bufferDesc.ByteWidth = desc.mSizeInBytes;
     bufferDesc.Usage = D3D11Enum(desc.mUsage);
     bufferDesc.CPUAccessFlags = D3D11Enum(desc.mAccess);
-    bufferDesc.MiscFlags = D3D11Enum(desc.mFlags);
+    bufferDesc.MiscFlags = D3D11ResourceMiscFlag(desc.mFlags);
     bufferDesc.StructureByteStride = 0;
 
     D3D11_SUBRESOURCE_DATA subResData;
@@ -143,7 +143,7 @@ bool DrawingDevice_D3D11::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     bufferDesc.ByteWidth = desc.mSizeInBytes;
     bufferDesc.Usage = D3D11Enum(desc.mUsage);
     bufferDesc.CPUAccessFlags = D3D11Enum(desc.mAccess);
-    bufferDesc.MiscFlags = D3D11Enum(desc.mFlags);
+    bufferDesc.MiscFlags = D3D11ResourceMiscFlag(desc.mFlags);
     bufferDesc.StructureByteStride = 0;
 
     D3D11_SUBRESOURCE_DATA subResData;
@@ -243,7 +243,7 @@ bool DrawingDevice_D3D11::CreateTarget(const DrawingTargetDesc& desc, std::share
         renderTargetDesc.Usage = D3D11_USAGE_DEFAULT;
         renderTargetDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
         renderTargetDesc.CPUAccessFlags = 0;
-        renderTargetDesc.MiscFlags = D3D11Enum(desc.mFlags);
+        renderTargetDesc.MiscFlags = D3D11ResourceMiscFlag(desc.mFlags);
 
         pTargetRaw = std::make_shared<DrawingRawRenderTarget_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), renderTargetDesc);
     }
@@ -279,6 +279,28 @@ bool DrawingDevice_D3D11::CreateTarget(const DrawingTargetDesc& desc, std::share
 
 bool DrawingDevice_D3D11::CreateDepthBuffer(const DrawingDepthBufferDesc& desc, std::shared_ptr<DrawingDepthBuffer>& pRes)
 {
+    std::shared_ptr<DrawingRawTarget> pDepthTargetRaw = nullptr;
+
+    D3D11_TEXTURE2D_DESC depthTargetDesc;
+    depthTargetDesc.Width = desc.mWidth;
+    depthTargetDesc.Height = desc.mHeight;
+    depthTargetDesc.MipLevels = 1;
+    depthTargetDesc.ArraySize = desc.mSlices;
+    depthTargetDesc.Format = D3D11Enum(desc.mFormat);
+    depthTargetDesc.SampleDesc.Count = desc.mMultiSampleCount;
+    depthTargetDesc.SampleDesc.Quality = desc.mMultiSampleQuality;
+    depthTargetDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthTargetDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthTargetDesc.CPUAccessFlags = 0;
+    depthTargetDesc.MiscFlags = D3D11ResourceMiscFlag(desc.mFlags);
+
+    pDepthTargetRaw = std::make_shared<DrawingRawDepthTarget_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), depthTargetDesc);
+
+    auto pDepthBuffer = std::make_shared<DrawingDepthBuffer>(shared_from_this());
+    pDepthBuffer->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
+    pDepthBuffer->SetResource(pDepthTargetRaw);
+
+    pRes = pDepthBuffer;
     return true;
 }
 
@@ -914,6 +936,48 @@ bool DrawingDevice_D3D11::Present(const std::shared_ptr<DrawingTarget> pTarget, 
     return true;
 }
 
+void* DrawingDevice_D3D11::Map(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch, uint32_t offset, uint32_t sizeInBytes)
+{
+    assert(pRes != nullptr);
+
+    if (subID < 0)
+        subID = 0;
+
+    switch(pRes->GetType())
+    {
+    case eResource_Texture:
+        return MapResource<DrawingRawTexture_D3D11, DrawingTexture>(pRes, subID, flag, rowPitch, slicePitch);
+
+    case eResource_Vertex_Buffer:
+        return MapResource<DrawingRawVertexBuffer_D3D11, DrawingVertexBuffer>(pRes, subID, flag, rowPitch, slicePitch);
+
+    case eResource_Index_Buffer:
+        return MapResource<DrawingRawIndexBuffer_D3D11, DrawingIndexBuffer>(pRes, subID, flag, rowPitch, slicePitch);
+    }
+
+    return nullptr;
+}
+
+void DrawingDevice_D3D11::UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t subID)
+{
+    assert(pRes != nullptr);
+
+    if (subID < 0)
+        subID = 0;
+
+    switch(pRes->GetType())
+    {
+    case eResource_Texture:
+        return UnMapResource<DrawingRawTexture_D3D11, DrawingTexture>(pRes, subID);
+
+    case eResource_Vertex_Buffer:
+        return UnMapResource<DrawingRawVertexBuffer_D3D11, DrawingVertexBuffer>(pRes, subID);
+
+    case eResource_Index_Buffer:
+        return UnMapResource<DrawingRawIndexBuffer_D3D11, DrawingIndexBuffer>(pRes, subID);
+    }
+}
+
 void DrawingDevice_D3D11::Flush()
 {
     m_pDeviceContext->Flush();
@@ -1110,4 +1174,36 @@ std::shared_ptr<DrawingRawPixelShader_D3D11> DrawingDevice_D3D11::CreatePixelSha
     }
 
     return CreatePixelShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
+}
+
+template <typename T, typename U>
+void* DrawingDevice_D3D11::MapResource(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch)
+{
+    auto pResWrap = std::dynamic_pointer_cast<U>(pRes);
+    assert(pResWrap != nullptr);
+
+    auto pMapRes = std::dynamic_pointer_cast<T>(pResWrap->GetResource());
+    assert(pMapRes != nullptr);
+
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+
+    m_pDeviceContext->Map(pMapRes->GetBuffer().get(), subID, D3D11ResourceMapType(flag), 0, &mappedResource);
+
+    rowPitch = mappedResource.RowPitch;
+    slicePitch = mappedResource.DepthPitch;
+
+    return mappedResource.pData;
+}
+
+template <typename T, typename U>
+void DrawingDevice_D3D11::UnMapResource(std::shared_ptr<DrawingResource> pRes, uint32_t aSubID)
+{
+    auto pResWrap = std::dynamic_pointer_cast<U>(pRes);
+    assert(pResWrap != nullptr);
+
+    auto pMapRes = std::dynamic_pointer_cast<T>(pResWrap->GetResource());
+    assert(pMapRes != nullptr);
+
+    m_pDeviceContext->Unmap(pMapRes->GetBuffer().get(), aSubID);
 }

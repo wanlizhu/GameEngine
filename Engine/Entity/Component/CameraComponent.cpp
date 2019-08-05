@@ -5,7 +5,7 @@ using namespace Engine;
 CameraComponent::CameraComponent(ERendererType rendererType,
                                  EProjectionType projType,
                                  EClearType clearType,
-                                 Vec4<float>& color,
+                                 float4& color,
                                  float fov,
                                  float near,
                                  float far) :
@@ -49,12 +49,12 @@ void CameraComponent::SetClearType(EClearType type)
     m_clearType = type;
 }
 
-Vec4<float> CameraComponent::GetBackground() const
+float4 CameraComponent::GetBackground() const
 {
     return m_background;
 }
 
-void CameraComponent::SetBackground(Vec4<float>& color)
+void CameraComponent::SetBackground(float4& color)
 {
     m_background = color;
 }

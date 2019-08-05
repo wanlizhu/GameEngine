@@ -1,21 +1,23 @@
 #pragma once
 
 #include <array>
+#include <Vector.h>
 
 namespace Engine
 {
     template<typename T>
-    class Vec4
+    class Vec4 : public Vec
     {
     public:
         typedef Vec4<T> type;
         typedef T value_type;
         typedef size_t size_type;
 
+        constexpr static int DIMS = 4;
         union
         {
-            T mData[4];
-            std::array<T, 4> mArray;
+            T mData[DIMS];
+            std::array<T, DIMS> mArray;
             struct{ T x, y, z, w; };
         };
 

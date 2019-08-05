@@ -23,9 +23,11 @@ namespace Engine
         virtual void SetupBuffers(DrawingResourceTable& resTable) = 0;
         virtual void Cleanup() = 0;
 
-        virtual void BeginFrame() = 0;
-        virtual void EndFrame() = 0;
+        virtual void BeginDrawPass() = 0;
+        virtual void EndDrawPass() = 0;
 
+        virtual void FlushData() = 0;
+        virtual void ResetData() = 0;
         virtual void UpdatePrimitive(DrawingResourceTable& resTable) = 0;
         virtual void Draw(DrawingResourceTable& resTable) = 0;
 
@@ -33,6 +35,7 @@ namespace Engine
         virtual void AttachMesh(std::shared_ptr<IMesh> pMesh) = 0;
 
         virtual void MapResources(DrawingResourceTable& resTable) = 0;
+        virtual void CreateDataResources(DrawingResourceTable& resTable) = 0;
     };
 
 #define FuncResourceName(name)                              \

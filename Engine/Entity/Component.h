@@ -11,26 +11,24 @@ namespace Engine
     public:
         inline ComponentBase()
         {
-            if (m_bInit)
+            if (m_compID != static_cast<uint32_t>(-1))
                 return;
+
             m_createFunc = createFunc<T>;
             m_destroyFunc = destroyFunc<T>;
             m_size = sizeof(T);
             m_compID = RegisterComponent(ComponentBase<T>::m_createFunc, ComponentBase<T>::m_destroyFunc, ComponentBase<T>::m_size);
-
-            m_bInit = true;
         }
 
         inline virtual ~ComponentBase()
         {
         }
 
-        static bool m_bInit;
-        static CreateCompFunc m_createFunc;
-        static DestroyCompFunc m_destroyFunc;
-        static uint32_t m_size;
-        static uint32_t m_size2;
-        static CompID m_compID;
+        inline static CompID m_compID = static_cast<uint32_t>(-1);
+        inline static CreateCompFunc m_createFunc;
+        inline static DestroyCompFunc m_destroyFunc;
+        inline static uint32_t m_size;
+        inline static uint32_t m_size2;
     };
 
     template<typename T>
@@ -49,9 +47,6 @@ namespace Engine
         T* pComp = (T*)pComponent;
         pComp->~T();
     };
-
-    template<typename T>
-    bool ComponentBase<T>::m_bInit = false;
 
     template<typename T>
     CreateCompFunc ComponentBase<T>::m_createFunc;

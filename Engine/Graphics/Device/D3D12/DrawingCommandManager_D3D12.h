@@ -34,6 +34,7 @@ namespace Engine
         std::shared_ptr<DrawingDescriptorAllocator_D3D12> GetDescriptorAllocator(EDrawingDescriptorHeapType type) const;
         std::shared_ptr<DrawingDynamicDescriptorHeap_D3D12> GetDynamicDescriptorHeap(EDrawingDescriptorHeapType type) const;
 
+        DrawingUploadAllocator_D3D12::Allocation AllocationUpload(uint64_t sizeInBytes, uint64_t alignment);
         DrawingDescriptorAllocator_D3D12::Allocation AllocationDescriptors(EDrawingDescriptorHeapType type, uint32_t numDescriptors = 1);
 
     private:

@@ -6,9 +6,6 @@
 #include "TransformComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
-#include "PolylineRendererComponent.h"
-
-#include "PolylineRenderer.h"
 
 #include "DrawingSystem.h"
 #include "D3D11/DrawingDevice_D3D11.h"
@@ -18,7 +15,7 @@ using namespace Engine;
 
 DrawingSystem::DrawingSystem() : m_window(nullptr),
     m_deviceSize(0),
-    m_deviceType(gpGlobal->GetConfiguration().type),
+    m_deviceType(gpGlobal->GetConfiguration<GraphicsConfiguration>().GetDeviceType()),
     m_pDevice(nullptr),
     m_pContext(nullptr),
     m_pEffectPool(nullptr),
@@ -55,24 +52,29 @@ void DrawingSystem::Tick(float elapsedTime)
         m_pContext->UpdateContext(*m_pResourceTable);
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
 
-        m_pDevice->ClearTarget(m_pContext->GetSwapChain(), gpGlobal->GetConfiguration().background);
+        m_pDevice->ClearTarget(m_pContext->GetSwapChain(), pCameraComponent->GetBackground());
+        m_pDevice->ClearDepthBuffer(m_pContext->GetDepthBuffer(), 1.0f, 0, eClear_Depth);
 
         auto& pRenderer = gpGlobal->GetRenderer(pCameraComponent->GetRendererType());
-        if (pRenderer != nullptr)
+        if (pRenderer == nullptr)
+            continue;
+
+        for (auto& pEntity : m_pMeshList)
         {
-            for (auto& pEntity : m_pMeshList)
-            {
-                auto pTrans = pEntity->GetComponent<TransformComponent>();
-                auto trans = UpdateWorldMatrix(pTrans);
-                m_pContext->UpdateTransform(*m_pResourceTable, trans);
-                pRenderer->Draw(*m_pResourceTable);
-            }
+            auto pTrans = pEntity->GetComponent<TransformComponent>();
+            auto pMesh = pEntity->GetComponent<MeshFilterComponent>();
+
+            auto trans = UpdateWorldMatrix(pTrans);
+            m_pContext->UpdateTransform(*m_pResourceTable, trans);
+
+            pRenderer->BeginDrawPass();
+            pRenderer->AttachMesh(pMesh->GetMesh());
+            pRenderer->FlushData();
+            pRenderer->Draw(*m_pResourceTable);
+            pRenderer->ResetData();
+            pRenderer->EndDrawPass();
         }
     }
-
-    auto& pPolyLineRenderer = gpGlobal->GetRenderer(eRenderer_Polyline);
-    if (pPolyLineRenderer != nullptr)
-        pPolyLineRenderer->Draw(*m_pResourceTable);
 
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
 }
@@ -83,39 +85,15 @@ void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
         m_pCameraList.emplace_back(pEntity);
 
     if (pEntity->HasComponent<MeshFilterComponent>() && pEntity->HasComponent<TransformComponent>())
-    {
-        auto meshFilter = pEntity->GetComponent<MeshFilterComponent>();
-        auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
-        if (pRenderer != nullptr)
-        {
-            pRenderer->AttachMesh(meshFilter->GetMesh());
-            m_pMeshList.emplace_back(pEntity);
-        }
-    }
-
-    if (pEntity->HasComponent<PolylineRendererComponent>())
-    {
-        auto& pRenderer = std::dynamic_pointer_cast<PolylineRenderer>(gpGlobal->GetRenderer(eRenderer_Polyline));
-        if (pRenderer != nullptr)
-            pRenderer->AttachSegment(pEntity->GetComponent<PolylineRendererComponent>()->GetGeometry());
-    }
+        m_pMeshList.emplace_back(pEntity);
 }
 
-void DrawingSystem::BeginFrame()
-{
-}
-
-
-void DrawingSystem::EndFrame()
-{
-}
-
-EDeviceType DrawingSystem::GetDeviceType() const
+EConfigurationDeviceType DrawingSystem::GetDeviceType() const
 {
     return m_deviceType;
 }
 
-void DrawingSystem::SetDeviceType(EDeviceType type)
+void DrawingSystem::SetDeviceType(EConfigurationDeviceType type)
 {
     m_deviceType = type;
 }
@@ -145,9 +123,9 @@ bool DrawingSystem::PreConfiguration()
     if (gpGlobal == nullptr)
         return false;
 
-    m_deviceSize.x = gpGlobal->GetConfiguration().width;
-    m_deviceSize.y = gpGlobal->GetConfiguration().height;
-    m_window = gpGlobal->GetConfiguration().hWnd;
+    m_deviceSize.x = gpGlobal->GetConfiguration<AppConfiguration>().GetWidth();
+    m_deviceSize.y = gpGlobal->GetConfiguration<AppConfiguration>().GetHeight();
+    m_window = gpGlobal->GetConfiguration<AppConfiguration>().GetAppHandle();
 
     return true;
 }
@@ -206,8 +184,8 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
-    desc.mMultiSampleCount = 1;
-    desc.mMultiSampleQuality = 0;
+    desc.mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
+    desc.mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     std::shared_ptr<DrawingTarget> pSwapChain;
 
@@ -222,7 +200,9 @@ std::shared_ptr<DrawingDepthBuffer> DrawingSystem::CreateDepthBuffer()
     DrawingDepthBufferDesc desc;
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
-    desc.mFormat = eFormat_D32_FLOAT;
+    desc.mFormat = eFormat_D24S8;
+    desc.mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
+    desc.mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     std::shared_ptr<DrawingDepthBuffer> pDepthBuffer;
 
@@ -239,7 +219,7 @@ bool DrawingSystem::PostConfiguration()
 
     m_pContext->SetSwapChain(pSwapChain);
     m_pContext->SetDepthBuffer(pDepthBuffer);
-    m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration().width, (float)gpGlobal->GetConfiguration().height)));
+    m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
 
     m_pContext->UpdateTargets(*m_pResourceTable);
 
@@ -248,31 +228,63 @@ bool DrawingSystem::PostConfiguration()
 
     m_pDevice->Flush();
 
+    CreateDataResources();
+    MapResources();
+
+    return true;
+}
+
+void DrawingSystem::CreateDataResources()
+{
+    std::for_each(m_rendererTable.begin(), m_rendererTable.end(), [this](RendererTable::value_type& aElem)
+    {
+        auto& pRenderer = aElem.second;
+        if (pRenderer != nullptr)
+            pRenderer->CreateDataResources(*m_pResourceTable);
+    });
+}
+
+void DrawingSystem::MapResources()
+{
     std::for_each(m_rendererTable.begin(), m_rendererTable.end(), [this](RendererTable::value_type& aElem)
     {
         auto& pRenderer = aElem.second;
         if (pRenderer != nullptr)
             pRenderer->MapResources(*m_pResourceTable);
     });
-
-    return true;
 }
 
 float4x4 DrawingSystem::UpdateWorldMatrix(TransformComponent* pTransform)
 {
+    float3 position = pTransform->GetPosition();
     float3 rotate = pTransform->GetRotate();
+    float3 scale = pTransform->GetScale();
 
     float cosR = std::cosf(rotate.y);
     float sinR = std::sinf(rotate.y);
 
-    float4x4 ret = {
+    float4x4 posMatrix = {
+        1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        position.x, position.y, position.z, 1.f
+    };
+
+    float4x4 rotMatrix = {
         cosR, 0.f, sinR, 0.f,
         0.f, 1.f, 0.f, 0.f,
         -sinR, 0.f, cosR, 0.f,
         0.f, 0.f, 0.f, 1.f
     };
 
-    return ret;
+    float4x4 scaleMatrix = {
+        scale.x, 0.f, 0.f, 0.f,
+        0.f, scale.y, 0.f, 0.f,
+        0.f, 0.f, scale.z, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+
+    return Mat::Mul(scaleMatrix, Mat::Mul(rotMatrix, posMatrix));
 }
 
 float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)
@@ -281,15 +293,15 @@ float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)
     float3 at = float3(0.0f, 0.0f, 1.0f);
     float3 up = float3(0.0f, 1.0f, 0.0f);
 
-    float3 z = (at - pos).Normalize();
-    float3 x = up.Cross(z).Normalize();
-    float3 y = z.Cross(x);
+    float3 z = Vec::Normalize(at - pos);
+    float3 x = Vec::Normalize(Vec::Cross(up, z));
+    float3 y = Vec::Cross(z, x);
 
     float4x4 ret = {
         x.x, y.x, z.x, 0.f,
         x.y, y.y, z.y, 0.f,
         x.z, y.z, z.z, 0.f,
-        -x.Dot(pos), -y.Dot(pos), -z.Dot(pos), 1.f
+        Vec::Dot(-x, pos), Vec::Dot(-y, pos), Vec::Dot(-z, pos), 1.f
     };
 
     return ret;
@@ -300,7 +312,8 @@ float4x4 DrawingSystem::UpdateProjectionMatrix(CameraComponent* pCamera)
     auto fovy = pCamera->GetFov();
     auto zn = pCamera->GetClippingNear();
     auto zf = pCamera->GetClippingFar();
-    auto aspect = (float)(gpGlobal->GetConfiguration().width) / (float)(gpGlobal->GetConfiguration().height);
+    auto aspect = (float)(gpGlobal->GetConfiguration<AppConfiguration>().GetWidth())
+                / (float)(gpGlobal->GetConfiguration<AppConfiguration>().GetHeight());
 
     float d2r = PI_F / 180.0f;
     float yScale = 1.0f / std::tanf(d2r * fovy / 2.0f);

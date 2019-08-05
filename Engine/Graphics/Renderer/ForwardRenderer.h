@@ -20,13 +20,16 @@ namespace Engine
         void SetupBuffers(DrawingResourceTable& resTable) override;
         void Cleanup() override;
 
-        void BeginFrame() override;
-        void EndFrame() override;
+        void BeginDrawPass() override;
+        void EndDrawPass() override;
 
+        void FlushData() override;
+        void ResetData() override;
         void UpdatePrimitive(DrawingResourceTable& resTable) override;
         void Draw(DrawingResourceTable& resTable) override;
 
     public:
+        /* Basic Primitive Stage */
         // Define shader resource names
         FuncResourceName(BasicPrimitiveVertexShader);
         FuncResourceName(BasicPrimitivePixelShader);
@@ -44,7 +47,7 @@ namespace Engine
         void DefinePipelineStateResource(DrawingResourceTable& resTable);
 
     private:
-        std::shared_ptr<DrawingPass> CreateDefaultPass(
+        std::shared_ptr<DrawingPass> CreateForwardBasePass(
             std::shared_ptr<std::string> pPassName,
             std::shared_ptr<std::string> pEffectName);
     };

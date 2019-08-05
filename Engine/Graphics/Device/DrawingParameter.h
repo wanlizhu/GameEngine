@@ -3,8 +3,10 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <assert.h>
 
-#include "DrawingType.h"
+#include "Vector.h"
+#include "Matrix.h"
 
 namespace Engine
 {

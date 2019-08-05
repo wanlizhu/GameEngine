@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Component.h"
-#include "Vec4.h"
+#include "Vector.h"
 
 namespace Engine
 {
@@ -24,7 +24,7 @@ namespace Engine
         CameraComponent(ERendererType rendererType,
                         EProjectionType projType,
                         EClearType clearType,
-                        Vec4<float>& color,
+                        float4& color,
                         float fov,
                         float near,
                         float far);
@@ -40,8 +40,8 @@ namespace Engine
         EClearType GetClearType() const;
         void SetClearType(EClearType type);
 
-        Vec4<float> GetBackground() const;
-        void SetBackground(Vec4<float>& color);
+        float4 GetBackground() const;
+        void SetBackground(float4& color);
 
         float GetFov() const;
         void SetFov(float fov);
@@ -56,7 +56,7 @@ namespace Engine
         ERendererType m_rendererType = eRenderer_Forward;
         EProjectionType m_projType = eProjection_Perspective;
         EClearType m_clearType = eClear_Solid;
-        Vec4<float> m_background;
+        float4 m_background;
 
         float m_fov = 60.0f;
         float m_clippingNear = 0.3f;

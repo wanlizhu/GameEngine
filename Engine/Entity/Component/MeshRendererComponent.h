@@ -8,7 +8,7 @@ namespace Engine
     class MeshRendererComponent : public ComponentBase<MeshRendererComponent>
     {
     public:
-        MeshRendererComponent() : ComponentBase<MeshRendererComponent>() {}
-        virtual ~MeshRendererComponent() = default;
+        MeshRendererComponent();
+        virtual ~MeshRendererComponent();
     };
 }

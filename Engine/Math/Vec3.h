@@ -1,21 +1,23 @@
 #pragma once
 
 #include <array>
+#include <Vector.h>
 
 namespace Engine
 {
     template<typename T>
-    class Vec3
+    class Vec3 : public Vec
     {
     public:
         typedef Vec3<T> type;
         typedef T value_type;
         typedef size_t size_type;
 
+        constexpr static int DIMS = 3;
         union
         {
-            T mData[3];
-            std::array<T, 3> mArray;
+            T mData[DIMS];
+            std::array<T, DIMS> mArray;
             struct{ T x, y, z; };
         };
 
@@ -29,10 +31,6 @@ namespace Engine
 
         const T& operator[] (size_type index) const;
         T& operator[](size_type index);
-
-        Vec3 Normalize() const;
-        Vec3 Cross(const Vec3& vec) const;
-        T Dot(const Vec3& vec) const;
 
         Vec3& operator= (const Vec3& vec);
         template<typename U>

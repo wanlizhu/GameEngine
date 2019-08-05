@@ -241,18 +241,14 @@ namespace Engine
     class DrawingRawBuffer_D3D12
     {
     public:
-        DrawingRawBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride) :
+        DrawingRawBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, uint32_t size, uint32_t stride) :
             m_pDevice(pDevice), m_sizeInBytes(size), m_stride(stride)
         {
-            auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Copy);
-            auto pCommandList = pCommandManager->GetCommandList();
-            auto pUploadAllocator = pCommandList->GetUploadAllocator();
+        }
 
-            assert(pCommandList != nullptr);
-            assert(pUploadAllocator != nullptr);
-
-            m_allocation = pUploadAllocator->Allocate(m_sizeInBytes, m_stride);
-            memcpy(m_allocation.m_pCPUData, data.pData, m_sizeInBytes);
+        virtual std::shared_ptr<ID3D12Resource> GetBuffer(void) const
+        {
+            return nullptr;
         }
 
         uint64_t GetSizeInBytes() const
@@ -260,35 +256,139 @@ namespace Engine
             return m_sizeInBytes;
         }
 
+        void SetSizeInBytes(uint64_t size)
+        {
+            m_sizeInBytes = size;
+        }
+
         uint64_t GetStride() const
         {
             return m_stride;
         }
 
-        DrawingUploadAllocator_D3D12::Allocation GetAllocation() const
+        void SetStride(uint64_t stride)
         {
-            return m_allocation;
+            m_stride = stride;
         }
 
     private:
         std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
-        DrawingUploadAllocator_D3D12::Allocation m_allocation;
+
         uint64_t m_sizeInBytes;
         uint64_t m_stride;
+    };
+
+    class DrawingRawStaticBuffer_D3D12 : public DrawingRawBuffer_D3D12
+    {
+    public:
+        DrawingRawStaticBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride) :
+            DrawingRawBuffer_D3D12(pDevice, size, stride)
+        {
+            auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+            auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(size);
+
+            HRESULT hr = pDevice->GetDevice()->CreateCommittedResource(
+                &heapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &resourceDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                __uuidof(ID3D12Resource),
+                (void**)&m_pResource);
+
+            assert(SUCCEEDED(hr));
+
+            DrawingResourceStateTracker_D3D12::AddGlobalResourceState(m_pResource, D3D12_RESOURCE_STATE_COMMON);
+
+            if (data.SlicePitch == 0)
+                return;
+
+            auto pCommandManager = pDevice->GetCommandManager(eCommandList_Copy);
+            assert(pCommandManager != nullptr);
+
+            auto pCommandList = pCommandManager->GetCommandList();
+            assert(pCommandList != nullptr);
+
+            pCommandList->TransitionBarrier(m_pResource, D3D12_RESOURCE_STATE_COPY_DEST);
+            pCommandList->FlushBarriers();
+
+            auto requiredSize = GetRequiredIntermediateSize(m_pResource.get(), 0, 1);
+            auto uploadAllocation = pCommandList->AllocationUpload(requiredSize, stride);
+
+            UpdateSubresources(pCommandList->GetCommandList().get(), m_pResource.get(), uploadAllocation.m_page->GetResource().get(), uploadAllocation.m_offset, 0, 1, &data);
+        }
+
+        std::shared_ptr<ID3D12Resource> GetBuffer(void) const override
+        {
+            return m_pResource;
+        }
+
+    private:
+        std::shared_ptr<ID3D12Resource> m_pResource;
+    };
+
+    class DrawingRawDynamicBuffer_D3D12 : public DrawingRawBuffer_D3D12
+    {
+    public:
+        DrawingRawDynamicBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride) :
+            DrawingRawBuffer_D3D12(pDevice, size, stride)
+        {
+            auto pCommandManager = pDevice->GetCommandManager(eCommandList_Copy);
+            assert(pCommandManager != nullptr);
+
+            auto pCommandList = pCommandManager->GetCommandList();
+            assert(pCommandList != nullptr);
+
+            m_uploadAllocation = pCommandList->AllocationUpload(size, stride);
+
+            if (data.SlicePitch == 0)
+                return;
+
+            memcpy(m_uploadAllocation.m_pCPUData, data.pData, size);
+        }
+
+        DrawingUploadAllocator_D3D12::Allocation GetUploadAllocation() const
+        {
+            return m_uploadAllocation;
+        }
+
+    private:
+        DrawingUploadAllocator_D3D12::Allocation m_uploadAllocation;
     };
 
     class DrawingRawVertexBuffer_D3D12 : public DrawingRawVertexBuffer
     {
     public:
-        DrawingRawVertexBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride) :
-            m_pDevice(pDevice), m_pBufferImpl(std::make_shared<DrawingRawBuffer_D3D12>(pDevice, data, size, stride))
+        DrawingRawVertexBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride, bool bStatic = false) :
+            m_pDevice(pDevice)
         {
-            m_vertexBufferView.BufferLocation = m_pBufferImpl->GetAllocation().m_pGPUAddr;
+            if (bStatic)
+            {
+                m_pBufferImpl = std::make_shared<DrawingRawStaticBuffer_D3D12>(pDevice, data, size, stride);
+                auto pStaticBufferImpl = std::dynamic_pointer_cast<DrawingRawStaticBuffer_D3D12>(m_pBufferImpl);
+                assert(pStaticBufferImpl != nullptr);
+
+                m_vertexBufferView.BufferLocation = pStaticBufferImpl->GetBuffer()->GetGPUVirtualAddress();
+            }
+            else
+            {
+                m_pBufferImpl = std::make_shared<DrawingRawDynamicBuffer_D3D12>(pDevice, data, size, stride);
+                auto pDynamicBufferImpl = std::dynamic_pointer_cast<DrawingRawDynamicBuffer_D3D12>(m_pBufferImpl);
+                assert(pDynamicBufferImpl != nullptr);
+
+                m_vertexBufferView.BufferLocation = pDynamicBufferImpl->GetUploadAllocation().m_pGPUAddr;
+            }
+
             m_vertexBufferView.SizeInBytes = static_cast<UINT>(size);
             m_vertexBufferView.StrideInBytes = static_cast<UINT>(stride);
         }
 
         virtual ~DrawingRawVertexBuffer_D3D12() = default;
+
+        std::shared_ptr<ID3D12Resource> GetBuffer(void) const
+        {
+            return m_pBufferImpl->GetBuffer();
+        }
 
         D3D12_VERTEX_BUFFER_VIEW GetVertexBufferView() const
         {
@@ -315,17 +415,38 @@ namespace Engine
     class DrawingRawIndexBuffer_D3D12 : public DrawingRawIndexBuffer
     {
     public:
-        DrawingRawIndexBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride) :
-            m_pDevice(pDevice), m_pBufferImpl(std::make_shared<DrawingRawBuffer_D3D12>(pDevice, data, size, stride))
+        DrawingRawIndexBuffer_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, D3D12_SUBRESOURCE_DATA& data, uint32_t size, uint32_t stride, bool bStatic = false) :
+            m_pDevice(pDevice)
         {
             m_format = (stride == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 
-            m_indexBufferView.BufferLocation = m_pBufferImpl->GetAllocation().m_pGPUAddr;
+            if (bStatic)
+            {
+                m_pBufferImpl = std::make_shared<DrawingRawStaticBuffer_D3D12>(pDevice, data, size, stride);
+                auto pStaticBufferImpl = std::dynamic_pointer_cast<DrawingRawStaticBuffer_D3D12>(m_pBufferImpl);
+                assert(pStaticBufferImpl != nullptr);
+
+                m_indexBufferView.BufferLocation = pStaticBufferImpl->GetBuffer()->GetGPUVirtualAddress();
+            }
+            else
+            {
+                m_pBufferImpl = std::make_shared<DrawingRawDynamicBuffer_D3D12>(pDevice, data, size, stride);
+                auto pDynamicBufferImpl = std::dynamic_pointer_cast<DrawingRawDynamicBuffer_D3D12>(m_pBufferImpl);
+                assert(pDynamicBufferImpl != nullptr);
+
+                m_indexBufferView.BufferLocation = pDynamicBufferImpl->GetUploadAllocation().m_pGPUAddr;
+            }
+
             m_indexBufferView.SizeInBytes = static_cast<UINT>(size);
             m_indexBufferView.Format = GetFormat();
         }
 
         virtual ~DrawingRawIndexBuffer_D3D12() = default;
+
+        std::shared_ptr<ID3D12Resource> GetBuffer(void) const
+        {
+            return m_pBufferImpl->GetBuffer();
+        }
 
         D3D12_INDEX_BUFFER_VIEW GetIndexBufferView() const
         {
@@ -341,7 +462,6 @@ namespace Engine
         {
             return m_pBufferImpl->GetStride();
         }
-
 
         DXGI_FORMAT GetFormat() const
         {
@@ -376,12 +496,10 @@ namespace Engine
 
             auto pCommandManager = m_pDevice->GetCommandManager(eCommandList_Direct);
             auto pCommandList = pCommandManager->GetCommandList();
-            auto pUploadAllocator = pCommandList->GetUploadAllocator();
 
             assert(pCommandList != nullptr);
-            assert(pUploadAllocator != nullptr);
 
-            auto heapAllocation = pUploadAllocator->Allocate(m_sizeInBytes, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+            auto heapAllocation = pCommandList->AllocationUpload(m_sizeInBytes, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
             memcpy(heapAllocation.m_pCPUData, m_pData, m_sizeInBytes);
 
             pCommandList->GetCommandList()->SetGraphicsRootConstantBufferView(m_rootParameterIndex, heapAllocation.m_pGPUAddr);
@@ -450,6 +568,11 @@ namespace Engine
         {
             auto shaderResourceViewHandle = m_allocation.m_pCPUHandle;
             return shaderResourceViewHandle;
+        }
+
+        std::shared_ptr<ID3D12Resource> GetBuffer() const
+        {
+            return m_pResource;
         }
 
     protected:

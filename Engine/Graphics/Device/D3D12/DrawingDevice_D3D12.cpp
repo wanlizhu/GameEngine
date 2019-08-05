@@ -80,7 +80,9 @@ bool DrawingDevice_D3D12::CreateVertexBuffer(const DrawingVertexBufferDesc& desc
     auto pVertexBuffer = std::make_shared<DrawingVertexBuffer>(shared_from_this());
     auto commandList = m_pCopyCommandManager->GetCommandList();
 
-    std::shared_ptr<DrawingRawVertexBuffer> pVertexBufferRaw = std::make_shared<DrawingRawVertexBuffer_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), subResData, size, desc.mStrideInBytes);
+    bool bStatic = desc.mUsage != eUsage_Dynamic;
+
+    std::shared_ptr<DrawingRawVertexBuffer> pVertexBufferRaw = std::make_shared<DrawingRawVertexBuffer_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), subResData, size, desc.mStrideInBytes, bStatic);
 
     pVertexBuffer->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
     pVertexBuffer->SetResource(pVertexBufferRaw);
@@ -104,7 +106,9 @@ bool DrawingDevice_D3D12::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     auto pIndexBuffer = std::make_shared<DrawingIndexBuffer>(shared_from_this());
     auto commandList = m_pCopyCommandManager->GetCommandList();
 
-    std::shared_ptr<DrawingRawIndexBuffer> pIndexBufferRaw = std::make_shared<DrawingRawIndexBuffer_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), subResData, size, desc.mStrideInBytes);
+    bool bStatic = desc.mUsage != eUsage_Dynamic;
+
+    std::shared_ptr<DrawingRawIndexBuffer> pIndexBufferRaw = std::make_shared<DrawingRawIndexBuffer_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), subResData, size, desc.mStrideInBytes, bStatic);
 
     pIndexBuffer->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
     pIndexBuffer->SetResource(pIndexBufferRaw);
@@ -712,6 +716,48 @@ bool DrawingDevice_D3D12::Present(const std::shared_ptr<DrawingTarget> pTarget, 
     return true;
 }
 
+void* DrawingDevice_D3D12::Map(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch, uint32_t offset, uint32_t sizeInBytes)
+{
+    assert(pRes != nullptr);
+
+    if (subID < 0)
+        subID = 0;
+
+    switch(pRes->GetType())
+    {
+    case eResource_Texture:
+        return MapResource<DrawingRawTexture_D3D12, DrawingTexture>(pRes, subID);
+
+    case eResource_Vertex_Buffer:
+        return MapResource<DrawingRawVertexBuffer_D3D12, DrawingVertexBuffer>(pRes, subID);
+
+    case eResource_Index_Buffer:
+        return MapResource<DrawingRawIndexBuffer_D3D12, DrawingIndexBuffer>(pRes, subID);
+    }
+
+    return nullptr;
+}
+
+void DrawingDevice_D3D12::UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t subID)
+{
+    assert(pRes != nullptr);
+
+    if (subID < 0)
+        subID = 0;
+
+    switch(pRes->GetType())
+    {
+    case eResource_Texture:
+        return UnMapResource<DrawingRawTexture_D3D12, DrawingTexture>(pRes, subID);
+
+    case eResource_Vertex_Buffer:
+        return UnMapResource<DrawingRawVertexBuffer_D3D12, DrawingVertexBuffer>(pRes, subID);
+
+    case eResource_Index_Buffer:
+        return UnMapResource<DrawingRawIndexBuffer_D3D12, DrawingIndexBuffer>(pRes, subID);
+    }
+}
+
 void DrawingDevice_D3D12::Flush()
 {
     auto fenceValue = m_pDirectCommandManager->ExecuteAllCommandLists();
@@ -886,4 +932,40 @@ std::shared_ptr<DrawingRawPixelShader_D3D12> DrawingDevice_D3D12::CreatePixelSha
     }
 
     return CreatePixelShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
+}
+
+template <typename T, typename U>
+void* DrawingDevice_D3D12::MapResource(std::shared_ptr<DrawingResource> pRes, uint32_t subID)
+{
+    auto pResWrap = std::dynamic_pointer_cast<U>(pRes);
+    assert(pResWrap != nullptr);
+
+    auto pMapRes = std::dynamic_pointer_cast<T>(pResWrap->GetResource());
+    assert(pMapRes != nullptr);
+
+    void* pData = nullptr;
+    auto pBuffer = pMapRes->GetBuffer();
+
+    if (pBuffer != nullptr)
+    {
+        HRESULT hr = pBuffer->Map(subID, nullptr, &pData);
+        assert(SUCCEEDED(hr));
+    }
+
+    return pData;
+}
+
+template <typename T, typename U>
+void DrawingDevice_D3D12::UnMapResource(std::shared_ptr<DrawingResource> pRes, uint32_t aSubID)
+{
+    auto pResWrap = std::dynamic_pointer_cast<U>(pRes);
+    assert(pResWrap != nullptr);
+
+    auto pMapRes = std::dynamic_pointer_cast<T>(pResWrap->GetResource());
+    assert(pMapRes != nullptr);
+
+    auto pBuffer = pMapRes->GetBuffer();
+
+    if (pBuffer != nullptr)
+        pBuffer->Unmap(aSubID, nullptr);
 }

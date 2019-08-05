@@ -70,7 +70,10 @@
         "xloctime": "cpp",
         "random": "cpp",
         "set": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "atomic": "cpp",
+        "condition_variable": "cpp",
+        "shared_mutex": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

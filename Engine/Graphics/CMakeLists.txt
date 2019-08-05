@@ -16,6 +16,8 @@ file(GLOB SRC_D3D12
 file(GLOB SRC_RENDERER
     "Renderer/*.cpp"
     "Renderer/*.h"
+    "Renderer/Geometry/*.cpp"
+    "Renderer/Geometry/*.h"
 )
 
 file(GLOB SRC_MATH

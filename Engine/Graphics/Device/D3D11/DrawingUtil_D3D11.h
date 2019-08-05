@@ -9,27 +9,6 @@ namespace Engine
     class DrawingToD3DEnum_D3D11
     {
     public:
-        UINT operator[](uint32_t flags) const
-        {
-            UINT miscFlags = 0;
-            if ((flags & eResource_Gen_Mips) != 0)
-                miscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-            if ((flags & eResource_Cube_Map) != 0)
-                miscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
-
-            if ((flags & eResource_Raw_Buf) != 0)
-                miscFlags |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-
-            if ((flags & eResource_Struct_Buf) != 0)
-                miscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-
-            if ((flags & eResource_Draw_Indirect) != 0)
-                miscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
-            
-            return miscFlags;
-        }
-
         DXGI_SWAP_EFFECT operator[](EDrawingSwapChainType type) const
         {
             switch (type)
@@ -122,6 +101,8 @@ namespace Engine
             case eAccess_Read:
                 return D3D11_CPU_ACCESS_READ;
             case eAccess_Write:
+            case eAccess_Write_Discard:
+            case eAccess_Write_Append:
                 return D3D11_CPU_ACCESS_WRITE;
             case eAccess_RW:
                 return D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
@@ -391,6 +372,29 @@ namespace Engine
             d3d11MiscFlags |= D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
 
         return d3d11MiscFlags;
+    }
+
+    inline D3D11_MAP D3D11ResourceMapType(EDrawingAccessType access)
+    {
+        switch (access)
+        {
+        case eAccess_Read:
+            return D3D11_MAP_READ;
+
+        case eAccess_Write:
+            return D3D11_MAP_WRITE;
+
+        case eAccess_RW:
+            return D3D11_MAP_READ_WRITE;
+
+        case eAccess_Write_Append:
+            return D3D11_MAP_WRITE_NO_OVERWRITE;
+
+        case eAccess_No_Access:
+        case eAccess_Write_Discard:
+        default:
+            return D3D11_MAP_WRITE_DISCARD;
+        }
     }
 
     inline const DrawingToD3DEnum_D3D11& D3D11Enum(void)
