@@ -74,6 +74,9 @@ namespace Engine
         template<typename Comp>
         inline bool HasComponent();
 
+        template<typename Comp>
+        inline void AttachComponent(Comp component);
+
     public:
         EntityID m_id;
 
@@ -109,6 +112,13 @@ namespace Engine
         static_assert(std::is_base_of<IComponent, Comp>::value);
         return IsBitOf(m_compBitset, Comp::m_compID);
     };
+
+    template<typename Comp>
+    inline void IEntity::AttachComponent(Comp component)
+    {
+        IComponent* pComp = &component;
+        AttachComponent(Comp::m_compID, pComp, m_pWorld->GetCompTable());
+    }
 
     class IECSSystem : public IRuntimeModule
     {
@@ -157,6 +167,11 @@ namespace Engine
         {
             for (uint32_t i = 0; i < m_systemPool.size(); i++)
                 m_systemPool[i]->Tick(elapsedTime);
+        }
+
+        std::unordered_map<CompID, std::vector<uint8_t>>& GetCompTable()
+        {
+            return m_compTable;
         }
 
     private:

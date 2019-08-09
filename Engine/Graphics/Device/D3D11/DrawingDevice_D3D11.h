@@ -140,10 +140,10 @@ namespace Engine
         std::shared_ptr<DrawingRawVertexShader_D3D11> CreateVertexShaderFromString(std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pEntryName, std::shared_ptr<std::string> pSourceName, const char* pSrc, uint32_t size);
         std::shared_ptr<DrawingRawPixelShader_D3D11> CreatePixelShaderFromString(std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pEntryName, std::shared_ptr<std::string> pSourceName, const char* pSrc, uint32_t size);
 
-        template <typename T, typename U>
+        template<typename T, typename U>
         void* MapResource(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch);
 
-        template <typename T, typename U>
+        template<typename T, typename U>
         void UnMapResource(std::shared_ptr<DrawingResource> pRes, uint32_t aSubID);
 
     private:

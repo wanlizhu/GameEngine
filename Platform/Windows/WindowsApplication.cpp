@@ -44,7 +44,7 @@ void WindowsApplication::CreateMainWindow()
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-    wc.lpszClassName = "GameEngineApplication";
+    wc.lpszClassName = "GraphicsEngineApplication";
 
     RegisterClassEx(&wc);
 
@@ -52,7 +52,7 @@ void WindowsApplication::CreateMainWindow()
     int width_adjust = (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER));
 
     m_hWnd = CreateWindowEx(0,
-                            "GameEngineApplication",
+                            "GraphicsEngineApplication",
                             gpGlobal->GetConfiguration<AppConfiguration>().GetAppName(),
                             WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT,

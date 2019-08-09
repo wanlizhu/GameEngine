@@ -6,6 +6,7 @@
 #include "TransformComponent.h"
 #include "MeshFilterComponent.h"
 #include "MeshRendererComponent.h"
+#include "FrameGraphComponent.h"
 
 #include "DrawingSystem.h"
 #include "D3D11/DrawingDevice_D3D11.h"
@@ -36,44 +37,21 @@ void DrawingSystem::Initialize()
 
 void DrawingSystem::Shutdown()
 {
-    m_rendererTable.clear();
 }
 
 void DrawingSystem::Tick(float elapsedTime)
 {
-    for (auto& camera : m_pCameraList)
+    for (auto& pCamera : m_pCameraList)
     {
-        auto pCameraComponent = camera->GetComponent<CameraComponent>();
-        auto pTransformComponent = camera->GetComponent<TransformComponent>();
-
-        auto proj = UpdateProjectionMatrix(pCameraComponent);
-        auto view = UpdateViewMatrix(pTransformComponent);
-
-        m_pContext->UpdateContext(*m_pResourceTable);
-        m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
-
-        m_pDevice->ClearTarget(m_pContext->GetSwapChain(), pCameraComponent->GetBackground());
-        m_pDevice->ClearDepthBuffer(m_pContext->GetDepthBuffer(), 1.0f, 0, eClear_Depth);
-
-        auto& pRenderer = gpGlobal->GetRenderer(pCameraComponent->GetRendererType());
-        if (pRenderer == nullptr)
+        auto pFrameGraphComponent = pCamera->GetComponent<FrameGraphComponent>();
+        if (pFrameGraphComponent == nullptr)
             continue;
 
-        for (auto& pEntity : m_pMeshList)
-        {
-            auto pTrans = pEntity->GetComponent<TransformComponent>();
-            auto pMesh = pEntity->GetComponent<MeshFilterComponent>();
+        auto pFrameGraph = pFrameGraphComponent->GetFrameGraph();
+        if (pFrameGraph == nullptr)
+            continue;
 
-            auto trans = UpdateWorldMatrix(pTrans);
-            m_pContext->UpdateTransform(*m_pResourceTable, trans);
-
-            pRenderer->BeginDrawPass();
-            pRenderer->AttachMesh(pMesh->GetMesh());
-            pRenderer->FlushData();
-            pRenderer->Draw(*m_pResourceTable);
-            pRenderer->ResetData();
-            pRenderer->EndDrawPass();
-        }
+        pFrameGraph->EnqueuePasses(*m_pContext);
     }
 
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
@@ -166,10 +144,9 @@ bool DrawingSystem::RegisterRenderer()
         auto& pRenderer = gpGlobal->GetRenderer((ERendererType)type);
         if (pRenderer != nullptr)
         {
-            m_rendererTable.emplace((ERendererType)type, pRenderer);
             pRenderer->AttachDevice(m_pDevice, m_pContext);
+            pRenderer->BuildPass();
             pRenderer->DefineResources(*m_pResourceTable);
-            pRenderer->SetupStages();
         }
     }
     return true;
@@ -228,63 +205,82 @@ bool DrawingSystem::PostConfiguration()
 
     m_pDevice->Flush();
 
-    CreateDataResources();
-    MapResources();
+    BuildFrameGraph();
 
     return true;
 }
 
-void DrawingSystem::CreateDataResources()
+void DrawingSystem::BuildFrameGraph()
 {
-    std::for_each(m_rendererTable.begin(), m_rendererTable.end(), [this](RendererTable::value_type& aElem)
+    for (auto& pCamera : m_pCameraList)
     {
-        auto& pRenderer = aElem.second;
-        if (pRenderer != nullptr)
-            pRenderer->CreateDataResources(*m_pResourceTable);
-    });
+        std::shared_ptr<FrameGraph> pFrameGraph = std::make_shared<FrameGraph>();
+
+        FrameGraphComponent frameGraphComponent;
+        frameGraphComponent.SetFrameGraph(pFrameGraph);
+        pCamera->AttachComponent<FrameGraphComponent>(frameGraphComponent);
+
+        auto pCameraComponent = pCamera->GetComponent<CameraComponent>();
+
+        if (pCameraComponent->GetRendererType() == eRenderer_Forward)
+            BuildForwardFrameGraph(pFrameGraph, pCamera);
+    }
 }
 
-void DrawingSystem::MapResources()
+bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera)
 {
-    std::for_each(m_rendererTable.begin(), m_rendererTable.end(), [this](RendererTable::value_type& aElem)
-    {
-        auto& pRenderer = aElem.second;
-        if (pRenderer != nullptr)
-            pRenderer->MapResources(*m_pResourceTable);
+    auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
+    if (pRenderer == nullptr)
+        return false;
+
+    pRenderer->CreateDataResources(*m_pResourceTable);
+
+    auto pMainPass = pRenderer->GetPass(ForwardRenderer::BasicPrimitiveDefaultPass());
+    assert(pMainPass != nullptr);
+
+    auto& mainPassNode = pFrameGraph->AddPass(pMainPass, GraphicsBit);
+
+    mainPassNode.SetInitializeFunc([&](void) -> bool {
+        return true;
+    }); 
+
+    mainPassNode.SetExecuteFunc([&, pCamera, pRenderer, pMainPass](void) -> void {
+        auto pCameraComponent = pCamera->GetComponent<CameraComponent>();
+        auto pTransformComponent = pCamera->GetComponent<TransformComponent>();
+
+        assert(pCameraComponent != nullptr && pTransformComponent != nullptr);
+    
+        auto proj = UpdateProjectionMatrix(pCameraComponent);
+        auto view = UpdateViewMatrix(pTransformComponent);
+
+        m_pContext->UpdateContext(*m_pResourceTable);
+        m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+
+        m_pDevice->ClearTarget(m_pContext->GetSwapChain(), pCameraComponent->GetBackground());
+        m_pDevice->ClearDepthBuffer(m_pContext->GetDepthBuffer(), 1.0f, 0, eClear_Depth);
+
+        RenderQueueItemListType items;
+        GetVisableRenderable(items);
+
+        pRenderer->Begin();
+        pRenderer->AddRenderables(items);
+        pRenderer->Flush(*m_pResourceTable, pMainPass);
     });
+
+    pFrameGraph->FetchResources(*m_pResourceTable);
+
+    return true;
 }
 
-float4x4 DrawingSystem::UpdateWorldMatrix(TransformComponent* pTransform)
+void DrawingSystem::GetVisableRenderable(RenderQueueItemListType& items)
 {
-    float3 position = pTransform->GetPosition();
-    float3 rotate = pTransform->GetRotate();
-    float3 scale = pTransform->GetScale();
+    for (auto& pEntity : m_pMeshList)
+    {
+        auto pTrans = pEntity->GetComponent<TransformComponent>();
+        auto pMesh = pEntity->GetComponent<MeshFilterComponent>();
 
-    float cosR = std::cosf(rotate.y);
-    float sinR = std::sinf(rotate.y);
-
-    float4x4 posMatrix = {
-        1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        position.x, position.y, position.z, 1.f
-    };
-
-    float4x4 rotMatrix = {
-        cosR, 0.f, sinR, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        -sinR, 0.f, cosR, 0.f,
-        0.f, 0.f, 0.f, 1.f
-    };
-
-    float4x4 scaleMatrix = {
-        scale.x, 0.f, 0.f, 0.f,
-        0.f, scale.y, 0.f, 0.f,
-        0.f, 0.f, scale.z, 0.f,
-        0.f, 0.f, 0.f, 1.f
-    };
-
-    return Mat::Mul(scaleMatrix, Mat::Mul(rotMatrix, posMatrix));
+        items.push_back(RenderQueueItem{ dynamic_cast<IRenderable*>(pMesh->GetMesh().get()), pTrans});
+    }
 }
 
 float4x4 DrawingSystem::UpdateViewMatrix(TransformComponent* pTransform)

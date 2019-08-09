@@ -58,7 +58,7 @@ namespace Engine
         // Renderer
         std::shared_ptr<IRenderer> GetRenderer(ERendererType type);
 
-        template <typename T>
+        template<typename T>
         T& GetConfiguration()
         {
             return m_config.GetConfiguration<T>();

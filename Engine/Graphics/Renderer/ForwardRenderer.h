@@ -10,26 +10,20 @@ namespace Engine
         ForwardRenderer();
         virtual ~ForwardRenderer() {}
 
-        void Initialize() override;
-        void Shutdown() override;
-
-        void Tick(float elapsedTime) override;
-
         void DefineResources(DrawingResourceTable& resTable) override;
-        void SetupStages() override;
         void SetupBuffers(DrawingResourceTable& resTable) override;
-        void Cleanup() override;
 
+        void BuildPass() override;
+
+    private:
         void BeginDrawPass() override;
         void EndDrawPass() override;
 
         void FlushData() override;
         void ResetData() override;
         void UpdatePrimitive(DrawingResourceTable& resTable) override;
-        void Draw(DrawingResourceTable& resTable) override;
 
     public:
-        /* Basic Primitive Stage */
         // Define shader resource names
         FuncResourceName(BasicPrimitiveVertexShader);
         FuncResourceName(BasicPrimitivePixelShader);
@@ -37,8 +31,6 @@ namespace Engine
         FuncResourceName(BasicPrimitivePipelineState);
         // Define effect resource names
         FuncResourceName(BasicPrimitiveEffect);
-        // Define stage resource names
-        FuncResourceName(BasicPrimitiveStage);
         // Define effect resource names
         FuncResourceName(BasicPrimitiveDefaultPass);
 

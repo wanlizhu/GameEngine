@@ -7,18 +7,6 @@ ForwardRenderer::ForwardRenderer() : BaseRenderer()
 {
 }
 
-void ForwardRenderer::Initialize()
-{
-}
-
-void ForwardRenderer::Shutdown()
-{
-}
-
-void ForwardRenderer::Tick(float elapsedTime)
-{
-}
-
 void ForwardRenderer::DefineResources(DrawingResourceTable& resTable)
 {
     DefineDefaultResources(resTable);
@@ -26,19 +14,7 @@ void ForwardRenderer::DefineResources(DrawingResourceTable& resTable)
     DefinePipelineStateResource(resTable);
 }
 
-void ForwardRenderer::SetupStages()
-{
-    auto pStage = CreateStage(BasicPrimitiveStage());
-    pStage->AppendDrawingPass(CreateForwardBasePass(BasicPrimitiveDefaultPass(), BasicPrimitiveEffect()));
-
-    m_stageTable.AddDrawingStage(pStage->GetName(), pStage);
-}
-
 void ForwardRenderer::SetupBuffers(DrawingResourceTable& resTable)
-{
-}
-
-void ForwardRenderer::Cleanup()
 {
 }
 
@@ -90,10 +66,10 @@ void ForwardRenderer::UpdatePrimitive(DrawingResourceTable& resTable)
     pPrimitive->SetInstanceOffset(0);
 }
 
-void ForwardRenderer::Draw(DrawingResourceTable& resTable)
+void ForwardRenderer::BuildPass()
 {
-    UpdatePrimitive(resTable);
-    FlushStage(BasicPrimitiveStage());
+    auto& pMainPass = CreateForwardBasePass(BasicPrimitiveDefaultPass(), BasicPrimitiveEffect());
+    m_passTable[BasicPrimitiveDefaultPass()] = pMainPass;
 }
 
 void ForwardRenderer::DefineShaderResource(DrawingResourceTable& resTable)

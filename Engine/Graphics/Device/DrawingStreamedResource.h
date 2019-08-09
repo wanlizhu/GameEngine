@@ -46,10 +46,10 @@ namespace Engine
 
         void DoCopy(void* pDst, const void* pSrc, uint32_t eleCount);
 
-        template <class ResType>
+        template<class ResType>
         uint32_t GetElementCount(std::shared_ptr<ResType> pDevRes);
 
-        template <class ResType>
+        template<class ResType>
         uint32_t GetDeviceStrideInBytes(std::shared_ptr<ResType> pDevRes);
 
     protected:
@@ -73,7 +73,7 @@ namespace Engine
     class DrawingVertexBufferDesc;
     class DrawingIndexBufferDesc;
 
-    template <class ResType, class DescType>
+    template<class ResType, class DescType>
     class DrawingTransientResource : public DrawingStreamedResource
     {
     public:
@@ -118,7 +118,7 @@ namespace Engine
         virtual ~DrawingTransientIndexBuffer();
     };
 
-    template <class ResType, class DescType>
+    template<class ResType, class DescType>
     class DrawingPersistResource : public DrawingStreamedResource
     {
     public:

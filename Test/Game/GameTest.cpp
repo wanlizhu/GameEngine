@@ -23,6 +23,8 @@
 using namespace Engine;
 using namespace Platform;
 
+IComponent::CompTableType IComponent::m_compTable;
+
 class GameSetup : public Setup
 {
 public:

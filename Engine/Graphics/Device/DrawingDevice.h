@@ -468,7 +468,7 @@ namespace Engine
     template<EConfigurationDeviceType type>
     static std::shared_ptr<DrawingDevice> CreateNativeDevice() { return nullptr; }
 
-    template <typename DescType>
+    template<typename DescType>
     static void GetStructInfo(const DescType& descType, uint32_t& dataSetType, uint32_t& arraySize, uint32_t& structSize)
     {
         dataSetType = eDataSet_Struct;
@@ -477,7 +477,7 @@ namespace Engine
         arraySize = descType.Elements;
     }
     
-    template <typename DescType>
+    template<typename DescType>
     static bool GetBasicTypeInfo(const DescType& descType, uint32_t& dataSetType, uint32_t& rowSize, uint32_t& colSize, uint32_t& arraySize, uint32_t& structSize)
     {
         bool isValid = true;
@@ -539,7 +539,7 @@ namespace Engine
         return isValid;
     }
     
-    template <class DescType>
+    template<class DescType>
     static uint32_t GenerateParamType(const DescType& descType, uint32_t dataSetType, uint32_t rowSize, uint32_t colSize, uint32_t arraySize, uint32_t structSize, uint32_t& dataSize)
     {
         uint32_t paramType = (uint32_t)EParam_Invalid;

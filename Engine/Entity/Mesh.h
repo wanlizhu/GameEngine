@@ -4,14 +4,17 @@
 #include <vector>
 
 #include "IMesh.h"
+#include "IRenderable.h"
 
 namespace Engine
 {
-    class Mesh : public IMesh
+    class Mesh : public IMesh, public IRenderable
     {
     public:
         Mesh();
         virtual ~Mesh();
+
+        void GetRenderable(RenderQueue &queue, const TransformComponent* pTransformComp) const override;
 
         const std::vector<std::shared_ptr<Attribute>> GetAttributes() const override;
         const std::shared_ptr<char> GetIndexData() const override;

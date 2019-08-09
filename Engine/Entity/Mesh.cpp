@@ -14,6 +14,14 @@ Mesh::~Mesh()
     m_indexCount = 0;
 }
 
+void Mesh::GetRenderable(RenderQueue &queue, const TransformComponent* pTransformComp) const
+{
+    const IRenderable* renderable = this;
+
+    ERenderQueueType type = ERenderQueueType::Opaque;
+    auto pMesh = queue.Add<Mesh>(type, RenderQueueItem { renderable, pTransformComp });
+}
+
 const std::vector<std::shared_ptr<Attribute>> Mesh::GetAttributes() const
 {
     return m_pAttributes;

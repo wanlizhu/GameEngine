@@ -10,16 +10,53 @@ BaseRenderer::BaseRenderer()
 {
 }
 
-void BaseRenderer::MapResources(DrawingResourceTable& resTable)
-{
-    m_stageTable.FetchResources(resTable);
-}
-
 void BaseRenderer::CreateDataResources(DrawingResourceTable& resTable)
 {
     m_pTransientPositionBuffer = CreateTransientVertexBuffer(resTable, DefaultDynamicPositionBuffer());
     m_pTransientNormalBuffer = CreateTransientVertexBuffer(resTable, DefaultDynamicNormalBuffer());
     m_pTransientIndexBuffer = CreateTransientIndexBuffer(resTable, DefaultDynamicIndexBuffer());
+}
+
+std::shared_ptr<DrawingPass> BaseRenderer::GetPass(std::shared_ptr<std::string> pName)
+{
+    auto iter = m_passTable.find(pName);
+    if (iter == m_passTable.end())
+        return nullptr;
+
+    return iter->second;
+}
+
+void BaseRenderer::Begin()
+{
+    m_renderQueue.Reset();
+}
+
+void BaseRenderer::AddRenderables(RenderQueueItemListType renderables)
+{
+    for (auto& item : renderables)
+        item.pRenderable->GetRenderable(m_renderQueue, item.pTransformComp);
+}
+
+void BaseRenderer::Flush(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass)
+{
+    m_renderQueue.Dispatch(ERenderQueueType::Opaque, [&](const RenderQueueItem& item) -> void {
+        auto pMesh = dynamic_cast<const IMesh*>(item.pRenderable);
+        if (pMesh == nullptr)
+            return;
+
+        auto trans = UpdateWorldMatrix(item.pTransformComp);
+        m_pDeviceContext->UpdateTransform(resTable, trans);
+
+        BeginDrawPass();
+        AttachMesh(pMesh);
+        FlushData();
+        UpdatePrimitive(resTable);
+
+        pPass->Flush(*m_pDeviceContext);
+
+        ResetData();
+        EndDrawPass();
+    });
 }
 
 void BaseRenderer::AttachDevice(const std::shared_ptr<DrawingDevice>& pDevice, const std::shared_ptr<DrawingContext>& pContext)
@@ -28,7 +65,7 @@ void BaseRenderer::AttachDevice(const std::shared_ptr<DrawingDevice>& pDevice, c
     m_pDeviceContext = pContext;
 }
 
-void BaseRenderer::AttachMesh(std::shared_ptr<IMesh> pMesh)
+void BaseRenderer::AttachMesh(const IMesh* pMesh)
 {
     auto vertexCount = pMesh->VertexCount();
     auto indexCount = pMesh->IndexCount();
@@ -503,7 +540,6 @@ void BaseRenderer::AddConstantSlot(DrawingPass& pass, std::shared_ptr<std::strin
 void BaseRenderer::AddTextureSlot(DrawingPass& pass, std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pParamName)
 {
     pass.AddResourceSlot(pName, ResourceSlot_Texture, pParamName);
-    
 }
 
 void BaseRenderer::BindStaticInputs(DrawingPass& pass)
@@ -596,19 +632,40 @@ std::shared_ptr<DrawingPersistIndexBuffer> BaseRenderer::CreatePersistIndexBuffe
     return std::make_shared<DrawingPersistIndexBuffer>(pTex);
 }
 
-std::shared_ptr<DrawingStage> BaseRenderer::CreateStage(std::shared_ptr<std::string> pName)
-{
-    return std::make_shared<DrawingStage>(pName);
-}
-
 std::shared_ptr<DrawingPass> BaseRenderer::CreatePass(std::shared_ptr<std::string> pName)
 {
     return std::make_shared<DrawingPass>(pName, m_pDevice);
 }
 
-void BaseRenderer::FlushStage(std::shared_ptr<std::string> pStageName)
+float4x4 BaseRenderer::UpdateWorldMatrix(const TransformComponent* pTransform)
 {
-    auto stage = m_stageTable.GetDrawingStage(pStageName);
-    if (stage != nullptr)
-        stage->Flush(*m_pDeviceContext);
+    float3 position = pTransform->GetPosition();
+    float3 rotate = pTransform->GetRotate();
+    float3 scale = pTransform->GetScale();
+
+    float cosR = std::cosf(rotate.y);
+    float sinR = std::sinf(rotate.y);
+
+    float4x4 posMatrix = {
+        1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        position.x, position.y, position.z, 1.f
+    };
+
+    float4x4 rotMatrix = {
+        cosR, 0.f, sinR, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        -sinR, 0.f, cosR, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+
+    float4x4 scaleMatrix = {
+        scale.x, 0.f, 0.f, 0.f,
+        0.f, scale.y, 0.f, 0.f,
+        0.f, 0.f, scale.z, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+
+    return Mat::Mul(scaleMatrix, Mat::Mul(rotMatrix, posMatrix));
 }

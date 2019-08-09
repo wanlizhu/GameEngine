@@ -14,6 +14,7 @@
 #include "DrawingEffectPool.h"
 #include "DrawingResourceTable.h"
 #include "ForwardRenderer.h"
+#include "FrameGraph.h"
 
 namespace Engine
 {
@@ -43,13 +44,14 @@ namespace Engine
         bool RegisterRenderer();
         bool PostConfiguration();
 
-        void CreateDataResources();
-        void MapResources();
+        void BuildFrameGraph();
+        bool BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
+
+        void GetVisableRenderable(RenderQueueItemListType& items);
 
         std::shared_ptr<DrawingTarget> CreateSwapChain();
         std::shared_ptr<DrawingDepthBuffer> CreateDepthBuffer();
 
-        float4x4 UpdateWorldMatrix(TransformComponent* pTransform);
         float4x4 UpdateViewMatrix(TransformComponent* pTransform);
         float4x4 UpdateProjectionMatrix(CameraComponent* pCamera);
 
@@ -67,8 +69,5 @@ namespace Engine
 
         std::vector<std::shared_ptr<IEntity>> m_pCameraList;
         std::vector<std::shared_ptr<IEntity>> m_pMeshList;
-
-        typedef std::unordered_map<ERendererType, std::shared_ptr<IRenderer>> RendererTable;
-        RendererTable m_rendererTable;
     };
 }

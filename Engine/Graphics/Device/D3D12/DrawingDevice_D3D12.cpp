@@ -934,7 +934,7 @@ std::shared_ptr<DrawingRawPixelShader_D3D12> DrawingDevice_D3D12::CreatePixelSha
     return CreatePixelShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
 }
 
-template <typename T, typename U>
+template<typename T, typename U>
 void* DrawingDevice_D3D12::MapResource(std::shared_ptr<DrawingResource> pRes, uint32_t subID)
 {
     auto pResWrap = std::dynamic_pointer_cast<U>(pRes);
@@ -955,7 +955,7 @@ void* DrawingDevice_D3D12::MapResource(std::shared_ptr<DrawingResource> pRes, ui
     return pData;
 }
 
-template <typename T, typename U>
+template<typename T, typename U>
 void DrawingDevice_D3D12::UnMapResource(std::shared_ptr<DrawingResource> pRes, uint32_t aSubID)
 {
     auto pResWrap = std::dynamic_pointer_cast<U>(pRes);

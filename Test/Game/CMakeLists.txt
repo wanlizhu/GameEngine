@@ -18,6 +18,7 @@ target_link_libraries(
     GameTest
     WindowsApp
     Common
+    Component
     Graphics
     Entity
 )
@@ -25,6 +26,6 @@ target_link_libraries(
 set_target_properties(
     WindowsApp
     PROPERTIES
-    FOLDER ${FOLDER_APP}
+    FOLDER ${FOLDER_TEST}
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
 )

@@ -52,7 +52,7 @@ public:                                                                 \
     public:
         Configuration() = default;
 
-        template <typename T>
+        template<typename T>
         inline T& GetConfiguration();
 
     protected:
@@ -60,19 +60,19 @@ public:                                                                 \
         GraphicsConfiguration mGraphicsConfig;
     };
 
-    template <typename T>
+    template<typename T>
     inline T& Configuration::GetConfiguration()
     {
         static_assert(false);
     }
 
-    template <>
+    template<>
     inline AppConfiguration& Configuration::GetConfiguration<AppConfiguration>()
     {
         return mAppConfig;
     }
 
-    template <>
+    template<>
     inline GraphicsConfiguration& Configuration::GetConfiguration<GraphicsConfiguration>()
     {
         return mGraphicsConfig;

@@ -32,6 +32,8 @@ namespace Engine
         Allocation Allocate(uint64_t sizeInBytes, uint64_t alignment);
         void Reset();
 
+        
+
     private:
         struct Page
         {
