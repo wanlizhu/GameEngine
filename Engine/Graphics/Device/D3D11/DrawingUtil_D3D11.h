@@ -292,7 +292,7 @@ namespace Engine
 
         D3D11_FILTER operator()(EDrawingSamplerModeType mode, EDrawingFilterModeType min, EDrawingFilterModeType mag, EDrawingFilterModeType mip) const
         {
-            return D3D11_FILTER_MIN_MAG_MIP_POINT;
+            return D3D11_FILTER_MIN_MAG_MIP_LINEAR;
         }
     };
 

@@ -1,7 +1,6 @@
 #include <assert.h>
 
 #include "Global.h"
-#include "AnimationComponent.h"
 
 #include "AnimationSystem.h"
 

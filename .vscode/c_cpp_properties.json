@@ -17,6 +17,7 @@
                 "${workspaceFolder}/Engine/Graphics/Device",
                 "${workspaceFolder}/Engine/Graphics/Renderer",
                 "${workspaceFolder}/Engine/Entity",
+                "${workspaceFolder}/Engine/Entity/Light",
                 "${workspaceFolder}/Engine/Entity/Mesh",
                 "${workspaceFolder}/Engine/Entity/Scene",
                 "${workspaceFolder}/Engine/Math",

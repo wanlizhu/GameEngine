@@ -24,7 +24,7 @@ target_link_libraries(
 )
 
 set_target_properties(
-    WindowsApp
+    GameTest
     PROPERTIES
     FOLDER ${FOLDER_TEST}
     RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}

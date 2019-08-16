@@ -66,7 +66,7 @@ static void UpdateSampler(DrawingParameter* pParam, ID3DX11EffectVariable* pVar)
     if (pSampler == nullptr) return;
 
     auto pState = static_cast<const DrawingRawSamplerState_D3D11*>(pParam->AsSampler());
-    pSampler->SetSampler(0, pState != nullptr ? pState->Get().get() : nullptr);
+    pSampler->SetSampler(0, pState != nullptr ? pState->GetState().get() : nullptr);
 }
 
 void DrawingRawFxEffect_D3D11::_SParamVar::UpdateParamValue(const DrawingRawFxEffect_D3D11* apEffect)
@@ -269,8 +269,8 @@ void DrawingRawShader_D3D11::ProcessVariables(std::shared_ptr<std::string> pName
         D3D11_SHADER_VARIABLE_DESC varDesc;
         pD3D11Var->GetDesc(&varDesc);
 
-        if (0 == (varDesc.uFlags & D3D_SVF_USED))
-            continue;
+        //if (0 == (varDesc.uFlags & D3D_SVF_USED))
+        //    continue;
 
         VariableDesc imp;
         imp.mpName = strPtr(varDesc.Name);
@@ -416,7 +416,7 @@ DrawingRawShaderEffect_D3D11::DrawingRawShaderEffect_D3D11(std::shared_ptr<Drawi
     {
         m_shaderBlocks[DrawingRawShader::RawShader_PS] = std::make_shared<ShaderBlock>();
         m_shaderBlocks[DrawingRawShader::RawShader_PS]->mpShader = pPixelShader;
-        LoadShaderInfo(vsShaderImpl, DrawingRawShader::RawShader_PS);
+        LoadShaderInfo(psShaderImpl, DrawingRawShader::RawShader_PS);
     }
 }
 
@@ -477,6 +477,7 @@ void DrawingRawShaderEffect_D3D11::LoadShaderInfo(const DrawingRawShader_D3D11* 
 {
     LoadConstantBufferFromShader(pShader, shaderType);
     LoadTexturesFromShader(pShader, shaderType);
+    LoadSamplersFromShader(pShader, shaderType);
 }
 
 void DrawingRawShaderEffect_D3D11::LoadConstantBufferFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
@@ -494,6 +495,16 @@ void DrawingRawShaderEffect_D3D11::LoadTexturesFromShader(const DrawingRawShader
         auto& desc = item.second;
         auto paramType = COMPOSE_TYPE(eObject_Texture, eDataSet_Object, eBasic_FP32, desc.mCount <= 1 ? 0 : desc.mCount, 0, 0);
         CheckAndAddResource(desc, paramType, shaderType, mTexTable);
+    }
+}
+
+void DrawingRawShaderEffect_D3D11::LoadSamplersFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType)
+{
+    for (auto& item : pShader->GetSamplerTable())
+    {
+        auto& desc = item.second;
+        auto paramType = COMPOSE_TYPE(eObject_Sampler, eDataSet_Object, eBasic_FP32, desc.mCount <= 1 ? 0 : desc.mCount, 0, 0);
+        CheckAndAddResource(desc, paramType, shaderType, mSamplerTable);
     }
 }
 
@@ -618,6 +629,27 @@ void DrawingRawShaderEffect_D3D11::SetTextureSlots(ShaderBlock& shaderBlock, con
 
 void DrawingRawShaderEffect_D3D11::SetSamplerSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType)
 {
+    for (auto& item : mSamplerTable)
+    {
+        auto& resDesc = item.second;
+        if (nullptr == resDesc.mpParam || resDesc.mStartSlot[shaderType] == EMPTY_SLOT)
+            continue;
+
+        uint32_t arraySize{ 0 };
+        auto pSamplerArray = resDesc.mpParam->AsSamplerArray(arraySize);
+        assert(arraySize == 0 || arraySize == resDesc.mCount);
+
+        for (uint32_t index = 0; index < resDesc.mCount; ++index)
+        {
+            auto pSampler = static_cast<const DrawingRawSamplerState_D3D11*>(pSamplerArray[index]);
+            if (pSampler == nullptr)
+                continue;
+
+            uint32_t curSlot = index + resDesc.mStartSlot[shaderType];
+            shaderBlock.mSamplerSlots[curSlot] = pSampler->GetState().get();
+            shaderBlock.mSamplerSlotsCount = max(shaderBlock.mSamplerSlotsCount, curSlot);
+        }
+    }
 }
 
 void DrawingRawShaderEffect_D3D11::SetTexBufferSlots(ShaderBlock& shaderBlock, const DrawingRawShader::DrawingRawShaderType shaderType)

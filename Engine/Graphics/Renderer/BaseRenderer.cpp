@@ -37,6 +37,11 @@ void BaseRenderer::AddRenderables(RenderQueueItemListType renderables)
         item.pRenderable->GetRenderable(m_renderQueue, item.pTransformComp);
 }
 
+void BaseRenderer::Clear(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass)
+{
+    
+}
+
 void BaseRenderer::Flush(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass)
 {
     m_renderQueue.Dispatch(ERenderQueueType::Opaque, [&](const RenderQueueItem& item) -> void {
@@ -92,7 +97,8 @@ void BaseRenderer::AttachMesh(const IMesh* pMesh)
 
 void BaseRenderer::DefineDefaultResources(DrawingResourceTable& resTable)
 {
-    DefineDefaultVertexFormat(resTable);
+    DefineVertexFormatP(resTable);
+    DefineVertexFormatPN(resTable);
 
     DefineDynamicVertexBuffer(DefaultDynamicPositionBuffer(), PositionOffset, MAX_VERTEX_COUNT, resTable);
     DefineDynamicVertexBuffer(DefaultDynamicNormalBuffer(), NormalOffset, MAX_VERTEX_COUNT, resTable);
@@ -102,6 +108,10 @@ void BaseRenderer::DefineDefaultResources(DrawingResourceTable& resTable)
     DefineViewMatrixConstantBuffer(resTable);
     DefineProjectionMatrixConstantBuffer(resTable);
 
+    DefineTarget(DefaultTarget(), resTable);
+    DefineDepthBuffer(DefaultDepthBuffer(), resTable);
+
+    DefineExternalTarget(ShadowMapTarget(), resTable);
     DefineExternalTarget(ScreenTarget(), resTable);
     DefineExternalDepthBuffer(ScreenDepthBuffer(), resTable);
 
@@ -140,8 +150,8 @@ void BaseRenderer::DefineLinkedEffect(std::shared_ptr<std::string> pEffectName, 
     resTable.AddResourceEntry(pEffectName, pDesc);
 }
 
-void BaseRenderer::DefinePipelineState(std::shared_ptr<std::string> pVertexFormatName,
-                                       std::shared_ptr<std::string> pPipelineStateName, 
+void BaseRenderer::DefinePipelineState(std::shared_ptr<std::string> pPipelineStateName,
+                                       std::shared_ptr<std::string> pVertexFormatName,
                                        std::shared_ptr<std::string> pPrimitiveName,
                                        std::shared_ptr<std::string> pEffectName,
                                        std::shared_ptr<std::string> pBlendStateName,
@@ -183,7 +193,24 @@ void BaseRenderer::DefinePixelShader(std::shared_ptr<std::string> pShaderName, s
     DoDefineShader<DrawingPixelShaderDesc>(pShaderName, pFileName, pEntryName, resTable);
 }
 
-void BaseRenderer::DefineDefaultVertexFormat(DrawingResourceTable& resTable)
+void BaseRenderer::DefineVertexFormatP(DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingVertexFormatDesc>();
+
+    DrawingVertexFormatDesc::VertexInputElement inputElem;
+
+    inputElem.mFormat = eFormat_R32G32B32_FLOAT;
+    inputElem.mpName = strPtr("POSITION");
+    inputElem.mIndex = 0;
+    inputElem.mSlot = 0;
+    inputElem.mOffset = 0;
+    inputElem.mInstanceStepRate = 0;
+    pDesc->m_inputElements.emplace_back(inputElem);
+
+    resTable.AddResourceEntry(VertexFormatP(), pDesc);
+}
+
+void BaseRenderer::DefineVertexFormatPN(DrawingResourceTable& resTable)
 {
     auto pDesc = std::make_shared<DrawingVertexFormatDesc>();
 
@@ -205,7 +232,7 @@ void BaseRenderer::DefineDefaultVertexFormat(DrawingResourceTable& resTable)
     inputElem.mInstanceStepRate = 0;
     pDesc->m_inputElements.emplace_back(inputElem);
 
-    resTable.AddResourceEntry(DefaultVertexFormat(), pDesc);
+    resTable.AddResourceEntry(VertexFormatPN(), pDesc);
 }
 
 void BaseRenderer::DefineStaticVertexBuffer(std::shared_ptr<std::string> pName, uint32_t stride, uint32_t count, const void* data, uint32_t size, DrawingResourceTable& resTable)
@@ -383,6 +410,32 @@ void BaseRenderer::DefineDefaultRasterState(DrawingResourceTable& resTable)
     resTable.AddResourceEntry(DefaultRasterState(), pDesc);
 }
 
+void BaseRenderer::DefineTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingTargetDesc>();
+
+    pDesc->mWidth = gpGlobal->GetConfiguration<AppConfiguration>().GetWidth();
+    pDesc->mHeight = gpGlobal->GetConfiguration<AppConfiguration>().GetHeight();
+    pDesc->mFormat = eFormat_R8G8B8A8_UNORM;
+    pDesc->mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
+    pDesc->mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
+
+    resTable.AddResourceEntry(pName, pDesc);
+}
+
+void BaseRenderer::DefineDepthBuffer(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingDepthBufferDesc>();
+
+    pDesc->mWidth = gpGlobal->GetConfiguration<AppConfiguration>().GetWidth();
+    pDesc->mHeight = gpGlobal->GetConfiguration<AppConfiguration>().GetHeight();
+    pDesc->mFormat = eFormat_D24S8;
+    pDesc->mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
+    pDesc->mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
+
+    resTable.AddResourceEntry(pName, pDesc);
+}
+
 void BaseRenderer::DefineExternalTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
 {
     auto pDesc = std::make_shared<DrawingTargetDesc>();
@@ -395,6 +448,15 @@ void BaseRenderer::DefineExternalTarget(std::shared_ptr<std::string> pName, Draw
 void BaseRenderer::DefineExternalDepthBuffer(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
 {
     auto pDesc = std::make_shared<DrawingDepthBufferDesc>();
+
+    pDesc->SetIsExternalResource(true);
+
+    resTable.AddResourceEntry(pName, pDesc);
+}
+
+void BaseRenderer::DefineExternalTexture(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
+{
+    auto pDesc = std::make_shared<DrawingTextureDesc>();
 
     pDesc->SetIsExternalResource(true);
 
@@ -542,17 +604,31 @@ void BaseRenderer::AddTextureSlot(DrawingPass& pass, std::shared_ptr<std::string
     pass.AddResourceSlot(pName, ResourceSlot_Texture, pParamName);
 }
 
-void BaseRenderer::BindStaticInputs(DrawingPass& pass)
+void BaseRenderer::BindStaticInputsP(DrawingPass& pass)
 {
-    BindVertexFormat(pass, DefaultVertexFormat());
+    BindVertexFormat(pass, VertexFormatP());
+    BindVertexBuffer(pass, 0, DefaultStaticPositionBuffer());
+    BindIndexBuffer(pass, DefaultStaticIndexBuffer());
+}
+
+void BaseRenderer::BindDynamicInputsP(DrawingPass& pass)
+{
+    BindVertexFormat(pass, VertexFormatP());
+    BindVertexBuffer(pass, 0, DefaultDynamicPositionBuffer());
+    BindIndexBuffer(pass, DefaultDynamicIndexBuffer());
+}
+
+void BaseRenderer::BindStaticInputsPN(DrawingPass& pass)
+{
+    BindVertexFormat(pass, VertexFormatPN());
     BindVertexBuffer(pass, 0, DefaultStaticPositionBuffer());
     BindVertexBuffer(pass, 1, DefaultStaticNormalBuffer());
     BindIndexBuffer(pass, DefaultStaticIndexBuffer());
 }
 
-void BaseRenderer::BindDynamicInputs(DrawingPass& pass)
+void BaseRenderer::BindDynamicInputsPN(DrawingPass& pass)
 {
-    BindVertexFormat(pass, DefaultVertexFormat());
+    BindVertexFormat(pass, VertexFormatPN());
     BindVertexBuffer(pass, 0, DefaultDynamicPositionBuffer());
     BindVertexBuffer(pass, 1, DefaultDynamicNormalBuffer());
     BindIndexBuffer(pass, DefaultDynamicIndexBuffer());
@@ -567,8 +643,8 @@ void BaseRenderer::BindStates(DrawingPass& pass)
 
 void BaseRenderer::BindOutput(DrawingPass& pass)
 {
-    BindTarget(pass, 0, ScreenTarget());
-    BindDepthBuffer(pass, ScreenDepthBuffer());
+    BindTarget(pass, 0, DefaultTarget());
+    BindDepthBuffer(pass, DefaultDepthBuffer());
 }
 
 void BaseRenderer::BindConstants(DrawingPass& pass)

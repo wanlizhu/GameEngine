@@ -1,18 +1,24 @@
+#include <assert.h>
+
 #include "AnimationComponent.h"
+#include "AnimationSystem.h"
 
 using namespace Engine;
 
-void AnimationComponent::SetAnimationFunc(AnimationComponent::AnimationFunc func)
+void AnimationComponent::SetAnimationFunc(AnimationFunc& func)
 {
-    m_animFunc = func;
+    auto size = AnimationSystem::s_cbTables.size();
+    m_cbID = (uint32_t)size;
+    AnimationSystem::s_cbTables.emplace_back(func);
 }
 
-const AnimationComponent::AnimationFunc& AnimationComponent::GetAnimationFunc()
+const AnimationFunc& AnimationComponent::GetAnimationFunc()
 {
-    return m_animFunc;
+    return AnimationSystem::s_cbTables[m_cbID];
 }
 
 void AnimationComponent::Apply(float elapsedTime)
 {
-    m_animFunc(elapsedTime);
+    auto func = GetAnimationFunc();
+    func(elapsedTime);
 }

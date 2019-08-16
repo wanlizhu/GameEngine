@@ -7,10 +7,10 @@ PlaneMesh::PlaneMesh()
     float3 position[] =
     {
         //Plane
-        float3(-10.f, 0.f, -10.f),
-        float3(-10.f, 0.f,  10.f),
-        float3( 10.f, 0.f, -10.f),
-        float3( 10.f, 0.f,  10.f),
+        float3(-10.f, 1.f, -10.f),
+        float3(-10.f, 1.f,  10.f),
+        float3( 10.f, 1.f, -10.f),
+        float3( 10.f, 1.f,  10.f),
     };
 
     float3 normal[] = 

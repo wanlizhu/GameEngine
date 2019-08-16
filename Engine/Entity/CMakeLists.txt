@@ -3,6 +3,11 @@ file(GLOB SRC_ENTITY
     "*.h"
 )
 
+file(GLOB SRC_LIGHT
+    "Light/*.cpp"
+    "Light/*.h"
+)
+
 file(GLOB SRC_MESH
     "Mesh/*.cpp"
     "Mesh/*.h"
@@ -18,6 +23,7 @@ source_group(Scene FILES ${SRC_SCENE})
 add_library(
     Entity
     ${SRC_ENTITY}
+    ${SRC_LIGHT}
     ${SRC_MESH}
     ${SRC_SCENE}
     ${SRC_SYSTEM}

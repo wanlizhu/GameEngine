@@ -160,62 +160,73 @@ bool DrawingDevice_D3D11::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     return true;
 }
 
-bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[], uint32_t size[], uint32_t slices)
+bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData[], uint32_t size[], uint32_t slices)
 {
     auto pTexture = std::make_shared<DrawingTexture>(shared_from_this());
     std::shared_ptr<DrawingRawTexture> pRawTexture = nullptr;
 
-    std::vector<D3D11_SUBRESOURCE_DATA> subResData(slices);
-    switch (desc.mType)
+    auto pTarget = std::static_pointer_cast<DrawingTarget>(pRefRes);
+    if (pTarget != nullptr)
     {
-        case eTexture_1D:
-        case eTexture_1DArray:
-        {
-            break;
-        }
-        case eTexture_2D:
-        case eTexture_2DArray:
-        case eTexture_Cube:
-        {
-            D3D11_TEXTURE2D_DESC texture2DDesc;
-            texture2DDesc.Width = desc.mWidth;
-            texture2DDesc.Height = desc.mHeight;
-            texture2DDesc.MipLevels = desc.mMipLevels;
-            texture2DDesc.ArraySize = desc.mArraySize;
-            texture2DDesc.Format = D3D11Enum(desc.mFormat);
-            texture2DDesc.SampleDesc.Count = desc.mSampleCount;
-            texture2DDesc.SampleDesc.Quality = desc.mSampleQuality;
-            texture2DDesc.Usage = D3D11Enum(desc.mUsage);
-            texture2DDesc.BindFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE;
-            texture2DDesc.CPUAccessFlags = D3D11Enum(desc.mAccess);
-            texture2DDesc.MiscFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11ResourceMiscFlag(desc.mFlags);
+        auto pRawTarget = std::static_pointer_cast<DrawingRawRenderTarget_D3D11>(pTarget->GetResource());
+        assert(pRawTarget != nullptr);
 
-            if ((desc.mUsage != eUsage_Staging) && (desc.mFlags & eResource_Gen_Mips))
-                texture2DDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
-
-            if (desc.mType == eTexture_Cube)
+        pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(*pRawTarget);
+    }
+    else
+    {
+        std::vector<D3D11_SUBRESOURCE_DATA> subResData(slices);
+        switch (desc.mType)
+        {
+            case eTexture_1D:
+            case eTexture_1DArray:
             {
-                texture2DDesc.ArraySize = 6;
-                texture2DDesc.MiscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+                break;
             }
-
-            if (!subResData.empty())
+            case eTexture_2D:
+            case eTexture_2DArray:
+            case eTexture_Cube:
             {
-                auto mipLevels = slices / desc.mArraySize;
-                for (uint32_t index = 0; index < desc.mArraySize; ++index)
+                D3D11_TEXTURE2D_DESC texture2DDesc;
+                texture2DDesc.Width = desc.mWidth;
+                texture2DDesc.Height = desc.mHeight;
+                texture2DDesc.MipLevels = desc.mMipLevels;
+                texture2DDesc.ArraySize = desc.mArraySize;
+                texture2DDesc.Format = D3D11Enum(desc.mFormat);
+                texture2DDesc.SampleDesc.Count = desc.mSampleCount;
+                texture2DDesc.SampleDesc.Quality = desc.mSampleQuality;
+                texture2DDesc.Usage = D3D11Enum(desc.mUsage);
+                texture2DDesc.BindFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE;
+                texture2DDesc.CPUAccessFlags = D3D11Enum(desc.mAccess);
+                texture2DDesc.MiscFlags = (texture2DDesc.Usage == D3D11_USAGE_STAGING) ? 0 : D3D11ResourceMiscFlag(desc.mFlags);
+    
+                if ((desc.mUsage != eUsage_Staging) && (desc.mFlags & eResource_Gen_Mips))
+                    texture2DDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    
+                if (desc.mType == eTexture_Cube)
                 {
-                    auto bytesPerRow = desc.mBytesPerRow;
-                    for (uint32_t level = 0; level < mipLevels; ++level)
+                    texture2DDesc.ArraySize = 6;
+                    texture2DDesc.MiscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+                }
+    
+                if (!subResData.empty())
+                {
+                    auto mipLevels = slices / desc.mArraySize;
+                    for (uint32_t index = 0; index < desc.mArraySize; ++index)
                     {
-                        auto LOD = index * level + level;
-                        ZeroMemory(&subResData[LOD], sizeof(D3D11_SUBRESOURCE_DATA));
-                        subResData[LOD].pSysMem = *(pData++);
-                        subResData[LOD].SysMemPitch = bytesPerRow;
-                        bytesPerRow = bytesPerRow > 1U ? bytesPerRow >> 1 : 1U;
+                        auto bytesPerRow = desc.mBytesPerRow;
+                        for (uint32_t level = 0; level < mipLevels; ++level)
+                        {
+                            auto LOD = index * level + level;
+                            ZeroMemory(&subResData[LOD], sizeof(D3D11_SUBRESOURCE_DATA));
+                            subResData[LOD].pSysMem = *(pData++);
+                            subResData[LOD].SysMemPitch = bytesPerRow;
+                            bytesPerRow = bytesPerRow > 1U ? bytesPerRow >> 1 : 1U;
+                        }
                     }
                 }
+                pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), texture2DDesc, subResData);
             }
-            pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), texture2DDesc, subResData);
         }
     }
 
@@ -597,7 +608,7 @@ void DrawingDevice_D3D11::SetBlendState(std::shared_ptr<DrawingBlendState> pBlen
     {
         auto pBlendState = std::dynamic_pointer_cast<DrawingRawBlendState_D3D11>(pBlend->GetResource()); 
         assert(pBlendState != nullptr);
-        m_pDeviceContext->OMSetBlendState(pBlendState->Get().get(), blendFactor.mData, sampleMask);
+        m_pDeviceContext->OMSetBlendState(pBlendState->GetState().get(), blendFactor.mData, sampleMask);
     }
     else
         m_pDeviceContext->OMSetBlendState(nullptr, float4(1.0f).mData, 0xffffffff);
@@ -609,7 +620,7 @@ void DrawingDevice_D3D11::SetDepthState(std::shared_ptr<DrawingDepthState> pDept
     {
         auto pDepthState = std::dynamic_pointer_cast<DrawingRawDepthState_D3D11>(pDepth->GetResource()); 
         assert(pDepthState != nullptr);
-        m_pDeviceContext->OMSetDepthStencilState(pDepthState->Get().get(), stencilRef);
+        m_pDeviceContext->OMSetDepthStencilState(pDepthState->GetState().get(), stencilRef);
     }
     else
         m_pDeviceContext->OMSetDepthStencilState(nullptr, 1U);
@@ -621,7 +632,7 @@ void DrawingDevice_D3D11::SetRasterState(std::shared_ptr<DrawingRasterState> pRa
     {
         auto pRasterState = std::dynamic_pointer_cast<DrawingRawRasterState_D3D11>(pRaster->GetResource()); 
         assert(pRasterState != nullptr);
-        m_pDeviceContext->RSSetState(pRasterState->Get().get());
+        m_pDeviceContext->RSSetState(pRasterState->GetState().get());
     }
     else
         m_pDeviceContext->RSSetState(nullptr);
@@ -687,19 +698,19 @@ void DrawingDevice_D3D11::SetViewport(Box2* vp)
 
 void DrawingDevice_D3D11::SetBlendState(const std::shared_ptr<DrawingRawBlendState_D3D11> pBlendState, const float4& blendFactor, uint32_t sampleMask)
 {
-    ID3D11BlendState* pRaw = pBlendState != nullptr ? pBlendState->Get().get() : nullptr;
+    ID3D11BlendState* pRaw = pBlendState != nullptr ? pBlendState->GetState().get() : nullptr;
     m_pDeviceContext->OMSetBlendState(pRaw, blendFactor.mData, sampleMask);
 }
 
 void DrawingDevice_D3D11::SetDepthState(const std::shared_ptr<DrawingRawDepthState_D3D11> pDepthState, uint32_t stencilRef)
 {
-    ID3D11DepthStencilState* pRaw = pDepthState != nullptr ? pDepthState->Get().get() : nullptr;
+    ID3D11DepthStencilState* pRaw = pDepthState != nullptr ? pDepthState->GetState().get() : nullptr;
     m_pDeviceContext->OMSetDepthStencilState(pRaw, stencilRef);
 }
 
 void DrawingDevice_D3D11::SetRasterState(const std::shared_ptr<DrawingRawRasterState_D3D11> pRasterState)
 {
-    ID3D11RasterizerState* pRaw = pRasterState != nullptr ? pRasterState->Get().get() : nullptr;
+    ID3D11RasterizerState* pRaw = pRasterState != nullptr ? pRasterState->GetState().get() : nullptr;
     m_pDeviceContext->RSSetState(pRaw);
 }
 
@@ -853,6 +864,28 @@ bool DrawingDevice_D3D11::UpdateEffectBuffer(std::shared_ptr<DrawingTexBuffer> p
 
 bool DrawingDevice_D3D11::UpdateEffectSampler(std::shared_ptr<DrawingSamplerState> pSampler, std::shared_ptr<std::string> pName, std::shared_ptr<DrawingEffect> pEffect)
 {
+    assert(pEffect != nullptr);
+    assert(pSampler != nullptr);
+    assert(pName != nullptr);
+
+    auto pRawEffect = std::dynamic_pointer_cast<DrawingRawEffect_D3D11>(pEffect->GetResource());
+    assert(pRawEffect != nullptr);
+
+    auto pRawSampler = std::dynamic_pointer_cast<DrawingRawSamplerState_D3D11>(pSampler->GetResource());
+    assert(pRawSampler != nullptr);
+
+    auto pParamSet = pRawEffect->GetParameterSet();
+
+    int32_t index = pParamSet.IndexOfName(pName);
+    if (index < 0)
+        return false;
+
+    auto pParam = pParamSet[index];
+    if (pParam == nullptr)
+        return false;
+
+    pParam->AsSampler(pRawSampler.get());
+
     return true;
 }
 
@@ -975,6 +1008,61 @@ void DrawingDevice_D3D11::UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t 
 
     case eResource_Index_Buffer:
         return UnMapResource<DrawingRawIndexBuffer_D3D11, DrawingIndexBuffer>(pRes, subID);
+    }
+}
+
+bool DrawingDevice_D3D11::CopyBuffer(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID, uint32_t srcSubID, uint32_t dstStartInBytes, uint32_t srcStartInBytes, uint32_t sizeInBytes)
+{
+    return true;
+}
+
+bool DrawingDevice_D3D11::CopyTexture(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID, uint32_t srcSubID, const int3& srcMin, const int3& srcMax, const int3& dstOrigin)
+{
+    assert(pDstRes != nullptr && pSrcRes != nullptr);
+    assert(pDstRes != pSrcRes);
+
+    switch(pDstRes->GetType())
+    {
+        case eResource_Target:
+        {
+            auto pDstTarget = std::dynamic_pointer_cast<DrawingTarget>(pDstRes);
+            switch(pSrcRes->GetType())
+            {
+                case eResource_Target:
+                {
+                    auto pSrcTarget = std::dynamic_pointer_cast<DrawingTarget>(pSrcRes);
+                    return CopyTextureData<DrawingRawTarget, DrawingRawTarget, DrawingRawTarget_D3D11, DrawingRawTarget_D3D11>(pDstTarget.get(), dstSubID, pSrcTarget.get(), srcSubID, srcMin, srcMax, dstOrigin);
+                }
+                case eResource_Texture:
+                {
+                    auto pSrcTex = std::dynamic_pointer_cast<DrawingTexture>(pSrcRes);
+                    return CopyTextureData<DrawingRawTarget, DrawingRawTexture, DrawingRawTarget_D3D11, DrawingRawTexture_D3D11>(pDstTarget.get(), dstSubID, pSrcTex.get(), srcSubID, srcMin, srcMax, dstOrigin);
+                }
+                default:
+                    return false;
+            }
+        }
+        case eResource_Texture:
+        {
+            auto pDstTex = std::dynamic_pointer_cast<DrawingTexture>(pDstRes);
+            switch(pSrcRes->GetType())
+            {
+                case eResource_Target:
+                {
+                    auto pSrcTarget = std::dynamic_pointer_cast<DrawingTarget>(pSrcRes);
+                    return CopyTextureData<DrawingRawTexture, DrawingRawTarget, DrawingRawTexture_D3D11, DrawingRawTarget_D3D11>(pDstTex.get(), dstSubID, pSrcTarget.get(), srcSubID, srcMin, srcMax, dstOrigin);
+                }
+                case eResource_Texture:
+                {
+                    auto pSrcTex = std::dynamic_pointer_cast<DrawingTexture>(pSrcRes);
+                    return CopyTextureData<DrawingRawTexture, DrawingRawTexture, DrawingRawTexture_D3D11, DrawingRawTexture_D3D11>(pDstTex.get(), dstSubID, pSrcTex.get(), srcSubID, srcMin, srcMax, dstOrigin);
+                }
+                default:
+                    return false;
+            }
+        }
+        default:
+            return false;
     }
 }
 
@@ -1174,6 +1262,40 @@ std::shared_ptr<DrawingRawPixelShader_D3D11> DrawingDevice_D3D11::CreatePixelSha
     }
 
     return CreatePixelShaderFromBlob(pName, pShaderBlob->GetBufferPointer(), (uint32_t)pShaderBlob->GetBufferSize());
+}
+
+template <typename T, typename U, typename SubT, typename SubU>
+bool DrawingDevice_D3D11::CopyTextureData(DrawingResourceWrapper<T>* pDstRes, uint32_t dstSubID, DrawingResourceWrapper<U>* pSrcRes, uint32_t srcSubID, const int3& srcMin, const int3& srcMax, const int3& dstOrigin)
+{
+    assert(pDstRes != nullptr && pSrcRes != nullptr);
+
+    T* pDstRawRes = static_cast<T*>(pDstRes->GetResource().get());
+    assert(pDstRawRes != nullptr);
+    SubT* pDstBuffer = static_cast<SubT*>(pDstRawRes);
+    assert(pDstBuffer != nullptr);
+
+    U* pSrcRawRes = static_cast<U*>(pSrcRes->GetResource().get());
+    assert(pSrcRawRes != nullptr);
+    SubU* pSrcBuffer = static_cast<SubU*>(pSrcRawRes);
+    assert(pSrcBuffer != nullptr);
+
+    if ((dstSubID == -1) && (srcSubID == -1))
+    {
+        m_pDeviceContext->CopyResource(pDstBuffer->GetBuffer().get(), pSrcBuffer->GetBuffer().get());
+        return true;
+    }
+    assert((dstSubID != -1) && (srcSubID != -1));
+
+    D3D11_BOX srcBox;
+    srcBox.left    = srcMin.x;
+    srcBox.right   = srcMax.x;
+    srcBox.top     = srcMin.y;
+    srcBox.bottom  = srcMax.y;
+    srcBox.front   = srcMin.z;
+    srcBox.back    = srcMax.z;
+
+    m_pDeviceContext->CopySubresourceRegion(pDstBuffer->GetBuffer().get(), dstSubID, dstOrigin.x, dstOrigin.y, dstOrigin.z, pSrcBuffer->GetBuffer().get(), srcSubID, &srcBox);
+    return true;
 }
 
 template<typename T, typename U>

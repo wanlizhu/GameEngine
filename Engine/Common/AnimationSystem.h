@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "IAnimationSystem.h"
+#include "AnimationComponent.h"
 
 #include "ECSSystem.h"
 
@@ -23,5 +24,8 @@ namespace Engine
 
     private:
         std::vector<std::shared_ptr<IEntity>> m_pEntityList;
+
+    public:
+        static std::vector<AnimationFunc> s_cbTables;
     };
 }

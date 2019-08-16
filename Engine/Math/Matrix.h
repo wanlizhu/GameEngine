@@ -36,6 +36,79 @@ namespace Engine
             return ret;
         }
 
+        template<typename T, typename U>
+        static inline typename T Mul(const T& vec, const U& mat)
+        {
+            static_assert(std::is_base_of<Vec, T>::value, "T must inherit from Vec");
+            static_assert(std::is_base_of<Mat, U>::value, "T must inherit from Mat");
+            T ret;
+            MATH_LOOP_OPERATION(i, T::DIMS, ret[i] = Vec::Dot(vec, mat.Col(i)));
+            return ret;
+        }
+
+        template<typename T>
+        static inline typename Mat3x3<T> RotateLH(T p, T h, T b)
+        {
+            T sinp, cosp, sinh, cosh, sinb, cosb;
+            MATH_TYPE_DEGREE_FUN(T, p, sin, sinp)
+            MATH_TYPE_DEGREE_FUN(T, p, cos, cosp)
+            MATH_TYPE_DEGREE_FUN(T, h, sin, sinh)
+            MATH_TYPE_DEGREE_FUN(T, h, cos, cosh)
+            MATH_TYPE_DEGREE_FUN(T, b, sin, sinb)
+            MATH_TYPE_DEGREE_FUN(T, b, cos, cosb)
+
+            return Mat3x3<T>( cosb*cosh+sinb*sinp*sinh,     sinb*cosp,      -cosb*sinh+sinb*sinp*cosh,
+                             -sinb*cosh+cosb*sinp*sinh,     cosb*cosp,       sinb*sinh+cosb*sinp*cosh,
+                              cosp*sinh,                   -sinp,            cosp*cosh                 );
+        }
+
+        template<typename T>
+        static inline typename Mat4x4<T> LookAtLH(const Vec3<T>& eye, const Vec3<T>& at, const Vec3<T>& up)
+        {
+            Vec3<T> z = Vec::Normalize(at - eye);
+            Vec3<T> x = Vec::Normalize(Vec::Cross(up, z));
+            Vec3<T> y = Vec::Cross(z, x);
+
+            Mat4x4<T> view = {
+                x.x, y.x, z.x, 0,
+                x.y, y.y, z.y, 0,
+                x.z, y.z, z.z, 0,
+                Vec::Dot(-x, eye), Vec::Dot(-y, eye), Vec::Dot(-z, eye), 1
+            };
+            return view;
+        }
+
+        template<typename T>
+        static inline typename Mat4x4<T> PerspectiveFovLH(T fovy, T aspect, T zn, T zf)
+        {
+            T f;
+            MATH_TYPE_DEGREE_FUN(T, static_cast<T>(fovy / 2.0), tan, f);
+            T yScale = static_cast<T>(1.0 / f);
+            T xScale = yScale / aspect;
+
+            Mat4x4<T> proj = {
+                xScale, 0, 0, 0,
+                0, yScale, 0, 0,
+                0, 0, zf / (zf - zn), 1,
+                0, 0, -zn * zf / (zf - zn), 0
+            };
+
+            return proj;
+        }
+
+        template<typename T>
+        static inline typename Mat4x4<T> OrthoLH(T w, T h, T zn, T zf)
+        {
+            Mat4x4<T> ortho = {
+                2 / w, 0, 0, 0,
+                0, 2 / h, 0, 0,
+                0, 0, 1 / (zf - zn), 0,
+                0, 0, zn / (zn - zf), 1
+            };
+
+            return ortho;
+        }
+
     protected:
         Mat() = default;
     };

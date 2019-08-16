@@ -52,7 +52,7 @@ namespace Engine
         virtual ~DrawingResourceWrapper() { m_pRes = nullptr; }
 
         void SetResource(std::shared_ptr<T> pRes) { m_pRes = pRes; }
-        const std::shared_ptr<T>& GetResource() { return m_pRes; }
+        std::shared_ptr<T> GetResource() { return m_pRes; }
  
     private:
         std::shared_ptr<T> m_pRes;
@@ -335,7 +335,7 @@ namespace Engine
         virtual bool CreateVertexFormat(const DrawingVertexFormatDesc& desc, std::shared_ptr<DrawingVertexFormat>& pRes) = 0;
         virtual bool CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) = 0;
         virtual bool CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) =  0;
-        virtual bool CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) = 0;
+        virtual bool CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) = 0;
         virtual bool CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes) = 0;
         virtual bool CreateDepthBuffer(const DrawingDepthBufferDesc& desc, std::shared_ptr<DrawingDepthBuffer>& pRes) = 0;
         virtual bool CreateConstantBuffer(const DrawingConstantBufferDesc& desc, std::shared_ptr<DrawingConstantBuffer>& pRes);
@@ -403,6 +403,9 @@ namespace Engine
 
         virtual void* Map(std::shared_ptr<DrawingResource> pRes, uint32_t subID, EDrawingAccessType flag, uint32_t& rowPitch, uint32_t& slicePitch, uint32_t offset = 0, uint32_t sizeInBytes = 0) = 0;
         virtual void UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t subID) = 0;
+
+        virtual bool CopyBuffer(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID, uint32_t srcSubID, uint32_t dstStartInBytes, uint32_t srcStartInBytes, uint32_t sizeInBytes) = 0;
+        virtual bool CopyTexture(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID = -1, uint32_t srcSubID = -1, const int3& srcMin = int3(), const int3& srcMax = int3(), const int3& dstOrigin = int3()) = 0;
 
         virtual void Flush() = 0;
 

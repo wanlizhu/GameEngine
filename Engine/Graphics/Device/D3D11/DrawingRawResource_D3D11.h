@@ -31,7 +31,7 @@ namespace Engine
         {
         }
 
-        std::shared_ptr<ID3D11BlendState> Get() const
+        std::shared_ptr<ID3D11BlendState> GetState() const
         {
             return m_pBlendState;
         }
@@ -57,7 +57,7 @@ namespace Engine
         {
         }
 
-        std::shared_ptr<ID3D11DepthStencilState> Get() const
+        std::shared_ptr<ID3D11DepthStencilState> GetState() const
         {
             return m_pDepthState;
         }
@@ -83,7 +83,7 @@ namespace Engine
         {
         }
 
-        std::shared_ptr<ID3D11RasterizerState> Get() const
+        std::shared_ptr<ID3D11RasterizerState> GetState() const
         {
             return m_pRasterState;
         }
@@ -105,7 +105,7 @@ namespace Engine
             m_pSamplerState = std::shared_ptr<ID3D11SamplerState>(pRaw, D3D11Releaser<ID3D11SamplerState>);
         }
 
-        std::shared_ptr<ID3D11SamplerState> Get() const
+        std::shared_ptr<ID3D11SamplerState> GetState() const
         {
             return m_pSamplerState;
         }
@@ -113,103 +113,6 @@ namespace Engine
     private:
         std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
         std::shared_ptr<ID3D11SamplerState> m_pSamplerState;
-    };
-
-    class DrawingRawTexture_D3D11 : public DrawingRawTexture
-    {
-    public:
-        DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) : m_pDevice(pDevice), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
-        DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<ID3D11ShaderResourceView> pShaderResourceView, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) :
-            m_pDevice(pDevice), m_pShaderResourceView(pShaderResourceView), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
-
-        std::shared_ptr<ID3D11ShaderResourceView> GetShaderResourceView() const
-        {
-            return m_pShaderResourceView;
-        }
-
-        virtual std::shared_ptr<ID3D11Resource> GetBuffer() const = 0;
-
-    protected:
-        uint32_t m_sizeInBytes;
-        uint32_t m_startOffset;
-        std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
-        std::shared_ptr<ID3D11ShaderResourceView> m_pShaderResourceView; 
-    };
-
-    class DrawingRawTexture1D_D3D11 : public DrawingRawTexture_D3D11
-    {
-    public:
-        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
-        {
-            ID3D11Texture1D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture1D(&desc, data.data(), &pTextureRaw);
-            assert(SUCCEEDED(hr));
-            m_pTexture1D = std::shared_ptr<ID3D11Texture1D>(pTextureRaw, D3D11Releaser<ID3D11Texture1D>);
-
-            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
-            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
-            assert(SUCCEEDED(hr));
-            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
-        }
-
-        std::shared_ptr<ID3D11Resource> GetBuffer() const override
-        {
-            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture1D);
-        }
-
-    private:
-        std::shared_ptr<ID3D11Texture1D> m_pTexture1D;
-    };
-
-    class DrawingRawTexture2D_D3D11 : public DrawingRawTexture_D3D11
-    {
-    public:
-        DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE2D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
-        {
-            ID3D11Texture2D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture2D(&desc, data.data(), &pTextureRaw);
-            assert(SUCCEEDED(hr));
-            m_pTexture2D = std::shared_ptr<ID3D11Texture2D>(pTextureRaw, D3D11Releaser<ID3D11Texture2D>);
-
-            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
-            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
-            assert(SUCCEEDED(hr));
-            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
-        }
-
-        std::shared_ptr<ID3D11Resource> GetBuffer() const override
-        {
-            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture2D);
-        }
-
-    private:
-        std::shared_ptr<ID3D11Texture2D> m_pTexture2D;
-    };
-
-    class DrawingRawTexture3D_D3D11 : public DrawingRawTexture_D3D11
-    {
-    public:
-        DrawingRawTexture3D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE3D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
-        {
-            ID3D11Texture3D* pTextureRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateTexture3D(&desc, data.data(), &pTextureRaw);
-            assert(SUCCEEDED(hr));
-            m_pTexture3D = std::shared_ptr<ID3D11Texture3D>(pTextureRaw, D3D11Releaser<ID3D11Texture3D>);
-
-            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
-            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
-            assert(SUCCEEDED(hr));
-            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
-        }
-
-        std::shared_ptr<ID3D11Resource> GetBuffer() const override
-        {
-            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture3D);
-        }
-
-
-    private:
-        std::shared_ptr<ID3D11Texture3D> m_pTexture3D;
     };
 
     class DrawingRawShader_D3D11 : public DrawingRawShader_Common
@@ -572,6 +475,7 @@ namespace Engine
 
         void LoadConstantBufferFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
         void LoadTexturesFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
+        void LoadSamplersFromShader(const DrawingRawShader_D3D11* pShader, const DrawingRawShader::DrawingRawShaderType shaderType);
 
         void UpdateParameterValues();
         void UpdateConstantBuffers();
@@ -930,12 +834,14 @@ namespace Engine
 
         virtual ~DrawingRawTarget_D3D11() = default;
 
-        std::shared_ptr<ID3D11Texture2D> GetTarget() const
+        std::shared_ptr<ID3D11Texture2D> GetBuffer() const
         {
             return m_pTarget;
         }
 
         virtual ETargetType GetTargetType() const = 0;
+
+        friend class DrawingRawTexture2D_D3D11;
 
     protected:
         std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
@@ -989,6 +895,8 @@ namespace Engine
         {
             return eTarget_OffScreen;
         }
+
+        friend class DrawingRawTexture2D_D3D11;
 
     protected:
         std::shared_ptr<ID3D11ShaderResourceView> m_pShaderResourceView;
@@ -1065,5 +973,106 @@ namespace Engine
 
     private:
         std::shared_ptr<ID3D11DepthStencilView> m_pDepthStencilView;
+    };
+
+    class DrawingRawTexture_D3D11 : public DrawingRawTexture
+    {
+    public:
+        DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) : m_pDevice(pDevice), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
+        DrawingRawTexture_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, std::shared_ptr<ID3D11ShaderResourceView> pShaderResourceView, uint32_t sizeInBytes = 0, uint32_t startOffset = 0) :
+            m_pDevice(pDevice), m_pShaderResourceView(pShaderResourceView), m_sizeInBytes(sizeInBytes), m_startOffset(startOffset) {}
+
+        std::shared_ptr<ID3D11ShaderResourceView> GetShaderResourceView() const
+        {
+            return m_pShaderResourceView;
+        }
+
+        virtual std::shared_ptr<ID3D11Resource> GetBuffer() const = 0;
+
+    protected:
+        uint32_t m_sizeInBytes;
+        uint32_t m_startOffset;
+        std::shared_ptr<DrawingDevice_D3D11> m_pDevice;
+        std::shared_ptr<ID3D11ShaderResourceView> m_pShaderResourceView; 
+    };
+
+    class DrawingRawTexture1D_D3D11 : public DrawingRawTexture_D3D11
+    {
+    public:
+        DrawingRawTexture1D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE1D_DESC& desc, std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        {
+            ID3D11Texture1D* pTextureRaw = nullptr;
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture1D(&desc, data.data(), &pTextureRaw);
+            assert(SUCCEEDED(hr));
+            m_pTexture1D = std::shared_ptr<ID3D11Texture1D>(pTextureRaw, D3D11Releaser<ID3D11Texture1D>);
+
+            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
+            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
+            assert(SUCCEEDED(hr));
+            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
+        }
+
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
+        {
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture1D);
+        }
+
+    private:
+        std::shared_ptr<ID3D11Texture1D> m_pTexture1D;
+    };
+
+    class DrawingRawTexture2D_D3D11 : public DrawingRawTexture_D3D11
+    {
+    public:
+        DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE2D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        {
+            ID3D11Texture2D* pTextureRaw = nullptr;
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture2D(&desc, data.data(), &pTextureRaw);
+            assert(SUCCEEDED(hr));
+            m_pTexture2D = std::shared_ptr<ID3D11Texture2D>(pTextureRaw, D3D11Releaser<ID3D11Texture2D>);
+
+            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
+            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
+            assert(SUCCEEDED(hr));
+            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
+        }
+
+        DrawingRawTexture2D_D3D11(const DrawingRawRenderTarget_D3D11& target) : DrawingRawTexture_D3D11(target.m_pDevice, target.m_pShaderResourceView), m_pTexture2D(target.m_pTarget)
+        {
+        }
+
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
+        {
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture2D);
+        }
+
+    private:
+        std::shared_ptr<ID3D11Texture2D> m_pTexture2D;
+    };
+
+    class DrawingRawTexture3D_D3D11 : public DrawingRawTexture_D3D11
+    {
+    public:
+        DrawingRawTexture3D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const D3D11_TEXTURE3D_DESC& desc, const std::vector<D3D11_SUBRESOURCE_DATA>& data) : DrawingRawTexture_D3D11(pDevice, desc.Width)
+        {
+            ID3D11Texture3D* pTextureRaw = nullptr;
+            HRESULT hr = m_pDevice->GetDevice()->CreateTexture3D(&desc, data.data(), &pTextureRaw);
+            assert(SUCCEEDED(hr));
+            m_pTexture3D = std::shared_ptr<ID3D11Texture3D>(pTextureRaw, D3D11Releaser<ID3D11Texture3D>);
+
+            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
+            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
+            assert(SUCCEEDED(hr));
+            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
+        }
+
+        std::shared_ptr<ID3D11Resource> GetBuffer() const override
+        {
+            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture3D);
+        }
+
+
+    private:
+        std::shared_ptr<ID3D11Texture3D> m_pTexture3D;
     };
 }

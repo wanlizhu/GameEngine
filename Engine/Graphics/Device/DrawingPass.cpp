@@ -184,6 +184,20 @@ bool DrawingPass::Flush(DrawingContext& dc)
     return true;
 }
 
+void DrawingPass::ClearTarget(unsigned int index, const float4& color)
+{
+    auto pTarget = m_staticTable.LoadTarget(index);
+    if (pTarget != nullptr)
+        m_pDevice->ClearTarget(pTarget, color);
+}
+
+void DrawingPass::ClearDepthBuffer(float depth, uint8_t stencil, uint32_t flag)
+{
+    auto pDepthBuffer = m_staticTable.LoadDepthBuffer();
+    if (pDepthBuffer != nullptr)
+        m_pDevice->ClearDepthBuffer(pDepthBuffer, depth, stencil, flag);
+}
+
 bool DrawingPass::LoadEffect()
 {
     m_pEffect = m_staticTable.LoadEffect();
@@ -517,6 +531,18 @@ void DrawingPass::DynamicResourceSlotTable::UpdateBuffers(std::shared_ptr<Drawin
 
 void DrawingPass::DynamicResourceSlotTable::UpdateSamplers(std::shared_ptr<DrawingEffect> pEffect)
 {
+    std::for_each(mSlotTable.cbegin(), mSlotTable.cend(), [&pEffect](const ResourceSlotTableType::value_type& aElem)
+    {
+        if (aElem.second.mType == ResourceSlot_Sampler)
+        {
+            auto pSampler = std::dynamic_pointer_cast<DrawingSamplerState>(GetSlotDeviceResource(&aElem.second));
+            if (pSampler != nullptr)
+            {
+                auto pDevice = pSampler->GetDevice();
+                pDevice->UpdateEffectSampler(pSampler, aElem.second.mpKey, pEffect);
+            }
+        }
+    });
 }
 
 DrawingPass::StaticResourceSlotTable::StaticResourceSlotTable()
@@ -744,6 +770,26 @@ std::shared_ptr<DrawingPrimitive> DrawingPass::StaticResourceSlotTable::LoadPrim
     return std::dynamic_pointer_cast<DrawingPrimitive>(GetSlotDeviceResource(&(it->second)));
 }
 
+std::shared_ptr<DrawingTarget> DrawingPass::StaticResourceSlotTable::LoadTarget(uint32_t index)
+{
+    auto it = mSlotTable.find(TargetSlotName(index));
+
+    if (it == mSlotTable.cend())
+        return nullptr;
+
+    return std::dynamic_pointer_cast<DrawingTarget>(GetSlotDeviceResource(&(it->second)));
+}
+
+std::shared_ptr<DrawingDepthBuffer> DrawingPass::StaticResourceSlotTable::LoadDepthBuffer()
+{
+    auto it = mSlotTable.find(DepthBufferSlotName());
+
+    if (it == mSlotTable.cend())
+        return nullptr;
+
+    return std::dynamic_pointer_cast<DrawingDepthBuffer>(GetSlotDeviceResource(&(it->second)));
+}
+
 void DrawingPass::StaticResourceSlotTable::AddStaticResourceSlot()
 {
     AddStaticResourceSlot(EffectSlotName());
@@ -790,14 +836,6 @@ void DrawingPass::StaticResourceSlotTable::LoadTargets(std::shared_ptr<DrawingTa
         if (pSlot->mpRes != nullptr)
             targetCount = i + 1;
     }
-}
-
-std::shared_ptr<DrawingDepthBuffer> DrawingPass::StaticResourceSlotTable::LoadDepthBuffer()
-{
-    auto it = mSlotTable.find(DepthBufferSlotName());
-    auto pSlot = &(it->second);
-
-    return std::dynamic_pointer_cast<DrawingDepthBuffer>(GetSlotDeviceResource(pSlot));
 }
 
 void DrawingPass::StaticResourceSlotTable::LoadRWBuffers(std::shared_ptr<DrawingRWBuffer> rwbuffers[], uint32_t& bufferCount)

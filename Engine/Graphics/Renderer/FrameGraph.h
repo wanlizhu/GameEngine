@@ -29,10 +29,14 @@ namespace Engine
         bool RunInitializeFunc() const;
         bool IfNeedExecuteFunc() const;
         void RunExecuteFunc() const;
+        void RunClearColorFunc() const;
+        void RunClearDepthStencilFunc() const;
 
         void SetInitializeFunc(std::function<bool ()> func);
         void SetNeedExecuteFunc(std::function<bool ()> func);
         void SetExecuteFunc(std::function<void ()> func);
+        void SetClearColorFunc(unsigned int index, std::function<void (float4&)> func);
+        void SetClearDepthStencilFunc(std::function<void (float&, uint8_t&, uint32_t&)> func);
 
         void SetFrameGraph(const FrameGraph& frameGraph);
         FrameGraph GetFrameGraph() const;
@@ -41,6 +45,8 @@ namespace Engine
         std::shared_ptr<DrawingPass> GetDrawingPass() const;
 
     private:
+        typedef std::unordered_map<unsigned int, std::function<void (float4&)>> ClearColorFuncTable;
+
         FrameGraph& m_frameGraph;
 
         uint32_t m_index;
@@ -50,6 +56,8 @@ namespace Engine
         std::function<bool ()> m_initializeFunc;
         std::function<bool ()> m_needExecuteFunc;
         std::function<void ()> m_executeFunc;
+        ClearColorFuncTable m_clearColorFuncs;
+        std::function<void (float&, uint8_t&, uint32_t&)> m_clearDepthStencilFunc;
     };
 
     class FrameGraph
@@ -58,7 +66,7 @@ namespace Engine
         FrameGraph();
         FrameGraphNode& AddPass(std::shared_ptr<DrawingPass> pPass, FrameGraphFlagBits bits);
         bool InitializePasses();
-        void EnqueuePasses(DrawingContext& context);
+        void EnqueuePasses();
         void FetchResources(DrawingResourceTable& resTable);
 
     private:

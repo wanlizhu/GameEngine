@@ -69,6 +69,9 @@ namespace Engine
 
         bool Flush(DrawingContext& dc);
 
+        void ClearTarget(unsigned int index, const float4& color);
+        void ClearDepthBuffer(float depth, uint8_t stencil, uint32_t flag);
+
     private:
         bool LoadEffect();
 
@@ -186,6 +189,8 @@ namespace Engine
 
             std::shared_ptr<DrawingEffect> LoadEffect();
             std::shared_ptr<DrawingPrimitive> LoadPrimitive();
+            std::shared_ptr<DrawingTarget> LoadTarget(uint32_t index);
+            std::shared_ptr<DrawingDepthBuffer> LoadDepthBuffer();
 
         private:
             enum StaticSlotIndex
@@ -225,7 +230,6 @@ namespace Engine
             void AddStaticResourceSlot(std::shared_ptr<std::string> slotName);
 
             void LoadTargets(std::shared_ptr<DrawingTarget> targets[], uint32_t& targetCount);
-            std::shared_ptr<DrawingDepthBuffer> LoadDepthBuffer();
             void LoadRWBuffers(std::shared_ptr<DrawingRWBuffer> rwbuffers[], uint32_t& bufferCount);
 
             std::shared_ptr<DrawingVertexFormat> LoadVertexFormat();

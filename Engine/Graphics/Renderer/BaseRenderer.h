@@ -23,6 +23,8 @@ namespace Engine
 
         void Begin() override;
         void AddRenderables(RenderQueueItemListType renderables) override;
+
+        void Clear(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass) override;
         void Flush(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass) override;
 
         void AttachDevice(const std::shared_ptr<DrawingDevice>& pDevice, const std::shared_ptr<DrawingContext>& pContext) override;
@@ -43,31 +45,35 @@ namespace Engine
         float4x4 UpdateWorldMatrix(const TransformComponent* pTransform);
 
     public:
-        // vertex format
-        FuncResourceName(DefaultVertexFormat);
-        // vertex buffer
-        FuncResourceName(DefaultStaticPositionBuffer);
-        FuncResourceName(DefaultStaticNormalBuffer);
-        FuncResourceName(DefaultDynamicPositionBuffer);
-        FuncResourceName(DefaultDynamicNormalBuffer);
-        // index buffer
-        FuncResourceName(DefaultStaticIndexBuffer);
-        FuncResourceName(DefaultDynamicIndexBuffer);
-        // constant buffer
-        FuncResourceName(DefaultWorldMatrix);
-        FuncResourceName(DefaultViewMatrix);
-        FuncResourceName(DefaultProjectionMatrix);
-        // render target
-        FuncResourceName(ScreenTarget);
-        FuncResourceName(ScreenDepthBuffer);
-        // render state
-        FuncResourceName(DefaultDepthState);
-        FuncResourceName(DefaultBlendState);
-        FuncResourceName(DefaultRasterState);
-        // varing states
-        FuncResourceName(DefaultVaringStates);
-        // primitive
-        FuncResourceName(DefaultPrimitive);
+        // Vertex format names
+        FuncResourceName(VertexFormatP)
+        FuncResourceName(VertexFormatPN)
+        // Vertex buffer names
+        FuncResourceName(DefaultStaticPositionBuffer)
+        FuncResourceName(DefaultStaticNormalBuffer)
+        FuncResourceName(DefaultDynamicPositionBuffer)
+        FuncResourceName(DefaultDynamicNormalBuffer)
+        // Index buffer names
+        FuncResourceName(DefaultStaticIndexBuffer)
+        FuncResourceName(DefaultDynamicIndexBuffer)
+        // Constant buffer names
+        FuncResourceName(DefaultWorldMatrix)
+        FuncResourceName(DefaultViewMatrix)
+        FuncResourceName(DefaultProjectionMatrix)
+        // Render target names
+        FuncResourceName(ShadowMapTarget)
+        FuncResourceName(DefaultTarget)
+        FuncResourceName(DefaultDepthBuffer)
+        FuncResourceName(ScreenTarget)
+        FuncResourceName(ScreenDepthBuffer)
+        // Render state names
+        FuncResourceName(DefaultDepthState)
+        FuncResourceName(DefaultBlendState)
+        FuncResourceName(DefaultRasterState)
+        // Varing states names
+        FuncResourceName(DefaultVaringStates)
+        // Primitive names
+        FuncResourceName(DefaultPrimitive)
 
     protected:
         void DefineDefaultResources(DrawingResourceTable& resTable);
@@ -75,8 +81,8 @@ namespace Engine
         void DefineGeneralEffect(std::shared_ptr<std::string> pEffectName, std::shared_ptr<std::string> pSourceName, std::shared_ptr<std::string> pTechName, DrawingResourceTable& resTable);
         void DefineLinkedEffect(std::shared_ptr<std::string> pEffectName, std::shared_ptr<std::string> pVSName, std::shared_ptr<std::string> pPSName, DrawingResourceTable& resTable);
 
-        void DefinePipelineState(std::shared_ptr<std::string> pVertexFormatName,
-                                 std::shared_ptr<std::string> pPipelineStateName,
+        void DefinePipelineState(std::shared_ptr<std::string> pPipelineStateName,
+                                 std::shared_ptr<std::string> pVertexFormatName,
                                  std::shared_ptr<std::string> pPrimitiveName,
                                  std::shared_ptr<std::string> pEffectName,
                                  std::shared_ptr<std::string> pBlendStateName,
@@ -89,8 +95,9 @@ namespace Engine
         void DefinePixelShaderFromBlob(std::shared_ptr<std::string> pShaderName, std::shared_ptr<std::string> pSourceName, DrawingResourceTable& resTable);
         void DefineVertexShader(std::shared_ptr<std::string> pShaderName, std::shared_ptr<std::string> pFileName, std::shared_ptr<std::string> pEntryName, DrawingResourceTable& resTable);
         void DefinePixelShader(std::shared_ptr<std::string> pShaderName, std::shared_ptr<std::string> pFileName, std::shared_ptr<std::string> pEntryName, DrawingResourceTable& resTable);
- 
-        void DefineDefaultVertexFormat(DrawingResourceTable& resTable);
+
+        void DefineVertexFormatP(DrawingResourceTable& resTable);
+        void DefineVertexFormatPN(DrawingResourceTable& resTable);
         void DefineStaticVertexBuffer(std::shared_ptr<std::string> pName, uint32_t stride, uint32_t count, const void* data, uint32_t size, DrawingResourceTable& resTable);
         void DefineStaticIndexBuffer(std::shared_ptr<std::string> pName, uint32_t count, const void* data, uint32_t size, DrawingResourceTable& resTable);
 
@@ -105,8 +112,12 @@ namespace Engine
         void DefineDefaultBlendState(DrawingResourceTable& resTable);
         void DefineDefaultRasterState(DrawingResourceTable& resTable);
 
+        void DefineTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
+        void DefineDepthBuffer(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
+
         void DefineExternalTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
         void DefineExternalDepthBuffer(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
+        void DefineExternalTexture(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable);
 
         bool DefineDynamicTexture(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, DrawingResourceTable& resTable);
         void DefineDynamicTextureWithInit(std::shared_ptr<std::string> pName, EDrawingFormatType format, uint32_t elementCount, void* pData, uint32_t size, DrawingResourceTable& resTable);
@@ -130,8 +141,10 @@ namespace Engine
         void AddConstantSlot(DrawingPass& pass, std::shared_ptr<std::string> pName);
         void AddTextureSlot(DrawingPass& pass, std::shared_ptr<std::string> pName, std::shared_ptr<std::string> pParamName);
 
-        void BindStaticInputs(DrawingPass& pass);
-        void BindDynamicInputs(DrawingPass& pass);
+        void BindStaticInputsP(DrawingPass& pass);
+        void BindDynamicInputsP(DrawingPass& pass);
+        void BindStaticInputsPN(DrawingPass& pass);
+        void BindDynamicInputsPN(DrawingPass& pass);
         void BindStates(DrawingPass& pass);
         void BindOutput(DrawingPass& pass);
 

@@ -33,6 +33,36 @@ void FrameGraphNode::RunExecuteFunc() const
         m_executeFunc();
 }
 
+void FrameGraphNode::RunClearColorFunc() const
+{
+    std::for_each(m_clearColorFuncs.cbegin(), m_clearColorFuncs.cend(), [this](const ClearColorFuncTable::value_type& aElem)
+    {
+        auto index = aElem.first;
+        auto colorFunc = aElem.second;
+
+        if (!colorFunc)
+            return;
+
+        float4 color;
+        colorFunc(color);
+
+        m_pPass->ClearTarget(index, color);
+    });
+}
+
+void FrameGraphNode::RunClearDepthStencilFunc() const
+{
+    float depth;
+    uint8_t stencil;
+    uint32_t flag;
+
+    if (!m_clearDepthStencilFunc)
+        return;
+
+    m_clearDepthStencilFunc(depth, stencil, flag);
+    m_pPass->ClearDepthBuffer(depth, stencil, flag);
+}
+
 void FrameGraphNode::SetInitializeFunc(std::function<bool ()> func)
 {
     m_initializeFunc = std::move(func);
@@ -46,6 +76,16 @@ void FrameGraphNode::SetNeedExecuteFunc(std::function<bool ()> func)
 void FrameGraphNode::SetExecuteFunc(std::function<void ()> func)
 {
     m_executeFunc = std::move(func);
+}
+
+void FrameGraphNode::SetClearColorFunc(unsigned int index, std::function<void (float4&)> func)
+{
+    m_clearColorFuncs[index] = std::move(func);
+}
+
+void FrameGraphNode::SetClearDepthStencilFunc(std::function<void (float&, uint8_t&, uint32_t&)> func)
+{
+    m_clearDepthStencilFunc = std::move(func);
 }
 
 void FrameGraphNode::SetFrameGraph(const FrameGraph& frameGraph)
@@ -106,10 +146,16 @@ bool FrameGraph::InitializePasses()
     return true;
 }
 
-void FrameGraph::EnqueuePasses(DrawingContext& context)
+void FrameGraph::EnqueuePasses()
 {
     for (auto& pNode : m_nodes)
     {
+        if (pNode == nullptr)
+            continue;
+
+        pNode->RunClearColorFunc();
+        pNode->RunClearDepthStencilFunc();
+
         if (!pNode->IfNeedExecuteFunc())
             continue;
 

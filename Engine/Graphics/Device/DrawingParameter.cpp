@@ -994,8 +994,8 @@ void DrawingParameter::AsMatrix(const T& val)
     assert(GetBasicType() == type);
     assert(GetRowSize() == row_size);
     assert(GetColSize() == col_size);
-
     AsValue<T>(val);
+
 }
 
 template <typename T>

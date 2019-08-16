@@ -35,6 +35,8 @@ bool DrawingResourceFactory::CreateResource(const std::shared_ptr<DrawingResourc
     case eResource_Index_Buffer:    result = CreateIndexBuffer(pDesc, pRes, pInitData, initDataSize); break;
     case eResource_Constant_Buffer: result = CreateConstantBuffer(pDesc, pRes); break;
     case eResource_Texture:         result = CreateTexture(pDesc, pRes, pData, size, slices); break;
+    case eResource_Target:          result = CreateTarget(pDesc, pRes); break;
+    case eResource_DepthBuffer:     result = CreateDepthBuffer(pDesc, pRes); break;
     case eResource_Blend_State:     result = CreateBlendState(pDesc, pRes); break;
     case eResource_Depth_State:     result = CreateDepthState(pDesc, pRes); break;
     case eResource_Raster_State:    result = CreateRasterState(pDesc, pRes); break;
@@ -131,12 +133,37 @@ bool DrawingResourceFactory::CreateTexture(const std::shared_ptr<DrawingResource
         return false;
 
     std::shared_ptr<DrawingTexture> pTexture;
-    bool result = m_pDevice->CreateTexture(*pTextureDesc, pTexture, pData, size, slices);
+    bool result = m_pDevice->CreateTexture(*pTextureDesc, pTexture, nullptr, pData, size, slices);
     pRes = pTexture;
 
     return result;
 }
 
+bool DrawingResourceFactory::CreateTarget(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const
+{
+    auto pTargetDesc = std::static_pointer_cast<const DrawingTargetDesc>(pDesc);
+    if (pTargetDesc == nullptr)
+        return false;
+
+    std::shared_ptr<DrawingTarget> pTarget;
+    bool result = m_pDevice->CreateTarget(*pTargetDesc, pTarget);
+    pRes = pTarget;
+
+    return result;
+}
+
+bool DrawingResourceFactory::CreateDepthBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const
+{
+    auto pDepthBufferDesc = std::static_pointer_cast<const DrawingDepthBufferDesc>(pDesc);
+    if (pDepthBufferDesc == nullptr)
+        return false;
+
+    std::shared_ptr<DrawingDepthBuffer> pDepthBuffer;
+    bool result = m_pDevice->CreateDepthBuffer(*pDepthBufferDesc, pDepthBuffer);
+    pRes = pDepthBuffer;
+
+    return result;
+}
 
 bool DrawingResourceFactory::CreateConstantBuffer(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const
 {

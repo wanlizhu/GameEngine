@@ -118,7 +118,7 @@ bool DrawingDevice_D3D12::CreateIndexBuffer(const DrawingIndexBufferDesc& desc, 
     return true;
 }
 
-bool DrawingDevice_D3D12::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, const void* pData[], uint32_t size[], uint32_t slices)
+bool DrawingDevice_D3D12::CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, std::shared_ptr<DrawingResource> pRefRes, const void* pData[], uint32_t size[], uint32_t slices)
 {
     auto pTexture = std::make_shared<DrawingTexture>(shared_from_this());
     std::shared_ptr<DrawingRawTexture> pRawTexture = nullptr;
@@ -756,6 +756,16 @@ void DrawingDevice_D3D12::UnMap(std::shared_ptr<DrawingResource> pRes, uint32_t 
     case eResource_Index_Buffer:
         return UnMapResource<DrawingRawIndexBuffer_D3D12, DrawingIndexBuffer>(pRes, subID);
     }
+}
+
+bool DrawingDevice_D3D12::CopyBuffer(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID, uint32_t srcSubID, uint32_t dstStartInBytes, uint32_t srcStartInBytes, uint32_t sizeInBytes)
+{
+    return true;
+}
+
+bool DrawingDevice_D3D12::CopyTexture(std::shared_ptr<DrawingResource> pDstRes, std::shared_ptr<DrawingResource> pSrcRes, uint32_t dstSubID, uint32_t srcSubID, const int3& srcMin, const int3& srcMax, const int3& dstOrigin)
+{
+    return true;
 }
 
 void DrawingDevice_D3D12::Flush()

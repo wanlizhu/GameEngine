@@ -21,6 +21,8 @@ namespace Engine
 
         virtual void Begin() = 0;
         virtual void AddRenderables(RenderQueueItemListType renderables) = 0;
+
+        virtual void Clear(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass) = 0;
         virtual void Flush(DrawingResourceTable& resTable, std::shared_ptr<DrawingPass> pPass) = 0;
 
         virtual void AttachDevice(const std::shared_ptr<DrawingDevice>& pDevice, const std::shared_ptr<DrawingContext>& pContext) = 0;
