@@ -44,6 +44,8 @@ void DrawingSystem::Tick(float elapsedTime)
 {
     for (auto& pCamera : m_pCameraList)
     {
+        m_pContext->UpdateContext(*m_pResourceTable);
+
         auto pFrameGraphComponent = pCamera->GetComponent<FrameGraphComponent>();
         if (pFrameGraphComponent == nullptr)
             continue;
@@ -165,8 +167,6 @@ std::shared_ptr<DrawingTarget> DrawingSystem::CreateSwapChain()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_R8G8B8A8_UNORM;
-    desc.mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
-    desc.mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     std::shared_ptr<DrawingTarget> pSwapChain;
 
@@ -182,8 +182,6 @@ std::shared_ptr<DrawingDepthBuffer> DrawingSystem::CreateDepthBuffer()
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
     desc.mFormat = eFormat_D24S8;
-    desc.mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
-    desc.mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     std::shared_ptr<DrawingDepthBuffer> pDepthBuffer;
 
@@ -228,6 +226,11 @@ void DrawingSystem::BuildFrameGraph()
 
         if (pCameraComponent->GetRendererType() == eRenderer_Forward)
             BuildForwardFrameGraph(pFrameGraph, pCamera);
+
+        else if (pCameraComponent->GetRendererType() == eRenderer_Deferred)
+            BuildDeferredFrameGraph(pFrameGraph, pCamera);
+
+        pFrameGraph->InitializePasses();
     }
 }
 
@@ -250,6 +253,36 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     auto pLightComponent = pLight->GetComponent<LightComponent>();
     auto pLightTransformComponent = pLight->GetComponent<TransformComponent>();
 
+    // Depth pass.
+    auto pDepthPass = pRenderer->GetPass(ForwardRenderer::DepthPass());
+    assert(pDepthPass != nullptr);
+    auto& depthPassNode = pFrameGraph->AddPass(pDepthPass, GraphicsBit);
+
+    depthPassNode.SetInitializeFunc([&](void) -> bool {
+        return true;
+    });
+
+    depthPassNode.SetClearDepthStencilFunc([&](float& depth, uint8_t& stencil, uint32_t& flag) -> void {
+        depth = 1.0f;
+        stencil = 0;
+        flag = eClear_Depth;
+    });
+
+    depthPassNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pRenderer, pDepthPass](void) -> void {
+        float4x4 view;
+        float4x4 proj;
+        GetProjectionMatrix(pCameraComponent, proj);
+        GetViewMatrix(pTransformComponent, view);
+        m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+
+        RenderQueueItemListType items;
+        GetVisableRenderable(items);
+
+        pRenderer->Begin();
+        pRenderer->AddRenderables(items);
+        pRenderer->Flush(*m_pResourceTable, pDepthPass);
+    });
+
     // Shadowmap pass.
     auto pShadowPass = pRenderer->GetPass(ForwardRenderer::ShadowCasterPass());
     assert(pShadowPass != nullptr);
@@ -269,14 +302,11 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         flag = eClear_Depth;
     });
 
-    shadowPassNode.SetExecuteFunc([&, pCameraComponent, pLightTransformComponent, pRenderer, pShadowPass](void) -> void {
+    shadowPassNode.SetExecuteFunc([&, pLightTransformComponent, pRenderer, pShadowPass](void) -> void {
         float4x4 lightView;
         float4x4 lightProj;
         GetLightViewProjectionMatrix(pLightTransformComponent, lightView, lightProj);
-
-        m_pContext->UpdateContext(*m_pResourceTable);
-        UpdateLightViewMatrix(lightView);
-        UpdateLightProjMatrix(lightProj);
+        m_pContext->UpdateCamera(*m_pResourceTable, lightProj, lightView);
 
         RenderQueueItemListType items;
         GetVisableRenderable(items);
@@ -291,39 +321,30 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         pRenderer->Flush(*m_pResourceTable, pShadowPass);
     });
 
-    // Forward main pass.
-    auto pMainPass = pRenderer->GetPass(ForwardRenderer::ForwardBasePass());
-    assert(pMainPass != nullptr);
-    auto& mainPassNode = pFrameGraph->AddPass(pMainPass, GraphicsBit);
+    // Screen space shadow pass.
+    auto pSSSPass = pRenderer->GetPass(ForwardRenderer::ScreenSpaceShadowPass());
+    assert(pSSSPass != nullptr);
+    auto& sssNode = pFrameGraph->AddPass(pSSSPass, GraphicsBit);
 
-    mainPassNode.SetInitializeFunc([&](void) -> bool {
+    sssNode.SetInitializeFunc([&](void) -> bool {
         return true;
     });
 
-    mainPassNode.SetClearColorFunc(0, [&, pCameraComponent](float4& color) -> void {
-        color = pCameraComponent->GetBackground();
+    sssNode.SetClearColorFunc(0, [&, pCameraComponent](float4& color) -> void {
+        color = float4(1.0f, 1.0f, 1.0f, 1.0f);
     });
 
-    mainPassNode.SetClearDepthStencilFunc([&](float& depth, uint8_t& stencil, uint32_t& flag) -> void {
-        depth = 1.0f;
-        stencil = 0;
-        flag = eClear_Depth;
-    });
-
-    mainPassNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pLightTransformComponent, pRenderer, pMainPass](void) -> void {
+    sssNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pLightTransformComponent, pRenderer, pSSSPass](void) -> void {
         float4x4 view;
         float4x4 proj;
         GetProjectionMatrix(pCameraComponent, proj);
         GetViewMatrix(pTransformComponent, view);
-
-        m_pContext->UpdateContext(*m_pResourceTable);
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
 
         float4x4 lightView;
         float4x4 lightProj;
         float3 lightDir;
         GetLightViewProjectionMatrix(pLightTransformComponent, lightView, lightProj, lightDir);
-
         UpdateLightDir(lightDir);
         UpdateLightViewMatrix(lightView);
         UpdateLightProjMatrix(lightProj);
@@ -335,37 +356,61 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         assert(pForwardRenderer != nullptr);
 
         pForwardRenderer->UpdateShadowMapAsTexture(*m_pResourceTable);
+        pForwardRenderer->UpdateScreenSpaceShadowAsTarget(*m_pResourceTable);
 
         pRenderer->Begin();
         pRenderer->AddRenderables(items);
-        pRenderer->Flush(*m_pResourceTable, pMainPass);
+        pRenderer->Flush(*m_pResourceTable, pSSSPass);
     });
 
-    // Copy pass.
-    auto pCopyPass = pRenderer->GetPass(ForwardRenderer::CopyPass());
-    assert(pCopyPass != nullptr);
-    auto& copyPassNode = pFrameGraph->AddPass(pCopyPass, GraphicsBit);
+    // Forward shading pass.
+    auto pForwardShadingPass = pRenderer->GetPass(ForwardRenderer::ForwardShadingPass());
+    assert(pForwardShadingPass != nullptr);
+    auto& forwardShadingNode = pFrameGraph->AddPass(pForwardShadingPass, GraphicsBit);
 
-    copyPassNode.SetInitializeFunc([&](void) -> bool {
+    forwardShadingNode.SetInitializeFunc([&](void) -> bool {
         return true;
     });
 
-    copyPassNode.SetExecuteFunc([&, pCopyPass](void) -> void {
-        auto pEntry = m_pResourceTable->GetResourceEntry(ForwardRenderer::DefaultTarget());
-        if (pEntry == nullptr)
-            return;
+    forwardShadingNode.SetClearColorFunc(0, [&, pCameraComponent](float4& color) -> void {
+        color = pCameraComponent->GetBackground();
+    });
 
-        auto pResource = pEntry->GetResource();
-        if (pResource == nullptr)
-            return;
+    forwardShadingNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pLightTransformComponent, pRenderer, pForwardShadingPass](void) -> void {
+        float4x4 view;
+        float4x4 proj;
+        float3 dir;
+        GetProjectionMatrix(pCameraComponent, proj);
+        GetViewMatrix(pTransformComponent, view, dir);
+        m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+        UpdateCameraDir(dir);
 
-        auto pSwapChain = std::dynamic_pointer_cast<DrawingResource>(m_pContext->GetSwapChain());
+        float4x4 lightView;
+        float4x4 lightProj;
+        float3 lightDir;
+        GetLightViewProjectionMatrix(pLightTransformComponent, lightView, lightProj, lightDir);
+        UpdateLightDir(lightDir);
 
-        m_pDevice->CopyTexture(pSwapChain, pResource);
+        RenderQueueItemListType items;
+        GetVisableRenderable(items);
+
+        auto pForwardRenderer = std::static_pointer_cast<ForwardRenderer>(pRenderer);
+        assert(pForwardRenderer != nullptr);
+
+        pForwardRenderer->UpdateScreenSpaceShadowAsTexture(*m_pResourceTable);
+
+        pRenderer->Begin();
+        pRenderer->AddRenderables(items);
+        pRenderer->Flush(*m_pResourceTable, pForwardShadingPass);
     });
 
     pFrameGraph->FetchResources(*m_pResourceTable);
 
+    return true;
+}
+
+bool DrawingSystem::BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera)
+{
     return true;
 }
 
@@ -380,13 +425,13 @@ void DrawingSystem::GetVisableRenderable(RenderQueueItemListType& items)
     }
 }
 
-void DrawingSystem::GetViewMatrix(TransformComponent* pTransform, float4x4& view)
+void DrawingSystem::GetViewMatrix(TransformComponent* pTransform, float4x4& view, float3& dir)
 {
     float3 pos = pTransform->GetPosition();
     float3 rotate = pTransform->GetRotate();
 
     float3 up = float3(0.0f, 1.0f, 0.0f);
-    float3 dir = float3(1.0f, 0.0f, 0.0f);
+    dir = float3(1.0f, 0.0f, 0.0f);
     dir = Mat::Mul(dir, Mat::RotateLH(rotate.x, rotate.y, rotate.z));
     auto at = dir + pos;
 
@@ -412,10 +457,22 @@ void DrawingSystem::GetLightViewProjectionMatrix(TransformComponent* pTransform,
     float3 up = float3(0.0f, 1.0f, 0.0f);
     dir = float3(1.0f, 0.0f, 0.0f);
     dir = Vec::Normalize(Mat::Mul(dir, Mat::RotateLH(rotate.x, rotate.y, rotate.z)));
-    float3 pos = (at - dir) * 5.0f;
+    float3 pos = at - dir;
 
     view = Mat::LookAtLH(pos, at, up);
-    proj = Mat::OrthoLH(50.f, 50.f, -50.f, 50.f);
+    proj = Mat::OrthoLH(30.f, 30.f, -20.f, 20.f);
+}
+
+void DrawingSystem::UpdateCameraDir(float3 dir)
+{
+    auto pEntry = m_pResourceTable->GetResourceEntry(ForwardRenderer::CameraDirVector());
+    assert(pEntry != nullptr);
+    auto pCB = std::dynamic_pointer_cast<DrawingConstantBuffer>(pEntry->GetResource());
+    if (pCB == nullptr)
+        return;
+    auto pParam = pCB->GetParameter(strPtr("gCameraDir"));
+    if (pParam != nullptr)
+        pParam->AsFloat3(dir);
 }
 
 void DrawingSystem::UpdateLightDir(float3 dir)

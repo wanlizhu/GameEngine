@@ -27,6 +27,7 @@ namespace Engine
     {
         eRenderer_Start = 0,
         eRenderer_Forward = 0,
+        eRenderer_Deferred,
         eRenderer_End,
     };
 

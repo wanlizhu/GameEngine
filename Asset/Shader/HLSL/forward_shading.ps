@@ -1,0 +1,47 @@
+#include "forward_shading.h"
+
+Texture2D<float> gScreenSpaceShadowTexture : register(t0);
+
+SamplerState gPointSampler : PointSampler
+{
+    Texture = <gScreenSpaceShadowTexture>;
+    Filter = MIN_MAG_MIP_POINT;
+    AddressU = Border;
+    AddressV = Border;
+};
+
+cbuffer LightBuffer : register(b0)
+{
+    float3 gLightDir : LIGHT_DIR;
+};
+
+cbuffer CameraBuffer : register(b1)
+{
+    float3 gCameraDir : CAMERA_DIR;
+};
+
+float4 ForwardShading_PS(ForwardShading_VertexAttr input) : SV_Target
+{
+    float4 color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float2 coord = 0.5f * float2(input.pos.x ,-input.pos.y) / input.pos.w + 0.5f;
+
+    float4 sssVal = gScreenSpaceShadowTexture.Sample(gPointSampler, coord);
+
+    float4 lightColor = float4(0.98039f, 0.94118f, 0.90196f, 1.0f);
+    float matA = 0.3f;
+    float matD = 0.5f;
+    float matS = 0.2f;
+
+    float4 ambient = lightColor * matA;
+    float4 diffuse = lightColor * matD * saturate(dot(-gLightDir, input.normal));
+    float3 v = reflect(-gLightDir, input.normal);
+    float specFactor = 2.0f;
+    float4 spec = lightColor * pow(max(dot(v, gCameraDir), 0), specFactor) * matS;
+
+    color = ambient + (diffuse + spec) * sssVal;
+    color.w = 1.0f;
+
+    color = saturate(color);
+
+    return color;
+}

@@ -1,16 +1,14 @@
 #ifndef _BASIC_H_
 #define _BASIC_H_
 
-struct BasicPrimitive_Input
+struct Basic_Input
 {
     float3 Position : POSITION;
-    float3 Normal : NORMAL;
 };
 
-struct BasicPrimitive_VertexAttr
+struct Basic_VertexAttr
 {
-    noperspective float4 position : SV_Position;
-    noperspective float3 normal : NORMAL;
+    float4 position : SV_Position;
 };
 
 #endif

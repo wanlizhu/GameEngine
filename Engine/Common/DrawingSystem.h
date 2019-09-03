@@ -46,17 +46,19 @@ namespace Engine
 
         void BuildFrameGraph();
         bool BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
+        bool BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
 
         void GetVisableRenderable(RenderQueueItemListType& items);
 
         std::shared_ptr<DrawingTarget> CreateSwapChain();
         std::shared_ptr<DrawingDepthBuffer> CreateDepthBuffer();
 
-        void GetViewMatrix(TransformComponent* pTransform, float4x4& view);
+        void GetViewMatrix(TransformComponent* pTransform, float4x4& view, float3& dir = float3());
         void GetProjectionMatrix(CameraComponent* pCamera, float4x4& proj);
 
         void GetLightViewProjectionMatrix(TransformComponent* pTransform, float4x4& view, float4x4& proj, float3& dir = float3());
 
+        void UpdateCameraDir(float3 dir);
         void UpdateLightDir(float3 dir);
         void UpdateLightViewMatrix(float4x4 view);
         void UpdateLightProjMatrix(float4x4 proj);

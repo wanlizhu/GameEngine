@@ -1,0 +1,153 @@
+#include "screen_space_shadow.h"
+
+#define PCF_STEP 7
+#define BLOCK_STEP 3
+
+#define PCF_DIM (PCF_STEP * 2 + 1)
+#define BLOCK_DIM (BLOCK_STEP * 2 + 1)
+
+#define PCF_COUNT (PCF_DIM * PCF_DIM)
+#define BLOCK_COUNT (BLOCK_DIM * BLOCK_DIM)
+
+#define LIGHT_RADIUS 25
+
+Texture2D<float> gShadowMapTexture : register(t0);
+
+SamplerState gShadowMapSampler : ShadowMapSampler
+{
+    Texture = <gShadowMapTexture>;
+    Filter = MIN_MAG_MIP_POINT;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
+
+cbuffer LightBuffer : register(b0)
+{
+    float3 gLightDir : LIGHT_DIR;
+};
+
+float BiasedZ(float z0, float2 dz_duv, float2 offset)
+{
+    return z0 + dot(dz_duv, offset);
+}
+
+float2 DepthGradient(float2 uv, float z)
+{
+    float2 dz_duv = 0;
+
+    float3 duvdist_dx = ddx(float3(uv,z));
+    float3 duvdist_dy = ddy(float3(uv,z));
+
+    dz_duv.x = duvdist_dy.y * duvdist_dx.z;
+    dz_duv.x -= duvdist_dx.y * duvdist_dy.z;
+
+    dz_duv.y = duvdist_dx.x * duvdist_dy.z;
+    dz_duv.y -= duvdist_dy.x * duvdist_dx.z;
+
+    float det = (duvdist_dx.x * duvdist_dy.y) - (duvdist_dx.y * duvdist_dy.x);
+    dz_duv /= det;
+
+    return dz_duv;
+}
+
+void FindBlocker(out float accumBlockerDepth, out float numBlockers, float2 coord, float z0, float2 dz_duv, float2 texel)
+{
+    accumBlockerDepth = 0;
+    numBlockers = 0;
+
+    float2 stepUV = LIGHT_RADIUS * texel;
+    for(float x = -BLOCK_STEP; x <= BLOCK_STEP; ++x)
+    {
+        for(float y = -BLOCK_STEP; y <= BLOCK_STEP; ++y)
+        {
+            float2 offset = float2(x, y) * stepUV;
+            float shadowMapDepth = gShadowMapTexture.SampleLevel(gShadowMapSampler, coord + offset, 0).x;
+            float z = BiasedZ(z0, dz_duv, offset);
+            if (shadowMapDepth < z)
+            {
+                accumBlockerDepth += shadowMapDepth;
+                numBlockers++;
+            }
+        }
+    }
+}
+
+float PCF(float2 coord, float bias, float z, float2 filterRadiusUV)
+{
+    float2 stepUV = filterRadiusUV / PCF_STEP;
+
+    float shadowValue = 0.0f;
+    for (int x = -PCF_STEP; x <= PCF_STEP; ++x)
+    {
+        for (int y = -PCF_STEP; y <= PCF_STEP; ++y)
+        {
+            float pcfDepth = gShadowMapTexture.Sample(gShadowMapSampler, coord + float2(x, y) * stepUV).x;
+            shadowValue += (z - bias) > pcfDepth ? 1.0f : 0.0f;
+        }
+    }
+    shadowValue /= PCF_COUNT;
+    return shadowValue;
+}
+
+float FCSS(float2 coord, float bias, float z, float z_duv)
+{
+    float accumBlockerDepth = 0;
+    float numBlockers = 0;
+
+    uint width, height;
+    gShadowMapTexture.GetDimensions(width, height);
+
+    float2 texel = float2(1.0f / width, 1.0f / height);
+
+    FindBlocker(accumBlockerDepth, numBlockers, coord, z, z_duv, texel);
+
+    if (numBlockers == 0)
+        return 0.0;
+    else if (numBlockers == BLOCK_COUNT)
+        return 1.0;
+
+    float avgBlockerDepth = accumBlockerDepth / numBlockers;
+    float dist = z - avgBlockerDepth;
+    float2 filterRadiusUV = dist * LIGHT_RADIUS / z * texel;
+
+    float shadowValue = PCF(coord, bias, z, filterRadiusUV);
+    return shadowValue;
+}
+
+float4 ScreenSpaceShadow_PS(ScreenSpaceShadow_VertexAttr input) : SV_Target
+{
+    float lightIntensity;
+    float ambientStrength = 0.7f;
+    float4 color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    
+    float shadowValue = 1.0f;
+
+    float2 orthoTexCoord;
+    orthoTexCoord.x =  input.lightViewPosition.x / input.lightViewPosition.w / 2.0f + 0.5f;
+    orthoTexCoord.y = -input.lightViewPosition.y / input.lightViewPosition.w / 2.0f + 0.5f;
+
+    if((saturate(orthoTexCoord.x) == orthoTexCoord.x) && (saturate(orthoTexCoord.y) == orthoTexCoord.y))
+    {
+        lightIntensity = saturate(dot(input.normal, -gLightDir));
+
+        float bias = 0.005f * tan(acos(lightIntensity));
+        bias = clamp(bias, 0.0005f, 0.02f);
+        //float bias = max(0.02f * (1.0f - lightIntensity), 0.0005f);
+        float z = input.lightViewPosition.z;
+
+        if(lightIntensity > 0.0f)
+        {
+            float depth = gShadowMapTexture.Sample(gShadowMapSampler, orthoTexCoord).x;
+            float2 dz_duv = DepthGradient(orthoTexCoord, z);
+            shadowValue = FCSS(orthoTexCoord, bias, z, dz_duv);
+
+            color += (float4(0.5f, 0.5f, 0.5f, 1.0f) * lightIntensity * (1.0f - shadowValue));
+            color = saturate(color);
+        }
+    }
+    else
+        shadowValue = 0.0f;
+
+    color.xyz *= (1.0f - shadowValue);
+    return color;
+}

@@ -108,10 +108,8 @@ void BaseRenderer::DefineDefaultResources(DrawingResourceTable& resTable)
     DefineViewMatrixConstantBuffer(resTable);
     DefineProjectionMatrixConstantBuffer(resTable);
 
-    DefineTarget(DefaultTarget(), resTable);
-    DefineDepthBuffer(DefaultDepthBuffer(), resTable);
-
     DefineExternalTarget(ShadowMapTarget(), resTable);
+    DefineExternalTarget(ScreenSpaceShadowTarget(), resTable);
     DefineExternalTarget(ScreenTarget(), resTable);
     DefineExternalDepthBuffer(ScreenDepthBuffer(), resTable);
 
@@ -341,27 +339,68 @@ void BaseRenderer::DefineProjectionMatrixConstantBuffer(DrawingResourceTable& re
 
 void BaseRenderer::DefineDefaultDepthState(DrawingResourceTable& resTable)
 {
-    auto pDesc = std::make_shared<DrawingDepthStateDesc>();
+    auto pDesc1 = std::make_shared<DrawingDepthStateDesc>();
+    pDesc1->mDepthState.mDepthEnable = true;
+    pDesc1->mDepthState.mDepthWriteEnable = true;
+    pDesc1->mDepthState.mDepthFunc = eComparison_Less;
 
-    pDesc->mDepthState.mDepthEnable = true;
-    pDesc->mDepthState.mDepthWriteEnable = true;
-    pDesc->mDepthState.mDepthFunc = eComparison_Less;
+    pDesc1->mStencilState.mStencilEnable = false;
+    pDesc1->mStencilState.mStencilReadMask = 0;
+    pDesc1->mStencilState.mStencilWriteMask = 0;
 
-    pDesc->mStencilState.mStencilEnable = false;
-    pDesc->mStencilState.mStencilReadMask = 0;
-    pDesc->mStencilState.mStencilWriteMask = 0;
+    pDesc1->mStencilState.mFrontFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mFrontFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mFrontFace.mStencilFunc = eComparison_Always;
 
-    pDesc->mStencilState.mFrontFace.mStencilPassOp = eStencilOp_Keep;
-    pDesc->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Keep;
-    pDesc->mStencilState.mFrontFace.mStencilDepthFailOp = eStencilOp_Keep;
-    pDesc->mStencilState.mFrontFace.mStencilFunc = eComparison_Always;
+    pDesc1->mStencilState.mBackFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mBackFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc1->mStencilState.mBackFace.mStencilFunc = eComparison_Always;
 
-    pDesc->mStencilState.mBackFace.mStencilPassOp = eStencilOp_Keep;
-    pDesc->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Keep;
-    pDesc->mStencilState.mBackFace.mStencilDepthFailOp = eStencilOp_Keep;
-    pDesc->mStencilState.mBackFace.mStencilFunc = eComparison_Always;
+    resTable.AddResourceEntry(DefaultDepthState(), pDesc1);
 
-    resTable.AddResourceEntry(DefaultDepthState(), pDesc);
+    auto pDesc2 = std::make_shared<DrawingDepthStateDesc>();
+    pDesc2->mDepthState.mDepthEnable = true;
+    pDesc2->mDepthState.mDepthWriteEnable = false;
+    pDesc2->mDepthState.mDepthFunc = eComparison_LessEqual;
+
+    pDesc2->mStencilState.mStencilEnable = false;
+    pDesc2->mStencilState.mStencilReadMask = 0;
+    pDesc2->mStencilState.mStencilWriteMask = 0;
+
+    pDesc2->mStencilState.mFrontFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mFrontFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mFrontFace.mStencilFunc = eComparison_Always;
+
+    pDesc2->mStencilState.mBackFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mBackFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc2->mStencilState.mBackFace.mStencilFunc = eComparison_Always;
+
+    resTable.AddResourceEntry(DepthStateNoWrite(), pDesc2);
+
+    auto pDesc3 = std::make_shared<DrawingDepthStateDesc>();
+    pDesc3->mDepthState.mDepthEnable = false;
+    pDesc3->mDepthState.mDepthWriteEnable = false;
+    pDesc3->mDepthState.mDepthFunc = eComparison_Never;
+
+    pDesc3->mStencilState.mStencilEnable = false;
+    pDesc3->mStencilState.mStencilReadMask = 0;
+    pDesc3->mStencilState.mStencilWriteMask = 0;
+
+    pDesc3->mStencilState.mFrontFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mFrontFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mFrontFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mFrontFace.mStencilFunc = eComparison_Always;
+
+    pDesc3->mStencilState.mBackFace.mStencilPassOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mBackFace.mStencilFailOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mBackFace.mStencilDepthFailOp = eStencilOp_Keep;
+    pDesc3->mStencilState.mBackFace.mStencilFunc = eComparison_Always;
+
+    resTable.AddResourceEntry(DepthStateDisable(), pDesc3);
 }
 
 void BaseRenderer::DefineDefaultBlendState(DrawingResourceTable& resTable)
@@ -391,23 +430,39 @@ void BaseRenderer::DefineDefaultBlendState(DrawingResourceTable& resTable)
 
 void BaseRenderer::DefineDefaultRasterState(DrawingResourceTable& resTable)
 {
-    auto pDesc = std::make_shared<DrawingRasterStateDesc>();
+    auto pDesc1 = std::make_shared<DrawingRasterStateDesc>();
+    pDesc1->mAntialiasedLineEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
+    pDesc1->mMultisampleEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
+    pDesc1->mDepthClipEnable = true;
 
-    pDesc->mAntialiasedLineEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
-    pDesc->mMultisampleEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
-    pDesc->mDepthClipEnable = true;
+    pDesc1->mDepthBiasClamp = 0.0f;
+    pDesc1->mSlopeScaledDepthBias = 0.0f;
+    pDesc1->mDepthBias = 0;
 
-    pDesc->mDepthBiasClamp = 0.0f;
-    pDesc->mSlopeScaledDepthBias = 0.0f;
-    pDesc->mDepthBias = 0;
+    pDesc1->mCullMode = eCullMode_Back;
+    pDesc1->mFillMode = eFillMode_Solid;
 
-    pDesc->mCullMode = eCullMode_Back;
-    pDesc->mFillMode = eFillMode_Solid;
+    pDesc1->mFrontCounterClockwise = false;
+    pDesc1->mScissorEnable = false;
 
-    pDesc->mFrontCounterClockwise = false;
-    pDesc->mScissorEnable = false;
+    resTable.AddResourceEntry(DefaultRasterState(), pDesc1);
 
-    resTable.AddResourceEntry(DefaultRasterState(), pDesc);
+    auto pDesc2 = std::make_shared<DrawingRasterStateDesc>();
+    pDesc2->mAntialiasedLineEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
+    pDesc2->mMultisampleEnable = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() != eMSAA_Disable;
+    pDesc2->mDepthClipEnable = true;
+
+    pDesc2->mDepthBiasClamp = 0.0f;
+    pDesc2->mSlopeScaledDepthBias = 0.0f;
+    pDesc2->mDepthBias = 0;
+
+    pDesc2->mCullMode = eCullMode_Front;
+    pDesc2->mFillMode = eFillMode_Solid;
+
+    pDesc2->mFrontCounterClockwise = false;
+    pDesc2->mScissorEnable = false;
+
+    resTable.AddResourceEntry(RasterStateFrontCull(), pDesc2);
 }
 
 void BaseRenderer::DefineTarget(std::shared_ptr<std::string> pName, DrawingResourceTable& resTable)
@@ -417,8 +472,6 @@ void BaseRenderer::DefineTarget(std::shared_ptr<std::string> pName, DrawingResou
     pDesc->mWidth = gpGlobal->GetConfiguration<AppConfiguration>().GetWidth();
     pDesc->mHeight = gpGlobal->GetConfiguration<AppConfiguration>().GetHeight();
     pDesc->mFormat = eFormat_R8G8B8A8_UNORM;
-    pDesc->mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
-    pDesc->mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     resTable.AddResourceEntry(pName, pDesc);
 }
@@ -430,8 +483,6 @@ void BaseRenderer::DefineDepthBuffer(std::shared_ptr<std::string> pName, Drawing
     pDesc->mWidth = gpGlobal->GetConfiguration<AppConfiguration>().GetWidth();
     pDesc->mHeight = gpGlobal->GetConfiguration<AppConfiguration>().GetHeight();
     pDesc->mFormat = eFormat_D24S8;
-    pDesc->mMultiSampleCount = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA();
-    pDesc->mMultiSampleQuality = gpGlobal->GetConfiguration<GraphicsConfiguration>().GetMSAA() == eMSAA_Disable ? 0 : 1;
 
     resTable.AddResourceEntry(pName, pDesc);
 }
@@ -643,8 +694,8 @@ void BaseRenderer::BindStates(DrawingPass& pass)
 
 void BaseRenderer::BindOutput(DrawingPass& pass)
 {
-    BindTarget(pass, 0, DefaultTarget());
-    BindDepthBuffer(pass, DefaultDepthBuffer());
+    BindTarget(pass, 0, ScreenTarget());
+    BindDepthBuffer(pass, ScreenDepthBuffer());
 }
 
 void BaseRenderer::BindConstants(DrawingPass& pass)
