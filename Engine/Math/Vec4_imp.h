@@ -23,6 +23,11 @@ namespace Engine
     }
 
     template<typename T>
+    Vec4<T>::Vec4(const T (&val)[4]) : mArray{val[0], val[1], val[2], val[3]}
+    {
+    }
+
+    template<typename T>
     Vec4<T>::Vec4(const T& val1, const T& val2, const T& val3, const T& val4) : mArray{val1, val2, val3, val4}
     {
     }

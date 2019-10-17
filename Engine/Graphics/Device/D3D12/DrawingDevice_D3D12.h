@@ -36,6 +36,7 @@ namespace Engine
         bool CreateVertexBuffer(const DrawingVertexBufferDesc& desc, std::shared_ptr<DrawingVertexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) override;
         bool CreateIndexBuffer(const DrawingIndexBufferDesc& desc, std::shared_ptr<DrawingIndexBuffer>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData = nullptr, uint32_t size = 0) override;
         bool CreateTexture(const DrawingTextureDesc& desc, std::shared_ptr<DrawingTexture>& pRes, std::shared_ptr<DrawingResource> pRefRes = nullptr, const void* pData[] = nullptr, uint32_t size[] = nullptr, uint32_t slices = 0) override;
+        bool CreateTextureFromFile(const std::string uri, std::shared_ptr<DrawingTexture>& pRes) override;
         bool CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes) override;
         bool CreateDepthBuffer(const DrawingDepthBufferDesc& desc, std::shared_ptr<DrawingDepthBuffer>& pRes) override;
 
@@ -56,8 +57,6 @@ namespace Engine
         bool CreatePixelShaderFromString(const std::string& str, const DrawingPixelShaderDesc& desc, std::shared_ptr<DrawingPixelShader>& pRes) override;
         bool CreatePixelShaderFromBuffer(const void* pData, uint32_t length, const DrawingPixelShaderDesc& desc, std::shared_ptr<DrawingPixelShader>& pRes) override;
 
-        bool CreatePipelineState(const DrawingPipelineStateDesc& desc, const DrawingPipelineState::SubobjectResourceTable& subobjectResources, std::shared_ptr<DrawingPipelineState>& pRes) override;
-
         void ClearTarget(std::shared_ptr<DrawingTarget> pTarget, const float4& color) override;
         void ClearDepthBuffer(std::shared_ptr<DrawingDepthBuffer> pDepthBuffer, float depth, uint8_t stencil, uint32_t flag) override;
 
@@ -69,7 +68,6 @@ namespace Engine
         void SetDepthState(std::shared_ptr<DrawingDepthState> pDepth, uint32_t stencilRef) override;
         void SetRasterState(std::shared_ptr<DrawingRasterState> pRaster) override;
 
-        void SetPipelineState(std::shared_ptr<DrawingPipelineState> pPipelineState) override;
         void SetDescriptorHeap(EDrawingDescriptorHeapType type, std::shared_ptr<ID3D12DescriptorHeap> pHeap);
 
         void PushBlendState() override;

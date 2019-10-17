@@ -114,16 +114,5 @@ namespace Engine
         FPSCounter m_fps;
     };
 
-#define PRE_DEFINE_SETUP                                            \
-    std::vector<AnimationFunc> AnimationSystem::s_cbTables;         \
-    IComponent::CompTableType IComponent::m_compTable;
-
-    class Setup
-    {
-    public:
-        Setup();
-        virtual ~Setup() {};
-    };
-
     extern Global* gpGlobal;
 }

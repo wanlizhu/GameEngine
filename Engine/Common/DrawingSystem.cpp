@@ -16,6 +16,7 @@
 using namespace Engine;
 
 DrawingSystem::DrawingSystem() : m_window(nullptr),
+    m_bDebug(false),
     m_deviceSize(0),
     m_deviceType(gpGlobal->GetConfiguration<GraphicsConfiguration>().GetDeviceType()),
     m_pDevice(nullptr),
@@ -44,8 +45,6 @@ void DrawingSystem::Tick(float elapsedTime)
 {
     for (auto& pCamera : m_pCameraList)
     {
-        m_pContext->UpdateContext(*m_pResourceTable);
-
         auto pFrameGraphComponent = pCamera->GetComponent<FrameGraphComponent>();
         if (pFrameGraphComponent == nullptr)
             continue;
@@ -63,13 +62,69 @@ void DrawingSystem::Tick(float elapsedTime)
 void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
 {
     if (pEntity->HasComponent<CameraComponent>() && pEntity->HasComponent<TransformComponent>())
+    {
         m_pCameraList.emplace_back(pEntity);
+        BuildFrameGraph(pEntity);
+    }
 
     if (pEntity->HasComponent<LightComponent>() && pEntity->HasComponent<TransformComponent>())
         m_pLightList.emplace_back(pEntity);
 
     if (pEntity->HasComponent<MeshFilterComponent>() && pEntity->HasComponent<TransformComponent>())
+    {
         m_pMeshList.emplace_back(pEntity);
+        auto pComponent = pEntity->GetComponent<MeshRendererComponent>();
+        auto size = pComponent->GetMaterialSize();
+        for (uint32_t i = 0; i < size; i++)
+        {
+            auto pMaterial = pComponent->GetMaterial(i);
+
+            auto pAlbedoMap = pMaterial->GetAlbedoMap();
+            if (pAlbedoMap && pAlbedoMap->GetTexture() == nullptr)
+            {
+                auto uri = pAlbedoMap->GetURI();
+                std::shared_ptr<DrawingTexture> pTexture = nullptr;
+                m_pDevice->CreateTextureFromFile(uri, pTexture);
+                pAlbedoMap->SetTexture(pTexture);
+            }
+
+            auto pOcclusionMap = pMaterial->GetOcclusionMap();
+            if (pOcclusionMap && pOcclusionMap->GetTexture() == nullptr)
+            {
+                auto uri = pOcclusionMap->GetURI();
+                std::shared_ptr<DrawingTexture> pTexture = nullptr;
+                m_pDevice->CreateTextureFromFile(uri, pTexture);
+                pOcclusionMap->SetTexture(pTexture);
+            }
+
+            auto pMetallicRoughnessMap = pMaterial->GetMetallicRoughnessMap();
+            if (pMetallicRoughnessMap && pMetallicRoughnessMap->GetTexture() == nullptr)
+            {
+                auto uri = pMetallicRoughnessMap->GetURI();
+                std::shared_ptr<DrawingTexture> pTexture = nullptr;
+                m_pDevice->CreateTextureFromFile(uri, pTexture);
+                pMetallicRoughnessMap->SetTexture(pTexture);
+            }
+
+            auto pNormalMap = pMaterial->GetNormalMap();
+            if (pNormalMap && pNormalMap->GetTexture() == nullptr)
+            {
+                auto uri = pNormalMap->GetURI();
+                std::shared_ptr<DrawingTexture> pTexture = nullptr;
+                m_pDevice->CreateTextureFromFile(uri, pTexture);
+                pNormalMap->SetTexture(pTexture);
+            }
+
+            auto pEmissiveMap = pMaterial->GetEmissiveMap();
+            if (pEmissiveMap && pEmissiveMap->GetTexture() == nullptr)
+            {
+                auto uri = pEmissiveMap->GetURI();
+                std::shared_ptr<DrawingTexture> pTexture = nullptr;
+                m_pDevice->CreateTextureFromFile(uri, pTexture);
+                pEmissiveMap->SetTexture(pTexture);
+            }
+        }
+    }
 }
 
 EConfigurationDeviceType DrawingSystem::GetDeviceType() const
@@ -80,6 +135,11 @@ EConfigurationDeviceType DrawingSystem::GetDeviceType() const
 void DrawingSystem::SetDeviceType(EConfigurationDeviceType type)
 {
     m_deviceType = type;
+}
+
+void DrawingSystem::FlipDebugState()
+{
+    m_bDebug = !m_bDebug;
 }
 
 bool DrawingSystem::EstablishConfiguration()
@@ -134,6 +194,12 @@ bool DrawingSystem::CreateDevice()
 
 bool DrawingSystem::CreatePreResource()
 {
+    auto pSwapChain = CreateSwapChain();
+    auto pDepthBuffer = CreateDepthBuffer(); 
+
+    m_pContext->SetSwapChain(pSwapChain);
+    m_pContext->SetDepthBuffer(pDepthBuffer);
+
     m_pEffectPool = std::make_shared<DrawingEffectPool>(m_pDevice);
     m_pResourceFactory = std::make_shared<DrawingResourceFactory>(m_pDevice);
     m_pResourceTable = std::make_shared<DrawingResourceTable>(*m_pResourceFactory);
@@ -181,7 +247,7 @@ std::shared_ptr<DrawingDepthBuffer> DrawingSystem::CreateDepthBuffer()
     DrawingDepthBufferDesc desc;
     desc.mWidth = m_deviceSize.x;
     desc.mHeight = m_deviceSize.y;
-    desc.mFormat = eFormat_D24S8;
+    desc.mFormat = eFormat_R24G8_TYPELESS;
 
     std::shared_ptr<DrawingDepthBuffer> pDepthBuffer;
 
@@ -193,13 +259,6 @@ std::shared_ptr<DrawingDepthBuffer> DrawingSystem::CreateDepthBuffer()
 
 bool DrawingSystem::PostConfiguration()
 {
-    auto pSwapChain = CreateSwapChain();
-    auto pDepthBuffer = CreateDepthBuffer(); 
-
-    m_pContext->SetSwapChain(pSwapChain);
-    m_pContext->SetDepthBuffer(pDepthBuffer);
-    m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
-
     m_pContext->UpdateTargets(*m_pResourceTable);
 
     if(!m_pResourceTable->BuildResources())
@@ -207,36 +266,31 @@ bool DrawingSystem::PostConfiguration()
 
     m_pDevice->Flush();
 
-    BuildFrameGraph();
-
     return true;
 }
 
-void DrawingSystem::BuildFrameGraph()
+void DrawingSystem::BuildFrameGraph(std::shared_ptr<IEntity> pCamera)
 {
-    for (auto& pCamera : m_pCameraList)
-    {
-        std::shared_ptr<FrameGraph> pFrameGraph = std::make_shared<FrameGraph>();
+    std::shared_ptr<FrameGraph> pFrameGraph = std::make_shared<FrameGraph>();
 
-        FrameGraphComponent frameGraphComponent;
-        frameGraphComponent.SetFrameGraph(pFrameGraph);
-        pCamera->AttachComponent<FrameGraphComponent>(frameGraphComponent);
+    FrameGraphComponent frameGraphComponent;
+    frameGraphComponent.SetFrameGraph(pFrameGraph);
+    pCamera->AttachComponent<FrameGraphComponent>(frameGraphComponent);
 
-        auto pCameraComponent = pCamera->GetComponent<CameraComponent>();
+    auto pCameraComponent = pCamera->GetComponent<CameraComponent>();
 
-        if (pCameraComponent->GetRendererType() == eRenderer_Forward)
-            BuildForwardFrameGraph(pFrameGraph, pCamera);
+    if (pCameraComponent->GetRendererType() == eRenderer_Forward)
+        BuildForwardFrameGraph(pFrameGraph, pCamera);
 
-        else if (pCameraComponent->GetRendererType() == eRenderer_Deferred)
-            BuildDeferredFrameGraph(pFrameGraph, pCamera);
+    else if (pCameraComponent->GetRendererType() == eRenderer_Deferred)
+        BuildDeferredFrameGraph(pFrameGraph, pCamera);
 
-        pFrameGraph->InitializePasses();
-    }
+    pFrameGraph->InitializePasses();
 }
 
 bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera)
 {
-    auto& pRenderer = gpGlobal->GetRenderer(eRenderer_Forward);
+    auto& pRenderer = std::dynamic_pointer_cast<ForwardRenderer>(gpGlobal->GetRenderer(eRenderer_Forward));
     if (pRenderer == nullptr)
         return false;
 
@@ -246,21 +300,10 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     auto pTransformComponent = pCamera->GetComponent<TransformComponent>();
     assert(pCameraComponent != nullptr && pTransformComponent != nullptr);
 
-    auto pLight = m_pLightList.front();
-    if (pLight == nullptr)
-        return false;
-
-    auto pLightComponent = pLight->GetComponent<LightComponent>();
-    auto pLightTransformComponent = pLight->GetComponent<TransformComponent>();
-
     // Depth pass.
     auto pDepthPass = pRenderer->GetPass(ForwardRenderer::DepthPass());
     assert(pDepthPass != nullptr);
     auto& depthPassNode = pFrameGraph->AddPass(pDepthPass, GraphicsBit);
-
-    depthPassNode.SetInitializeFunc([&](void) -> bool {
-        return true;
-    });
 
     depthPassNode.SetClearDepthStencilFunc([&](float& depth, uint8_t& stencil, uint32_t& flag) -> void {
         depth = 1.0f;
@@ -273,24 +316,22 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         float4x4 proj;
         GetProjectionMatrix(pCameraComponent, proj);
         GetViewMatrix(pTransformComponent, view);
+
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+        m_pContext->UpdateContext(*m_pResourceTable);
 
         RenderQueueItemListType items;
         GetVisableRenderable(items);
 
-        pRenderer->Begin();
         pRenderer->AddRenderables(items);
-        pRenderer->Flush(*m_pResourceTable, pDepthPass);
+        pRenderer->Render(*m_pResourceTable, pDepthPass);
     });
 
     // Shadowmap pass.
     auto pShadowPass = pRenderer->GetPass(ForwardRenderer::ShadowCasterPass());
     assert(pShadowPass != nullptr);
     auto& shadowPassNode = pFrameGraph->AddPass(pShadowPass, GraphicsBit);
-
-    shadowPassNode.SetInitializeFunc([&](void) -> bool {
-        return true;
-    });
 
     shadowPassNode.SetClearColorFunc(0, [&](float4& color) -> void {
         color.x = 1.0f;
@@ -302,23 +343,28 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         flag = eClear_Depth;
     });
 
-    shadowPassNode.SetExecuteFunc([&, pLightTransformComponent, pRenderer, pShadowPass](void) -> void {
+    shadowPassNode.SetExecuteFunc([&, pRenderer, pShadowPass](void) -> void {
+        auto pLight = m_pLightList.front();
+        if (pLight == nullptr)
+            return;
+
+        auto pLightTransformComponent = pLight->GetComponent<TransformComponent>();
+
         float4x4 lightView;
         float4x4 lightProj;
         GetLightViewProjectionMatrix(pLightTransformComponent, lightView, lightProj);
+
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
         m_pContext->UpdateCamera(*m_pResourceTable, lightProj, lightView);
+        m_pContext->UpdateContext(*m_pResourceTable);
 
         RenderQueueItemListType items;
         GetVisableRenderable(items);
 
-        auto pForwardRenderer = std::static_pointer_cast<ForwardRenderer>(pRenderer);
-        assert(pForwardRenderer != nullptr);
+        pRenderer->UpdateShadowMapAsTarget(*m_pResourceTable);
 
-        pForwardRenderer->UpdateShadowMapAsTarget(*m_pResourceTable);
-
-        pRenderer->Begin();
         pRenderer->AddRenderables(items);
-        pRenderer->Flush(*m_pResourceTable, pShadowPass);
+        pRenderer->Render(*m_pResourceTable, pShadowPass);
     });
 
     // Screen space shadow pass.
@@ -326,20 +372,25 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     assert(pSSSPass != nullptr);
     auto& sssNode = pFrameGraph->AddPass(pSSSPass, GraphicsBit);
 
-    sssNode.SetInitializeFunc([&](void) -> bool {
-        return true;
-    });
-
-    sssNode.SetClearColorFunc(0, [&, pCameraComponent](float4& color) -> void {
+    sssNode.SetClearColorFunc(0, [&](float4& color) -> void {
         color = float4(1.0f, 1.0f, 1.0f, 1.0f);
     });
 
-    sssNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pLightTransformComponent, pRenderer, pSSSPass](void) -> void {
+    sssNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pRenderer, pSSSPass](void) -> void {
+        auto pLight = m_pLightList.front();
+        if (pLight == nullptr)
+            return;
+
+        auto pLightTransformComponent = pLight->GetComponent<TransformComponent>();
+
         float4x4 view;
         float4x4 proj;
         GetProjectionMatrix(pCameraComponent, proj);
         GetViewMatrix(pTransformComponent, view);
+
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+        m_pContext->UpdateContext(*m_pResourceTable);
 
         float4x4 lightView;
         float4x4 lightProj;
@@ -352,15 +403,11 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         RenderQueueItemListType items;
         GetVisableRenderable(items);
 
-        auto pForwardRenderer = std::static_pointer_cast<ForwardRenderer>(pRenderer);
-        assert(pForwardRenderer != nullptr);
+        pRenderer->UpdateShadowMapAsTexture(*m_pResourceTable);
+        pRenderer->UpdateScreenSpaceShadowAsTarget(*m_pResourceTable);
 
-        pForwardRenderer->UpdateShadowMapAsTexture(*m_pResourceTable);
-        pForwardRenderer->UpdateScreenSpaceShadowAsTarget(*m_pResourceTable);
-
-        pRenderer->Begin();
         pRenderer->AddRenderables(items);
-        pRenderer->Flush(*m_pResourceTable, pSSSPass);
+        pRenderer->Render(*m_pResourceTable, pSSSPass);
     });
 
     // Forward shading pass.
@@ -368,21 +415,27 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     assert(pForwardShadingPass != nullptr);
     auto& forwardShadingNode = pFrameGraph->AddPass(pForwardShadingPass, GraphicsBit);
 
-    forwardShadingNode.SetInitializeFunc([&](void) -> bool {
-        return true;
-    });
-
     forwardShadingNode.SetClearColorFunc(0, [&, pCameraComponent](float4& color) -> void {
         color = pCameraComponent->GetBackground();
     });
 
-    forwardShadingNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pLightTransformComponent, pRenderer, pForwardShadingPass](void) -> void {
+    forwardShadingNode.SetExecuteFunc([&, pCameraComponent, pTransformComponent, pRenderer, pForwardShadingPass](void) -> void {
+        auto pLight = m_pLightList.front();
+        if (pLight == nullptr)
+            return;
+
+        auto pLightTransformComponent = pLight->GetComponent<TransformComponent>();
+
         float4x4 view;
         float4x4 proj;
         float3 dir;
         GetProjectionMatrix(pCameraComponent, proj);
         GetViewMatrix(pTransformComponent, view, dir);
+
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
         m_pContext->UpdateCamera(*m_pResourceTable, proj, view);
+        m_pContext->UpdateContext(*m_pResourceTable);
+
         UpdateCameraDir(dir);
 
         float4x4 lightView;
@@ -394,14 +447,65 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
         RenderQueueItemListType items;
         GetVisableRenderable(items);
 
-        auto pForwardRenderer = std::static_pointer_cast<ForwardRenderer>(pRenderer);
-        assert(pForwardRenderer != nullptr);
+        pRenderer->UpdateScreenSpaceShadowAsTexture(*m_pResourceTable);
 
-        pForwardRenderer->UpdateScreenSpaceShadowAsTexture(*m_pResourceTable);
-
-        pRenderer->Begin();
         pRenderer->AddRenderables(items);
-        pRenderer->Flush(*m_pResourceTable, pForwardShadingPass);
+        pRenderer->Render(*m_pResourceTable, pForwardShadingPass);
+    });
+
+    // SSAO pass.
+    auto pSSAOPass = pRenderer->GetPass(ForwardRenderer::SSAOPass());
+    assert(pSSAOPass != nullptr);
+    auto& ssaoNode = pFrameGraph->AddPass(pSSAOPass, GraphicsBit);
+
+    ssaoNode.SetClearColorFunc(0, [&](float4& color) -> void {
+        color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    });
+
+    ssaoNode.SetExecuteFunc([&, pRenderer, pSSAOPass](void) -> void {
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<AppConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<AppConfiguration>().GetHeight())));
+        m_pContext->UpdateContext(*m_pResourceTable);
+
+        pRenderer->UpdateSSAOTextureAsTarget(*m_pResourceTable);
+        pRenderer->RenderRect(*m_pResourceTable, pSSAOPass);
+    });
+
+    // Debug layer pass.
+    auto pDebugLayerPass = pRenderer->GetPass(ForwardRenderer::DebugLayerPass());
+    assert(pDebugLayerPass != nullptr);
+    auto& debugLayerNode = pFrameGraph->AddPass(pDebugLayerPass, GraphicsBit);
+
+    debugLayerNode.SetClearColorFunc(0, [&](float4& color) -> void {
+        color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    });
+
+    debugLayerNode.SetNeedExecuteFunc([&](void) -> bool {
+        return m_bDebug;
+    });
+
+    debugLayerNode.SetExecuteFunc([&, pRenderer, pDebugLayerPass](void) -> void {
+        m_pContext->SetViewport(Box2(float2(0, 0), float2((float)gpGlobal->GetConfiguration<DebugConfiguration>().GetWidth(), (float)gpGlobal->GetConfiguration<DebugConfiguration>().GetHeight())));
+        m_pContext->UpdateContext(*m_pResourceTable);
+
+        pRenderer->UpdateDepthAsTexture(*m_pResourceTable);
+        pRenderer->UpdateRectTexture(*m_pResourceTable, ForwardRenderer::ScreenDepthTexture());
+        pRenderer->RenderRect(*m_pResourceTable, pDebugLayerPass);
+        pRenderer->CopyRect(*m_pResourceTable, ForwardRenderer::DebugLayerTarget(), ForwardRenderer::ScreenTarget(), int2(0, 0));
+
+        pRenderer->UpdateShadowMapAsTexture(*m_pResourceTable);
+        pRenderer->UpdateRectTexture(*m_pResourceTable, ForwardRenderer::ShadowMapTexture());
+        pRenderer->RenderRect(*m_pResourceTable, pDebugLayerPass);
+        pRenderer->CopyRect(*m_pResourceTable, ForwardRenderer::DebugLayerTarget(), ForwardRenderer::ScreenTarget(), int2(gpGlobal->GetConfiguration<DebugConfiguration>().GetWidth() + 5, 0));
+
+        pRenderer->UpdateScreenSpaceShadowAsTexture(*m_pResourceTable);
+        pRenderer->UpdateRectTexture(*m_pResourceTable, ForwardRenderer::ScreenSpaceShadowTexture());
+        pRenderer->RenderRect(*m_pResourceTable, pDebugLayerPass);
+        pRenderer->CopyRect(*m_pResourceTable, ForwardRenderer::DebugLayerTarget(), ForwardRenderer::ScreenTarget(), int2(gpGlobal->GetConfiguration<DebugConfiguration>().GetWidth() + 5, 0) * 2);
+
+        pRenderer->UpdateSSAOTextureAsTexture(*m_pResourceTable);
+        pRenderer->UpdateRectTexture(*m_pResourceTable, ForwardRenderer::SSAOTexture());
+        pRenderer->RenderRect(*m_pResourceTable, pDebugLayerPass);
+        pRenderer->CopyRect(*m_pResourceTable, ForwardRenderer::DebugLayerTarget(), ForwardRenderer::ScreenTarget(), int2(gpGlobal->GetConfiguration<DebugConfiguration>().GetWidth() + 5, 0) * 3);
     });
 
     pFrameGraph->FetchResources(*m_pResourceTable);
@@ -419,9 +523,34 @@ void DrawingSystem::GetVisableRenderable(RenderQueueItemListType& items)
     for (auto& pEntity : m_pMeshList)
     {
         auto pTrans = pEntity->GetComponent<TransformComponent>();
-        auto pMesh = pEntity->GetComponent<MeshFilterComponent>();
+        auto pMeshFilter = pEntity->GetComponent<MeshFilterComponent>();
+        auto pMeshRenderer = pEntity->GetComponent<MeshRendererComponent>();
 
-        items.push_back(RenderQueueItem{ dynamic_cast<IRenderable*>(pMesh->GetMesh().get()), pTrans});
+        items.push_back(RenderQueueItem{ dynamic_cast<IRenderable*>(pMeshFilter->GetMesh().get()), pTrans});
+
+        auto& pRenderer = std::dynamic_pointer_cast<ForwardRenderer>(gpGlobal->GetRenderer(eRenderer_Forward));
+
+        std::shared_ptr<ITexture> pTexture = nullptr;
+
+        pTexture = pMeshRenderer->GetMaterial(0)->GetAlbedoMap();
+        if (pTexture != nullptr)
+            pRenderer->UpdateBaseColorTexture(*m_pResourceTable, pTexture->GetTexture());
+
+        pTexture = pMeshRenderer->GetMaterial(0)->GetOcclusionMap();
+        if (pTexture != nullptr)
+            pRenderer->UpdateOcclusionTexture(*m_pResourceTable, pTexture->GetTexture());
+
+        pTexture = pMeshRenderer->GetMaterial(0)->GetMetallicRoughnessMap();
+        if (pTexture != nullptr)
+            pRenderer->UpdateMetallicRoughnessTexture(*m_pResourceTable, pTexture->GetTexture());
+
+        pTexture = pMeshRenderer->GetMaterial(0)->GetNormalMap();
+        if (pTexture != nullptr)
+            pRenderer->UpdateNormalTexture(*m_pResourceTable, pTexture->GetTexture());
+
+        pTexture = pMeshRenderer->GetMaterial(0)->GetEmissiveMap();
+        if (pTexture != nullptr)
+            pRenderer->UpdateEmissiveTexture(*m_pResourceTable, pTexture->GetTexture());
     }
 }
 
@@ -432,7 +561,7 @@ void DrawingSystem::GetViewMatrix(TransformComponent* pTransform, float4x4& view
 
     float3 up = float3(0.0f, 1.0f, 0.0f);
     dir = float3(1.0f, 0.0f, 0.0f);
-    dir = Mat::Mul(dir, Mat::RotateLH(rotate.x, rotate.y, rotate.z));
+    dir = Mat::Mul(dir, Mat::EulerRotateLH(rotate.x, rotate.y, rotate.z));
     auto at = dir + pos;
 
     view = Mat::LookAtLH(pos, at, up);
@@ -456,7 +585,7 @@ void DrawingSystem::GetLightViewProjectionMatrix(TransformComponent* pTransform,
     float3 at = float3(0.0f, 0.0f, 0.0f);
     float3 up = float3(0.0f, 1.0f, 0.0f);
     dir = float3(1.0f, 0.0f, 0.0f);
-    dir = Vec::Normalize(Mat::Mul(dir, Mat::RotateLH(rotate.x, rotate.y, rotate.z)));
+    dir = Vec::Normalize(Mat::Mul(dir, Mat::EulerRotateLH(rotate.x, rotate.y, rotate.z)));
     float3 pos = at - dir;
 
     view = Mat::LookAtLH(pos, at, up);

@@ -75,11 +75,6 @@ std::shared_ptr<std::string> DrawingPass::VaringStatesSlotName()
     return StaticResourceSlotTable::GetStaticSlotName("VaringStates", StaticResourceSlotTable::GetVaringStatesSlotID());
 }
 
-std::shared_ptr<std::string> DrawingPass::PipelineStateSlotName()
-{
-    return StaticResourceSlotTable::GetStaticSlotName("PipelineState", StaticResourceSlotTable::GetPipelineStateSlotID());
-}
-
 std::shared_ptr<std::string> DrawingPass::GetName() const
 {
     return m_pName;
@@ -172,8 +167,6 @@ bool DrawingPass::Flush(DrawingContext& dc)
     UpdateRWBuffers();
     UpdateBuffers();
     UpdateSamplers();
-
-    UpdatePipelineState();
 
     BeginEffect(dc);
     DrawPrimitive(dc);
@@ -275,11 +268,6 @@ void DrawingPass::PopStates()
     m_pDevice->PopRasterState();
     m_pDevice->PopDepthState();
     m_pDevice->PopBlendState();
-}
-
-void DrawingPass::UpdatePipelineState()
-{
-    m_staticTable.UpdatePipelineState(m_pDevice);
 }
 
 void DrawingPass::BeginEffect(DrawingContext& dc)
@@ -632,11 +620,6 @@ uint32_t DrawingPass::StaticResourceSlotTable::GetVaringStatesSlotID()
     return Varing_State_ID;
 }
 
-uint32_t DrawingPass::StaticResourceSlotTable::GetPipelineStateSlotID()
-{
-    return Pipeline_State_ID;
-}
-
 void DrawingPass::StaticResourceSlotTable::UpdateVertexFormat(const std::shared_ptr<DrawingDevice>& device)
 {
     auto it = mSlotTable.find(VertexFormatSlotName());
@@ -733,15 +716,6 @@ void DrawingPass::StaticResourceSlotTable::UpdateScissorBox(const std::shared_pt
 {
 }
 
-void DrawingPass::StaticResourceSlotTable::UpdatePipelineState(const std::shared_ptr<DrawingDevice>& device)
-{
-    auto it = mSlotTable.find(PipelineStateSlotName());
-    assert(it != mSlotTable.cend());
-
-    auto pPipelineState = std::dynamic_pointer_cast<DrawingPipelineState>(GetSlotDeviceResource(&(it->second)));
-    device->SetPipelineState(pPipelineState);
-}
-
 void DrawingPass::StaticResourceSlotTable::RestoreViewport(const std::shared_ptr<DrawingDevice>& device)
 {
 }
@@ -815,7 +789,6 @@ void DrawingPass::StaticResourceSlotTable::AddStaticResourceSlot()
 
     AddStaticResourceSlot(PrimitiveSlotName());
     AddStaticResourceSlot(VaringStatesSlotName());
-    AddStaticResourceSlot(PipelineStateSlotName());
 }
 
 void DrawingPass::StaticResourceSlotTable::AddStaticResourceSlot(std::shared_ptr<std::string> slotName)

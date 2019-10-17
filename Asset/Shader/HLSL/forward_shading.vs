@@ -19,6 +19,7 @@ ForwardShading_VertexAttr ForwardShading_VS(ForwardShading_Input input)
 
     output.pos = output.position;
     output.normal = normalize(mul(input.Normal, (float3x3)gWorldMatrix));
+    output.texcoord = input.TexCoord;
 
     return output;
 }

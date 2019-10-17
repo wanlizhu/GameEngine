@@ -36,7 +36,8 @@ namespace Engine
             return ret;
         }
 
-        template<typename T, typename U>
+        template<typename T, typename U> 
+
         static inline typename T Mul(const T& vec, const U& mat)
         {
             static_assert(std::is_base_of<Vec, T>::value, "T must inherit from Vec");
@@ -47,7 +48,7 @@ namespace Engine
         }
 
         template<typename T>
-        static inline typename Mat3x3<T> RotateLH(T p, T h, T b)
+        static inline typename Mat3x3<T> EulerRotateLH(T p, T h, T b)
         {
             T sinp, cosp, sinh, cosh, sinb, cosb;
             MATH_TYPE_DEGREE_FUN(T, p, sin, sinp)
@@ -60,6 +61,14 @@ namespace Engine
             return Mat3x3<T>( cosb*cosh+sinb*sinp*sinh,     sinb*cosp,      -cosb*sinh+sinb*sinp*cosh,
                              -sinb*cosh+cosb*sinp*sinh,     cosb*cosp,       sinb*sinh+cosb*sinp*cosh,
                               cosp*sinh,                   -sinp,            cosp*cosh                 );
+        }
+
+        template<typename T>
+        static inline typename Mat3x3<T> QuatRotateLH(T x, T y, T z, T w)
+        {
+            return Mat3x3<T>( 1-2*y*y-2*z*z,    2*x*y+2*w*z,    2*x*z-2*w*y,
+                              2*x*y-2*w*z,      1-2*x*x-2*z*z,  2*y*z+2*w*x,
+                              2*x*z+2*w*y,      2*y*z-2*w*x,    1-2*x*x-2*y*y);
         }
 
         template<typename T>

@@ -580,42 +580,4 @@ namespace Engine
         EDrawingResourceType GetType() const override;
         DrawingResourceDesc* Clone() const override;
     };
-
-    class DrawingPipelineStateDesc : public DrawingResourceDesc
-    {
-    public:
-        DrawingPipelineStateDesc();
-        DrawingPipelineStateDesc(const DrawingPipelineStateDesc& desc);
-        DrawingPipelineStateDesc(DrawingPipelineStateDesc&& desc);
-        virtual ~DrawingPipelineStateDesc();
-
-        enum EPipelineStateSubobjectType
-        {
-            ePipelineStateSubobjectType_RootSignature = 0,
-            ePipelineStateSubobjectType_Effect,
-            ePipelineStateSubobjectType_StreamOutput,
-            ePipelineStateSubobjectType_BlendState,
-            ePipelineStateSubobjectType_RasterState,
-            ePipelineStateSubobjectType_DepthStencilState,
-            ePipelineStateSubobjectType_InputLayout,
-            ePipelineStateSubobjectType_PrimitiveTopology,
-            ePipelineStateSubobjectType_RenderTarget,
-            ePipelineStateSubobjectType_DepthStencil,
-        };
-
-        DrawingPipelineStateDesc& operator= (const DrawingPipelineStateDesc& rhs);
-
-        EDrawingResourceType GetType() const override;
-        DrawingResourceDesc* Clone() const override;
-
-        void AttachSubobject(EPipelineStateSubobjectType type, std::shared_ptr<std::string> subobject);
-
-        typedef std::unordered_map<EPipelineStateSubobjectType, std::shared_ptr<std::string>> SubobjectTable;
-
-    private:
-        void CloneFromSubobject(const SubobjectTable& from);
-
-    public:
-        SubobjectTable mSubobjectTable;
-    };
 }

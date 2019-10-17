@@ -1,5 +1,7 @@
 #pragma once
 
+#include <locale>
+#include <codecvt>
 #include <vector>
 #include <array>
 #include <string>
@@ -8,6 +10,7 @@
 #include <dxgi.h>
 #include <d3d11shader.h>
 #include <d3dx11effect.h>
+#include <WICTextureLoader.h>
 
 #include "DrawingDevice_D3D11.h"
 #include "DrawingRawResource.h"
@@ -954,16 +957,43 @@ namespace Engine
         {
             auto pTargetRaw = m_pTarget.get();
             ID3D11DepthStencilView* pDepthStencilViewRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateDepthStencilView(pTargetRaw, nullptr, &pDepthStencilViewRaw);
+            ID3D11ShaderResourceView* pShaderResourceViewRaw = nullptr;
+            HRESULT hr;
+
+            if (desc.Format == DXGI_FORMAT_R24G8_TYPELESS)
+            {
+                D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+                dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+                dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+                hr = m_pDevice->GetDevice()->CreateDepthStencilView(pTargetRaw, &dsvDesc, &pDepthStencilViewRaw);
+
+                D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D.MostDetailedMip = 0;
+                srvDesc.Texture2D.MipLevels = -1;
+                hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTargetRaw, &srvDesc, &pShaderResourceViewRaw);
+            }
+            else
+            {
+                hr = m_pDevice->GetDevice()->CreateDepthStencilView(pTargetRaw, nullptr, &pDepthStencilViewRaw);
+            }
+
             assert(SUCCEEDED(hr));
             m_pDepthStencilView = std::shared_ptr<ID3D11DepthStencilView>(pDepthStencilViewRaw, D3D11Releaser<ID3D11DepthStencilView>);
+            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pShaderResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
         }
 
         virtual ~DrawingRawDepthTarget_D3D11() = default;
 
-        std::shared_ptr<ID3D11DepthStencilView> GetDepthStencilView()
+        std::shared_ptr<ID3D11DepthStencilView> GetDepthStencilView() const
         {
             return m_pDepthStencilView;
+        }
+
+        std::shared_ptr<ID3D11ShaderResourceView> GetShaderResourceView() const
+        {
+            return m_pShaderResourceView;
         }
 
         ETargetType GetTargetType() const override
@@ -971,8 +1001,11 @@ namespace Engine
             return eTarget_Depth;
         }
 
+        friend class DrawingRawTexture2D_D3D11;
+
     private:
         std::shared_ptr<ID3D11DepthStencilView> m_pDepthStencilView;
+        std::shared_ptr<ID3D11ShaderResourceView> m_pShaderResourceView;
     };
 
     class DrawingRawTexture_D3D11 : public DrawingRawTexture
@@ -1029,25 +1062,45 @@ namespace Engine
             ID3D11Texture2D* pTextureRaw = nullptr;
             HRESULT hr = m_pDevice->GetDevice()->CreateTexture2D(&desc, data.data(), &pTextureRaw);
             assert(SUCCEEDED(hr));
-            m_pTexture2D = std::shared_ptr<ID3D11Texture2D>(pTextureRaw, D3D11Releaser<ID3D11Texture2D>);
+            ID3D11Resource* pResourceRaw = dynamic_cast<ID3D11Resource*>(pTextureRaw);
+            m_pResource = std::shared_ptr<ID3D11Resource>(pResourceRaw, D3D11Releaser<ID3D11Resource>);
 
             ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
-            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pTextureRaw, nullptr, &pResourceViewRaw);
+            hr = m_pDevice->GetDevice()->CreateShaderResourceView(pResourceRaw, nullptr, &pResourceViewRaw);
             assert(SUCCEEDED(hr));
             m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
         }
 
-        DrawingRawTexture2D_D3D11(const DrawingRawRenderTarget_D3D11& target) : DrawingRawTexture_D3D11(target.m_pDevice, target.m_pShaderResourceView), m_pTexture2D(target.m_pTarget)
+        DrawingRawTexture2D_D3D11(std::shared_ptr<DrawingDevice_D3D11> pDevice, const std::string uri) : DrawingRawTexture_D3D11(pDevice)
+        {
+            ID3D11Resource* pResourceRaw = nullptr;
+            ID3D11ShaderResourceView* pResourceViewRaw = nullptr;
+
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            std::wstring wideUri = converter.from_bytes(uri);
+
+            HRESULT hr = DirectX::CreateWICTextureFromFile(m_pDevice->GetDevice().get(), m_pDevice->GetDeviceContext().get(), wideUri.c_str(), &pResourceRaw, &pResourceViewRaw);
+            assert(SUCCEEDED(hr));
+
+            m_pResource = std::shared_ptr<ID3D11Resource>(pResourceRaw, D3D11Releaser<ID3D11Resource>);
+            m_pShaderResourceView = std::shared_ptr<ID3D11ShaderResourceView>(pResourceViewRaw, D3D11Releaser<ID3D11ShaderResourceView>);
+        }
+
+        DrawingRawTexture2D_D3D11(const DrawingRawRenderTarget_D3D11& target) : DrawingRawTexture_D3D11(target.m_pDevice, target.m_pShaderResourceView), m_pResource(target.m_pTarget)
+        {
+        }
+
+        DrawingRawTexture2D_D3D11(const DrawingRawDepthTarget_D3D11& target) : DrawingRawTexture_D3D11(target.m_pDevice, target.m_pShaderResourceView), m_pResource(target.m_pTarget)
         {
         }
 
         std::shared_ptr<ID3D11Resource> GetBuffer() const override
         {
-            return std::dynamic_pointer_cast<ID3D11Resource>(m_pTexture2D);
+            return m_pResource;
         }
 
     private:
-        std::shared_ptr<ID3D11Texture2D> m_pTexture2D;
+        std::shared_ptr<ID3D11Resource> m_pResource;
     };
 
     class DrawingRawTexture3D_D3D11 : public DrawingRawTexture_D3D11

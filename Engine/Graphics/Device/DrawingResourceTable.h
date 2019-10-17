@@ -43,8 +43,6 @@ namespace Engine
         bool CreatePrimitive(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const;
         bool CreateVaringStates(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes) const;
 
-        bool CreatePipelineState(const std::shared_ptr<DrawingResourceDesc>& pDesc, std::shared_ptr<DrawingResource>& pRes, DrawingResourceTable& resTable) const;
-
     private:
         std::shared_ptr<DrawingDevice> m_pDevice;
         std::weak_ptr<DrawingEffectPool> m_pEffectPool;

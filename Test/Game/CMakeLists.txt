@@ -23,6 +23,8 @@ target_link_libraries(
     Entity
 )
 
+include_directories("${PROJECT_SOURCE_DIR}/Thirdparts/glTF2-loader/Include")
+
 set_target_properties(
     GameTest
     PROPERTIES

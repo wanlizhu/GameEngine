@@ -16,7 +16,7 @@ bool FrameGraphNode::RunInitializeFunc() const
     if (m_initializeFunc)
         return m_initializeFunc();
 
-    return false;
+    return true;
 }
 
 bool FrameGraphNode::IfNeedExecuteFunc() const

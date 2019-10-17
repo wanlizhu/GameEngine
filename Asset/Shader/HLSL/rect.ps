@@ -1,0 +1,17 @@
+#include "rect.h"
+
+Texture2D<float4> gRectTexture : register(t0);
+
+SamplerState gLinearSampler : LinearSampler
+{
+    Filter = MIN_MAG_MIP_Linear;
+    AddressU = LINEAR;
+    AddressV = LINEAR;
+};
+
+float4 Rect_PS(Rect_VertexAttr input) : SV_TARGET
+{
+    float4 val = gRectTexture.Sample(gLinearSampler, input.uv);
+    val.w = 1.0f;
+    return val;
+}

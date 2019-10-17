@@ -3,7 +3,7 @@
 using namespace Engine;
 
 TransformComponent::TransformComponent() : ComponentBase<TransformComponent>(),
-    m_scale(1.0f, 1.0f, 1.0f)
+    m_scale(1.0f, 1.0f, 1.0f), m_quaternion(0.0f, 0.0f, 0.0f, 1.0f)
 {
 }
 
@@ -25,6 +25,16 @@ float3 TransformComponent::GetRotate() const
 void TransformComponent::SetRotate(float3& rotate)
 {
     m_rotate = rotate;
+}
+
+float4 TransformComponent::GetQuaternion() const
+{
+    return m_quaternion;
+}
+
+void TransformComponent::SetQuaternion(float4& quaternion)
+{
+    m_quaternion = quaternion;
 }
 
 float3 TransformComponent::GetScale() const

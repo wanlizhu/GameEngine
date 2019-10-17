@@ -1,0 +1,33 @@
+#include "rect.h"
+
+Texture2D<float> gDepthTexture : register(t0);
+
+SamplerState gLinearSampler : LinearSampler
+{
+    Filter = MIN_MAG_MIP_Linear;
+    AddressU = LINEAR;
+    AddressV = LINEAR;
+};
+
+float4 SSAO_PS(Rect_VertexAttr input) : SV_TARGET
+{
+    float depth = gDepthTexture.Sample(gLinearSampler, input.uv);
+
+    const float2 offset1 = float2(0.0f, 0.001f);
+    const float2 offset2 = float2(0.001f, 0.0f);
+
+    float depth1 = gDepthTexture.Sample(gLinearSampler, input.uv + offset1);
+    float depth2 = gDepthTexture.Sample(gLinearSampler, input.uv + offset2);
+
+    float3 p1 = float3(offset1, depth1 - depth);
+    float3 p2 = float3(offset2, depth2 - depth);
+
+    float3 normal = cross(p1, p2);
+    normal.z = -normal.z;
+
+    float4 val = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    val.xyz = normalize(normal);
+    //val.w = 1.0f;
+
+    return val;
+}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 set (CMAKE_C_STANDARD 17)
 set (CMAKE_CXX_STANDARD 17)
-project (GraphicsEngine)
+project (GameEngine)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "")
@@ -19,7 +19,7 @@ include_directories("${PROJECT_SOURCE_DIR}/Engine/Graphics/Renderer")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Light")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Mesh")
-include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Scene")
+include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Import")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Math")
 include_directories("${PROJECT_SOURCE_DIR}/Platform/Windows")
 

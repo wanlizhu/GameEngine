@@ -12,5 +12,7 @@ namespace Engine
 
         virtual EConfigurationDeviceType GetDeviceType() const = 0;
         virtual void SetDeviceType(EConfigurationDeviceType type) = 0;
+
+        virtual void FlipDebugState() = 0;
     };
 }

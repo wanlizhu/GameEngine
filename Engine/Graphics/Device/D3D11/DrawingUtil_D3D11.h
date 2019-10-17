@@ -27,9 +27,13 @@ namespace Engine
             {
             case eFormat_Unknown:
                 return DXGI_FORMAT_UNKNOWN;
+            case eFormat_R24G8_TYPELESS:
+                return DXGI_FORMAT_R24G8_TYPELESS;
             case eFormat_D24S8:
             case eFormat_D24X8:
                 return DXGI_FORMAT_D24_UNORM_S8_UINT;
+            case eFormat_R32_TYPELESS:
+                return DXGI_FORMAT_R32_TYPELESS;
             case eFormat_D32_FLOAT:
                 return DXGI_FORMAT_D32_FLOAT;
             case eFormat_R8_UNORM:

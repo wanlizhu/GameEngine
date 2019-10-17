@@ -25,6 +25,7 @@ namespace Engine
         Vec4(const Vec4& vec);
         Vec4(Vec4&& vec);
         Vec4(const T& val);
+        Vec4(const T (&val)[4]);
         Vec4(const T& val1, const T& val2, const T& val3, const T& val4);
 
         size_type Size() const;

@@ -753,35 +753,4 @@ namespace Engine
         }
 
     };
-
-    class DrawingRawPipelineState_D3D12 : public DrawingRawPipelineState
-    {
-    public:
-        DrawingRawPipelineState_D3D12(std::shared_ptr<DrawingDevice_D3D12> pDevice, std::shared_ptr<DrawingRawEffect_D3D12> pEffect, D3D12_GRAPHICS_PIPELINE_STATE_DESC desc) : m_pDevice(pDevice)
-        {
-            ID3D12PipelineState* pPipelineStateRaw = nullptr;
-            HRESULT hr = m_pDevice->GetDevice()->CreateGraphicsPipelineState(&desc, __uuidof(ID3D12PipelineState), (void**)&pPipelineStateRaw);
-            assert(SUCCEEDED(hr));
-
-            m_pPipelineState = std::shared_ptr<ID3D12PipelineState>(pPipelineStateRaw, D3D12Releaser<ID3D12PipelineState>);
-            m_pEffect = pEffect;
-        }
-
-        virtual ~DrawingRawPipelineState_D3D12() = default;
-
-        std::shared_ptr<ID3D12PipelineState> GetPipelineState() const
-        {
-            return m_pPipelineState;
-        }
-
-        std::shared_ptr<DrawingRawEffect_D3D12> GetEffect() const
-        {
-            return m_pEffect;
-        }
-
-    private:
-        std::shared_ptr<DrawingDevice_D3D12> m_pDevice;
-        std::shared_ptr<DrawingRawEffect_D3D12> m_pEffect;
-        std::shared_ptr<ID3D12PipelineState> m_pPipelineState;
-    };
 }

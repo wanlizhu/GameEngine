@@ -36,6 +36,8 @@ namespace Engine
         EConfigurationDeviceType GetDeviceType() const override;
         void SetDeviceType(EConfigurationDeviceType type) override;
 
+        void FlipDebugState() override;
+
     private:
         bool EstablishConfiguration();
         bool PreConfiguration();
@@ -44,7 +46,7 @@ namespace Engine
         bool RegisterRenderer();
         bool PostConfiguration();
 
-        void BuildFrameGraph();
+        void BuildFrameGraph(std::shared_ptr<IEntity> pCamera);
         bool BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
         bool BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
 
@@ -65,6 +67,7 @@ namespace Engine
 
     private:
         void* m_window;
+        bool m_bDebug;
         uint2 m_deviceSize;
         EConfigurationDeviceType m_deviceType;
 

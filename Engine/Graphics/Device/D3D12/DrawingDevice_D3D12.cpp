@@ -169,6 +169,11 @@ bool DrawingDevice_D3D12::CreateTexture(const DrawingTextureDesc& desc, std::sha
     return true;
 }
 
+bool DrawingDevice_D3D12::CreateTextureFromFile(const std::string uri, std::shared_ptr<DrawingTexture>& pRes)
+{
+    return true;
+}
+
 bool DrawingDevice_D3D12::CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes)
 {
     std::shared_ptr<DrawingRawTarget> pTargetRaw = nullptr;
@@ -329,82 +334,6 @@ bool DrawingDevice_D3D12::CreatePixelShaderFromBuffer(const void* pData, uint32_
     return true;
 }
 
-bool DrawingDevice_D3D12::CreatePipelineState(const DrawingPipelineStateDesc& desc, const DrawingPipelineState::SubobjectResourceTable& subobjectResources, std::shared_ptr<DrawingPipelineState>& pRes)
-{
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc = {};
-    std::shared_ptr<DrawingRawEffect_D3D12> pEffectRaw = nullptr;
-
-    for (const auto& subobjectResource : subobjectResources)
-    {
-        switch (subobjectResource.first)
-        {
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_InputLayout:
-                pipelineDesc.InputLayout = std::dynamic_pointer_cast<DrawingRawVertexFormat_D3D12>(std::dynamic_pointer_cast<DrawingVertexFormat>(subobjectResource.second)->GetResource())->Get();
-                break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_PrimitiveTopology:
-                pipelineDesc.PrimitiveTopologyType = D3D12Enum(std::dynamic_pointer_cast<DrawingPrimitive>(subobjectResource.second)->GetPrimitiveType(), pipelineDesc.PrimitiveTopologyType);
-                break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_Effect:
-            {
-                pEffectRaw = std::dynamic_pointer_cast<DrawingRawEffect_D3D12>(std::dynamic_pointer_cast<DrawingEffect>(subobjectResource.second)->GetResource());
-                auto pShaderEffectRaw = std::dynamic_pointer_cast<DrawingRawShaderEffect_D3D12>(pEffectRaw);
-                assert(pShaderEffectRaw != nullptr);
-                auto pVSShaderRaw = std::dynamic_pointer_cast<DrawingRawVertexShader_D3D12>(pShaderEffectRaw->GetRawShader(DrawingRawShader::RawShader_VS));
-                auto pPSShaderRaw = std::dynamic_pointer_cast<DrawingRawPixelShader_D3D12>(pShaderEffectRaw->GetRawShader(DrawingRawShader::RawShader_PS));
-                auto pRootSignature = pShaderEffectRaw->GetRootSignature();
-                assert(pVSShaderRaw != nullptr);
-                assert(pPSShaderRaw != nullptr);
-                pipelineDesc.VS = CD3DX12_SHADER_BYTECODE(pVSShaderRaw->Get().get());
-                pipelineDesc.PS = CD3DX12_SHADER_BYTECODE(pPSShaderRaw->Get().get());
-                pipelineDesc.pRootSignature = pRootSignature->GetRootSignature().get();
-                break;
-            }
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_BlendState:
-            {
-                D3D12_BLEND_DESC blendDesc = {};
-                blendDesc.RenderTarget[0].BlendEnable = true;
-                blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-                blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-                blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-                blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
-                blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-                blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-                blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-                pipelineDesc.BlendState = CD3DX12_BLEND_DESC(blendDesc);
-                pipelineDesc.SampleMask = UINT_MAX;
-                break;
-            }
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_RasterState:
-                pipelineDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-                break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_DepthStencilState:
-                pipelineDesc.DepthStencilState.DepthEnable = FALSE;
-                pipelineDesc.DepthStencilState.StencilEnable = FALSE;
-                break;
-            case DrawingPipelineStateDesc::ePipelineStateSubobjectType_RenderTarget:
-            {
-                auto desc = std::dynamic_pointer_cast<DrawingTargetDesc>(std::dynamic_pointer_cast<DrawingTarget>(subobjectResource.second)->GetDesc());
-                pipelineDesc.RTVFormats[0] = D3D12Enum(desc->mFormat);
-                pipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-                pipelineDesc.SampleDesc.Count = desc->mMultiSampleCount;
-                pipelineDesc.SampleDesc.Quality = desc->mMultiSampleQuality;
-                pipelineDesc.NumRenderTargets = 1;
-                break;
-            }
-        }
-    }
-
-    auto pPipelineState = std::make_shared<DrawingPipelineState>(shared_from_this());
-    std::shared_ptr<DrawingRawPipelineState> pPipelineStateRaw = std::make_shared<DrawingRawPipelineState_D3D12>(std::static_pointer_cast<DrawingDevice_D3D12>(shared_from_this()), pEffectRaw, pipelineDesc);
-
-    pPipelineState->SetDesc(std::shared_ptr<DrawingResourceDesc>(desc.Clone()));
-    pPipelineState->SetResource(pPipelineStateRaw);
-
-    pRes = pPipelineState;
-
-    return true;
-}
-
 void DrawingDevice_D3D12::ClearTarget(std::shared_ptr<DrawingTarget> pTarget, const float4& color)
 {
     auto pTargetRaw = std::dynamic_pointer_cast<DrawingRawFragmentTarget_D3D12>(pTarget->GetResource());
@@ -467,21 +396,6 @@ void DrawingDevice_D3D12::SetDepthState(std::shared_ptr<DrawingDepthState> pDept
 
 void DrawingDevice_D3D12::SetRasterState(std::shared_ptr<DrawingRasterState> pRaster)
 {
-}
-
-void DrawingDevice_D3D12::SetPipelineState(std::shared_ptr<DrawingPipelineState> pPipelineState)
-{
-    if (pPipelineState != nullptr)
-    {
-        auto pPipelineStateRaw = std::dynamic_pointer_cast<DrawingRawPipelineState_D3D12>(pPipelineState->GetResource()); 
-        assert(pPipelineStateRaw != nullptr);
-
-        auto pCommandList = m_pDirectCommandManager->GetCommandList();
-        pCommandList->GetCommandList()->SetPipelineState(pPipelineStateRaw->GetPipelineState().get());
-
-        auto rootSignature = pPipelineStateRaw->GetEffect()->GetRootSignature();
-        pCommandList->GetCommandList()->SetGraphicsRootSignature(rootSignature->GetRootSignature().get());
-    }
 }
 
 void DrawingDevice_D3D12::SetDescriptorHeap(EDrawingDescriptorHeapType type, std::shared_ptr<ID3D12DescriptorHeap> pHeap)

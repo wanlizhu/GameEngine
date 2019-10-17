@@ -12,6 +12,7 @@ add_executable(
 target_link_libraries(
     EventTest
     Common
+    Entity
 )
 
 set_target_properties(

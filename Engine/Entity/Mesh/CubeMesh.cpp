@@ -90,8 +90,8 @@ CubeMesh::CubeMesh()
         23, 20, 22,
     };
 
-    AttachVertexData<float3>(position, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Position, Attribute::EFormatType::Float3, "POSITION");
-    AttachVertexData<float3>(normal, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Normal, Attribute::EFormatType::Float3, "NORMAL");
+    AttachVertexData<float3>(position, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Position, "POSITION");
+    AttachVertexData<float3>(normal, sizeof(position) / sizeof (float3), Attribute::ESemanticType::Normal, "NORMAL");
     AttachIndexData<short>(indices, sizeof(indices) / sizeof(short));
 }
 

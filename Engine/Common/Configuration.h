@@ -47,6 +47,14 @@ public:                                                                 \
         DECLEAR_CONFIGURATION_ITEM(MSAA, EConfigurationMSAAType, eMSAA_Disable)
     };
 
+    class DebugConfiguration
+    {
+    public:
+        DebugConfiguration() = default;
+        DECLEAR_CONFIGURATION_ITEM(Width, uint32_t, 200)
+        DECLEAR_CONFIGURATION_ITEM(Height, uint32_t, 200)
+    };
+
     class Configuration
     {
     public:
@@ -58,6 +66,7 @@ public:                                                                 \
     protected:
         AppConfiguration mAppConfig;
         GraphicsConfiguration mGraphicsConfig;
+        DebugConfiguration mDebugConfig;
     };
 
     template<typename T>
@@ -76,5 +85,11 @@ public:                                                                 \
     inline GraphicsConfiguration& Configuration::GetConfiguration<GraphicsConfiguration>()
     {
         return mGraphicsConfig;
+    }
+
+    template<>
+    inline DebugConfiguration& Configuration::GetConfiguration<DebugConfiguration>()
+    {
+        return mDebugConfig;
     }
 }

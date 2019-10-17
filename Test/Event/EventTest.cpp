@@ -8,20 +8,6 @@
 
 using namespace Engine;
 
-namespace Engine
-{
-    class TestSetup : public Setup
-    {
-    public:
-        TestSetup()
-        {
-            gpGlobal->RegisterRuntimeModule<EventSystem>(eSystem_Event);
-        }
-    };
-
-    TestSetup setup;
-}
-
 enum ETestEvent
 {
     eTestEvent_1 = 1,
@@ -44,6 +30,11 @@ struct EventData
 
 int main()
 {
+    if (gpGlobal == nullptr)
+        gpGlobal = new Global();
+
+    gpGlobal->RegisterRuntimeModule<EventSystem>(eSystem_Event);
+
     DECLARE_LISTENER();
     {
         LISTEN_EVENT(eTestEvent_1, [&](std::shared_ptr<Event<std::string, ETestEvent, eTestEvent_1>> data){

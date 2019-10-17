@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Algorithm.h"
+
 namespace Engine
 {
     #define MATH_LOOP_OPERATION(iterator, number, operation)                        \

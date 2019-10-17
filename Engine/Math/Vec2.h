@@ -25,6 +25,7 @@ namespace Engine
         Vec2(const Vec2& vec);
         Vec2(Vec2&& vec);
         Vec2(const T& val);
+        Vec2(const T (&val)[2]);
         Vec2(const T& val1, const T& val2);
 
         size_type Size() const;

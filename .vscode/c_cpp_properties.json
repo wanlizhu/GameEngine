@@ -19,12 +19,14 @@
                 "${workspaceFolder}/Engine/Entity",
                 "${workspaceFolder}/Engine/Entity/Light",
                 "${workspaceFolder}/Engine/Entity/Mesh",
-                "${workspaceFolder}/Engine/Entity/Scene",
+                "${workspaceFolder}/Engine/Entity/Import",
                 "${workspaceFolder}/Engine/Math",
                 "${workspaceFolder}/Engine/Util",
                 "${workspaceFolder}/Platform/Windows",
                 "${workspaceFolder}/Thirdparts/glTF2-loader/Include",
-                "${workspaceFolder}/Thirdparts/D3DX12/Include"
+                "${workspaceFolder}/Thirdparts/D3DX12/Include",
+                "${workspaceFolder}/Thirdparts/DirectXTex/Src/WICTextureLoader",
+                "${workspaceFolder}/Thirdparts/DirectXTex/Src/DDSTextureLoader"
             ],
             "defines": [
                 "_DEBUG",

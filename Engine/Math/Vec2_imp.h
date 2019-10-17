@@ -23,6 +23,11 @@ namespace Engine
     }
 
     template<typename T>
+    Vec2<T>::Vec2(const T (&val)[2]) : mArray{val[0], val[1]}
+    {
+    }
+
+    template<typename T>
     Vec2<T>::Vec2(const T& val1, const T& val2) : mArray{val1, val2}
     {
     }

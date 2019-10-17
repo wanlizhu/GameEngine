@@ -3,6 +3,11 @@ file(GLOB SRC_DEVICE
     "Device/*.h"
 )
 
+file(GLOB SRC_THIRDPARTS
+    "${PROJECT_SOURCE_DIR}/Thirdparts/DirectXTex/Src/WICTextureLoader/*.cpp"
+    "${PROJECT_SOURCE_DIR}/Thirdparts/DirectXTex/Src/WICTextureLoader/*.h"
+)
+
 file(GLOB SRC_D3D11
     "Device/D3D11/*.cpp"
     "Device/D3D11/*.h"
@@ -31,10 +36,12 @@ add_library(
     ${SRC_D3D12}
     ${SRC_RENDERER}
     ${SRC_MATH}
+    ${SRC_THIRDPARTS}
 )
 
 include_directories("${PROJECT_SOURCE_DIR}/Thirdparts/Effect11/Include")
 include_directories("${PROJECT_SOURCE_DIR}/Thirdparts/D3DX12/Include")
+include_directories("${PROJECT_SOURCE_DIR}/Thirdparts/DirectXTex/Src/WICTextureLoader")
 
 find_library(Effect11_LIB Effects11.lib HINTS ${PROJECT_SOURCE_DIR}/Thirdparts/Effect11/Lib)
 
@@ -49,6 +56,7 @@ target_link_libraries(
 )
 
 source_group(Device FILES ${SRC_DEVICE})
+source_group(Thirdparts FILES ${SRC_THIRDPARTS})
 source_group(Device\\D3D11 FILES ${SRC_D3D11})
 source_group(Device\\D3D12 FILES ${SRC_D3D12})
 source_group(Renderer FILES ${SRC_RENDERER})

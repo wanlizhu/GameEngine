@@ -47,7 +47,7 @@ const uint32_t Mesh::IndexCount() const
     return m_indexCount;
 }
 
-void Mesh::AttachVertexData(const char array[], const uint32_t size, const uint32_t count, Attribute::ESemanticType type, Attribute::EFormatType format, std::string name)
+void Mesh::AttachVertexData(const char array[], const uint32_t size, const uint32_t count, Attribute::ESemanticType type, std::string name)
 {
     char* pData = new char[size];
 
@@ -55,7 +55,6 @@ void Mesh::AttachVertexData(const char array[], const uint32_t size, const uint3
 
     auto pAttribute = std::make_shared<Attribute>();
     pAttribute->semanticType = type;
-    pAttribute->formatType = format;
     pAttribute->name = name;
     pAttribute->pData = std::shared_ptr<char>(pData);
     pAttribute->size = size;

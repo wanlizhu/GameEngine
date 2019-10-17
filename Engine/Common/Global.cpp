@@ -112,9 +112,3 @@ std::shared_ptr<IECSSystem> Global::GetRuntimeModule(ESystemType e)
         
     }
 }
-
-Setup::Setup()
-{
-    if (gpGlobal == nullptr)
-        gpGlobal = new Global();
-}

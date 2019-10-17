@@ -7,8 +7,8 @@ using namespace Engine;
 
 void ECSWorld::Initialize()
 {
-    Flush();
     IECSWorld::Initialize();
+    Flush();
 
     m_bEntityChanged = false;
 }

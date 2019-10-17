@@ -20,20 +20,7 @@ namespace Engine
             Count,
         } semanticType;
 
-        enum class EFormatType : uint16_t
-        {
-            UShort,
-            UShort2,
-            UShort3,
-            UShort4,
-            Float,
-            Float2,
-            Float3,
-            Float4,
-        } formatType;
-
         std::string name;
-
         std::shared_ptr<char> pData;
         uint32_t size;
     };
@@ -50,5 +37,8 @@ namespace Engine
 
         virtual const uint32_t VertexCount() const = 0;
         virtual const uint32_t IndexCount() const = 0;
+
+        virtual void AttachVertexData(const char array[], const uint32_t size, const uint32_t count, Attribute::ESemanticType type, std::string name) = 0;
+        virtual void AttachIndexData(const char array[], const uint32_t size, const uint32_t count) = 0;
     };
 }

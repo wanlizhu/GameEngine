@@ -165,8 +165,16 @@ bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::sha
     auto pTexture = std::make_shared<DrawingTexture>(shared_from_this());
     std::shared_ptr<DrawingRawTexture> pRawTexture = nullptr;
 
-    auto pTarget = std::static_pointer_cast<DrawingTarget>(pRefRes);
-    if (pTarget != nullptr)
+    auto pTarget = std::dynamic_pointer_cast<DrawingTarget>(pRefRes);
+    auto pDepthBuffer = std::dynamic_pointer_cast<DrawingDepthBuffer>(pRefRes);
+    if (pDepthBuffer != nullptr)
+    {
+        auto pRawDepthBuffer = std::static_pointer_cast<DrawingRawDepthTarget_D3D11>(pDepthBuffer->GetResource());
+        assert(pRawDepthBuffer != nullptr);
+
+        pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(*pRawDepthBuffer);
+    }
+    else if (pTarget != nullptr)
     {
         auto pRawTarget = std::static_pointer_cast<DrawingRawRenderTarget_D3D11>(pTarget->GetResource());
         assert(pRawTarget != nullptr);
@@ -238,6 +246,18 @@ bool DrawingDevice_D3D11::CreateTexture(const DrawingTextureDesc& desc, std::sha
     return true;
 }
 
+bool DrawingDevice_D3D11::CreateTextureFromFile(const std::string uri, std::shared_ptr<DrawingTexture>& pRes)
+{
+    auto pTexture = std::make_shared<DrawingTexture>(shared_from_this());
+
+    std::shared_ptr<DrawingRawTexture> pRawTexture = std::make_shared<DrawingRawTexture2D_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), uri);
+    pTexture->SetResource(pRawTexture);
+
+    pRes = pTexture;
+
+    return true;
+}
+
 bool DrawingDevice_D3D11::CreateTarget(const DrawingTargetDesc& desc, std::shared_ptr<DrawingTarget>& pRes)
 {
     std::shared_ptr<DrawingRawTarget> pTargetRaw = nullptr;
@@ -297,11 +317,16 @@ bool DrawingDevice_D3D11::CreateDepthBuffer(const DrawingDepthBufferDesc& desc, 
     depthTargetDesc.Height = desc.mHeight;
     depthTargetDesc.MipLevels = 1;
     depthTargetDesc.ArraySize = desc.mSlices;
-    depthTargetDesc.Format = D3D11Enum(desc.mFormat);
+    depthTargetDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
     depthTargetDesc.SampleDesc.Count = desc.mMultiSampleCount;
     depthTargetDesc.SampleDesc.Quality = desc.mMultiSampleQuality;
     depthTargetDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthTargetDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    if (desc.mFormat == eFormat_R24G8_TYPELESS)
+        depthTargetDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    else
+        depthTargetDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
     depthTargetDesc.CPUAccessFlags = 0;
     depthTargetDesc.MiscFlags = D3D11ResourceMiscFlag(desc.mFlags);
 
@@ -521,11 +546,6 @@ bool DrawingDevice_D3D11::CreatePixelShaderFromBuffer(const void* pData, uint32_
     return DoCreatePixelShader(desc, pData, length, pRes);
 }
 
-bool DrawingDevice_D3D11::CreatePipelineState(const DrawingPipelineStateDesc& desc, const DrawingPipelineState::SubobjectResourceTable& subobjectResources, std::shared_ptr<DrawingPipelineState>& pRes)
-{
-    return true;
-}
-
 void DrawingDevice_D3D11::ClearTarget(std::shared_ptr<DrawingTarget> pTarget, const float4& color)
 {
     auto pTargetRaw = std::dynamic_pointer_cast<DrawingRawFragmentTarget_D3D11>(pTarget->GetResource());
@@ -550,9 +570,15 @@ void DrawingDevice_D3D11::ClearDepthBuffer(std::shared_ptr<DrawingDepthBuffer> p
 
 void DrawingDevice_D3D11::SetVertexFormat(std::shared_ptr<DrawingVertexFormat> pFormat)
 {
-    assert(pFormat != nullptr);
-    auto pVertexFormatRaw = std::dynamic_pointer_cast<DrawingRawVertexFormat_D3D11>(pFormat->GetResource());
-    m_pDeviceContext->IASetInputLayout(pVertexFormatRaw->Get().get());
+    if (pFormat == nullptr)
+    {
+        m_pDeviceContext->IASetInputLayout(nullptr);
+    }
+    else
+    {
+        auto pVertexFormatRaw = std::dynamic_pointer_cast<DrawingRawVertexFormat_D3D11>(pFormat->GetResource());
+        m_pDeviceContext->IASetInputLayout(pVertexFormatRaw->Get().get());
+    }
 }
 
 void DrawingDevice_D3D11::SetVertexBuffer(std::shared_ptr<DrawingVertexBuffer> pVB[], uint32_t count)
@@ -636,10 +662,6 @@ void DrawingDevice_D3D11::SetRasterState(std::shared_ptr<DrawingRasterState> pRa
     }
     else
         m_pDeviceContext->RSSetState(nullptr);
-}
-
-void DrawingDevice_D3D11::SetPipelineState(std::shared_ptr<DrawingPipelineState> pPipelineState)
-{
 }
 
 void DrawingDevice_D3D11::PushBlendState()
@@ -1221,8 +1243,8 @@ std::shared_ptr<DrawingRawPixelShader_D3D11> DrawingDevice_D3D11::CreatePixelSha
 
     hr = D3DReflect(pShaderByteCode, length, IID_ID3D11ShaderReflection, (void**)&pReflection);
     if (!SUCCEEDED(hr))
-        return nullptr;
 
+        return nullptr;
     return std::make_shared<DrawingRawPixelShader_D3D11>(std::static_pointer_cast<DrawingDevice_D3D11>(shared_from_this()), pName, std::shared_ptr<ID3D11ShaderReflection>(pReflection, D3D11Releaser<ID3D11ShaderReflection>), std::shared_ptr<ID3D11PixelShader>(pPixelShader, D3D11Releaser<ID3D11PixelShader>));
 }
 
