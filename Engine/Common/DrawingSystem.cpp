@@ -59,7 +59,7 @@ void DrawingSystem::Tick(float elapsedTime)
     m_pDevice->Present(m_pContext->GetSwapChain(), 0);
 }
 
-void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void DrawingSystem::FlushEntity(IEntity* pEntity)
 {
     if (pEntity->HasComponent<CameraComponent>() && pEntity->HasComponent<TransformComponent>())
     {
@@ -78,51 +78,7 @@ void DrawingSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
         for (uint32_t i = 0; i < size; i++)
         {
             auto pMaterial = pComponent->GetMaterial(i);
-
-            auto pAlbedoMap = pMaterial->GetAlbedoMap();
-            if (pAlbedoMap && pAlbedoMap->GetTexture() == nullptr)
-            {
-                auto uri = pAlbedoMap->GetURI();
-                std::shared_ptr<DrawingTexture> pTexture = nullptr;
-                m_pDevice->CreateTextureFromFile(uri, pTexture);
-                pAlbedoMap->SetTexture(pTexture);
-            }
-
-            auto pOcclusionMap = pMaterial->GetOcclusionMap();
-            if (pOcclusionMap && pOcclusionMap->GetTexture() == nullptr)
-            {
-                auto uri = pOcclusionMap->GetURI();
-                std::shared_ptr<DrawingTexture> pTexture = nullptr;
-                m_pDevice->CreateTextureFromFile(uri, pTexture);
-                pOcclusionMap->SetTexture(pTexture);
-            }
-
-            auto pMetallicRoughnessMap = pMaterial->GetMetallicRoughnessMap();
-            if (pMetallicRoughnessMap && pMetallicRoughnessMap->GetTexture() == nullptr)
-            {
-                auto uri = pMetallicRoughnessMap->GetURI();
-                std::shared_ptr<DrawingTexture> pTexture = nullptr;
-                m_pDevice->CreateTextureFromFile(uri, pTexture);
-                pMetallicRoughnessMap->SetTexture(pTexture);
-            }
-
-            auto pNormalMap = pMaterial->GetNormalMap();
-            if (pNormalMap && pNormalMap->GetTexture() == nullptr)
-            {
-                auto uri = pNormalMap->GetURI();
-                std::shared_ptr<DrawingTexture> pTexture = nullptr;
-                m_pDevice->CreateTextureFromFile(uri, pTexture);
-                pNormalMap->SetTexture(pTexture);
-            }
-
-            auto pEmissiveMap = pMaterial->GetEmissiveMap();
-            if (pEmissiveMap && pEmissiveMap->GetTexture() == nullptr)
-            {
-                auto uri = pEmissiveMap->GetURI();
-                std::shared_ptr<DrawingTexture> pTexture = nullptr;
-                m_pDevice->CreateTextureFromFile(uri, pTexture);
-                pEmissiveMap->SetTexture(pTexture);
-            }
+            FlushMaterial(pMaterial.get());
         }
     }
 }
@@ -269,7 +225,72 @@ bool DrawingSystem::PostConfiguration()
     return true;
 }
 
-void DrawingSystem::BuildFrameGraph(std::shared_ptr<IEntity> pCamera)
+void DrawingSystem::FlushMaterial(IMaterial* pMaterial)
+{
+    auto type = pMaterial->GetMaterialType();
+    switch (type)
+    {
+        case eMaterial_Standard:
+        {
+            auto pStandardMaterial = dynamic_cast<StandardMaterial*>(pMaterial);
+            assert(pStandardMaterial != nullptr);
+            FlushStandardMaterial(pStandardMaterial);
+            break;
+        }
+        default:
+            assert(false);
+    }
+}
+
+void DrawingSystem::FlushStandardMaterial(StandardMaterial* pMaterial)
+{
+    auto pAlbedoMap = pMaterial->GetAlbedoMap();
+    if (pAlbedoMap && pAlbedoMap->GetTexture() == nullptr)
+    {
+        auto uri = pAlbedoMap->GetURI();
+        std::shared_ptr<DrawingTexture> pTexture = nullptr;
+        m_pDevice->CreateTextureFromFile(uri, pTexture);
+        pAlbedoMap->SetTexture(pTexture);
+    }
+
+    auto pOcclusionMap = pMaterial->GetOcclusionMap();
+    if (pOcclusionMap && pOcclusionMap->GetTexture() == nullptr)
+    {
+        auto uri = pOcclusionMap->GetURI();
+        std::shared_ptr<DrawingTexture> pTexture = nullptr;
+        m_pDevice->CreateTextureFromFile(uri, pTexture);
+        pOcclusionMap->SetTexture(pTexture);
+    }
+
+    auto pMetallicRoughnessMap = pMaterial->GetMetallicRoughnessMap();
+    if (pMetallicRoughnessMap && pMetallicRoughnessMap->GetTexture() == nullptr)
+    {
+        auto uri = pMetallicRoughnessMap->GetURI();
+        std::shared_ptr<DrawingTexture> pTexture = nullptr;
+        m_pDevice->CreateTextureFromFile(uri, pTexture);
+        pMetallicRoughnessMap->SetTexture(pTexture);
+    }
+
+    auto pNormalMap = pMaterial->GetNormalMap();
+    if (pNormalMap && pNormalMap->GetTexture() == nullptr)
+    {
+        auto uri = pNormalMap->GetURI();
+        std::shared_ptr<DrawingTexture> pTexture = nullptr;
+        m_pDevice->CreateTextureFromFile(uri, pTexture);
+        pNormalMap->SetTexture(pTexture);
+    }
+
+    auto pEmissiveMap = pMaterial->GetEmissiveMap();
+    if (pEmissiveMap && pEmissiveMap->GetTexture() == nullptr)
+    {
+        auto uri = pEmissiveMap->GetURI();
+        std::shared_ptr<DrawingTexture> pTexture = nullptr;
+        m_pDevice->CreateTextureFromFile(uri, pTexture);
+        pEmissiveMap->SetTexture(pTexture);
+    }
+}
+
+void DrawingSystem::BuildFrameGraph(IEntity* pCamera)
 {
     std::shared_ptr<FrameGraph> pFrameGraph = std::make_shared<FrameGraph>();
 
@@ -288,7 +309,7 @@ void DrawingSystem::BuildFrameGraph(std::shared_ptr<IEntity> pCamera)
     pFrameGraph->InitializePasses();
 }
 
-bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera)
+bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, IEntity* pCamera)
 {
     auto& pRenderer = std::dynamic_pointer_cast<ForwardRenderer>(gpGlobal->GetRenderer(eRenderer_Forward));
     if (pRenderer == nullptr)
@@ -308,6 +329,7 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     depthPassNode.SetClearDepthStencilFunc([&](float& depth, uint8_t& stencil, uint32_t& flag) -> void {
         depth = 1.0f;
         stencil = 0;
+        
         flag = eClear_Depth;
     });
 
@@ -513,7 +535,7 @@ bool DrawingSystem::BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGra
     return true;
 }
 
-bool DrawingSystem::BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera)
+bool DrawingSystem::BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, IEntity* pCamera)
 {
     return true;
 }
@@ -528,30 +550,51 @@ void DrawingSystem::GetVisableRenderable(RenderQueueItemListType& items)
 
         items.push_back(RenderQueueItem{ dynamic_cast<IRenderable*>(pMeshFilter->GetMesh().get()), pTrans});
 
-        auto& pRenderer = std::dynamic_pointer_cast<ForwardRenderer>(gpGlobal->GetRenderer(eRenderer_Forward));
-
-        std::shared_ptr<ITexture> pTexture = nullptr;
-
-        pTexture = pMeshRenderer->GetMaterial(0)->GetAlbedoMap();
-        if (pTexture != nullptr)
-            pRenderer->UpdateBaseColorTexture(*m_pResourceTable, pTexture->GetTexture());
-
-        pTexture = pMeshRenderer->GetMaterial(0)->GetOcclusionMap();
-        if (pTexture != nullptr)
-            pRenderer->UpdateOcclusionTexture(*m_pResourceTable, pTexture->GetTexture());
-
-        pTexture = pMeshRenderer->GetMaterial(0)->GetMetallicRoughnessMap();
-        if (pTexture != nullptr)
-            pRenderer->UpdateMetallicRoughnessTexture(*m_pResourceTable, pTexture->GetTexture());
-
-        pTexture = pMeshRenderer->GetMaterial(0)->GetNormalMap();
-        if (pTexture != nullptr)
-            pRenderer->UpdateNormalTexture(*m_pResourceTable, pTexture->GetTexture());
-
-        pTexture = pMeshRenderer->GetMaterial(0)->GetEmissiveMap();
-        if (pTexture != nullptr)
-            pRenderer->UpdateEmissiveTexture(*m_pResourceTable, pTexture->GetTexture());
+        auto pMaterial = pMeshRenderer->GetMaterial(0).get();
+        UpdateMaterial(pMaterial);
     }
+}
+
+void DrawingSystem::UpdateMaterial(IMaterial* pMaterial)
+{
+    auto type = pMaterial->GetMaterialType();
+    switch (type)
+    {
+        case eMaterial_Standard:
+        {
+            auto pStandardMaterial = dynamic_cast<StandardMaterial*>(pMaterial);
+            assert(pStandardMaterial != nullptr);
+            UpdateStandardMaterial(pStandardMaterial);
+            break;
+        }
+        default:
+            assert(false);
+    }
+}
+
+void DrawingSystem::UpdateStandardMaterial(StandardMaterial* pMaterial)
+{
+    auto& pRenderer = std::dynamic_pointer_cast<ForwardRenderer>(gpGlobal->GetRenderer(eRenderer_Forward));
+
+    auto pTexture = pMaterial->GetAlbedoMap();
+    if (pTexture != nullptr)
+        pRenderer->UpdateBaseColorTexture(*m_pResourceTable, pTexture->GetTexture());
+
+    pTexture = pMaterial->GetOcclusionMap();
+    if (pTexture != nullptr)
+        pRenderer->UpdateOcclusionTexture(*m_pResourceTable, pTexture->GetTexture());
+
+    pTexture = pMaterial->GetMetallicRoughnessMap();
+    if (pTexture != nullptr)
+        pRenderer->UpdateMetallicRoughnessTexture(*m_pResourceTable, pTexture->GetTexture());
+
+    pTexture = pMaterial->GetNormalMap();
+    if (pTexture != nullptr)
+        pRenderer->UpdateNormalTexture(*m_pResourceTable, pTexture->GetTexture());
+
+    pTexture = pMaterial->GetEmissiveMap();
+    if (pTexture != nullptr)
+        pRenderer->UpdateEmissiveTexture(*m_pResourceTable, pTexture->GetTexture());
 }
 
 void DrawingSystem::GetViewMatrix(TransformComponent* pTransform, float4x4& view, float3& dir)

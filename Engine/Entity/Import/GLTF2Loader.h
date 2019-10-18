@@ -6,8 +6,8 @@
 #include <glTF2.hpp>
 #include <Global.h>
 
-#include <IMesh.h>
-#include <IMaterial.h>
+#include <Mesh.h>
+#include <StandardMaterial.h>
 
 namespace Engine
 {
@@ -27,7 +27,7 @@ namespace Engine
     private:
         gltf2::Asset m_asset;
 
-        std::vector<IMesh*> m_pMeshes;
-        std::vector<IMaterial*> m_pMaterials;
+        std::vector<Mesh*> m_pMeshes;
+        std::vector<StandardMaterial*> m_pMaterials;
     };
 }

@@ -20,10 +20,10 @@ namespace Engine
         void Shutdown() override;
         void Tick(float elapsedTime) override;
 
-        void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
+        void FlushEntity(IEntity* pEntity) override;
 
     private:
-        std::vector<std::shared_ptr<IEntity>> m_pEntityList;
+        std::vector<IEntity*> m_pEntityList;
 
     public:
         static std::vector<AnimationFunc> s_cbTables;

@@ -23,7 +23,7 @@ void EventSystem::Tick(float elapsedTime)
     ProcessEvents();
 }
 
-void EventSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void EventSystem::FlushEntity(IEntity* pEntity)
 {
 }
 

@@ -20,6 +20,8 @@ include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Light")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Mesh")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Import")
+include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Material")
+include_directories("${PROJECT_SOURCE_DIR}/Engine/Entity/Texture")
 include_directories("${PROJECT_SOURCE_DIR}/Engine/Math")
 include_directories("${PROJECT_SOURCE_DIR}/Platform/Windows")
 

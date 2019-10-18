@@ -3,6 +3,7 @@
 #include <memory>
 #include <unordered_map>
 
+
 #include "IDrawingSystem.h"
 
 #include "Global.h"
@@ -15,6 +16,8 @@
 #include "DrawingResourceTable.h"
 #include "ForwardRenderer.h"
 #include "FrameGraph.h"
+
+#include "StandardMaterial.h"
 
 namespace Engine
 {
@@ -31,7 +34,7 @@ namespace Engine
         void Shutdown() override;
         void Tick(float elapsedTime) override;
 
-        void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
+        void FlushEntity(IEntity* pEntity) override;
 
         EConfigurationDeviceType GetDeviceType() const override;
         void SetDeviceType(EConfigurationDeviceType type) override;
@@ -46,11 +49,17 @@ namespace Engine
         bool RegisterRenderer();
         bool PostConfiguration();
 
-        void BuildFrameGraph(std::shared_ptr<IEntity> pCamera);
-        bool BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
-        bool BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, std::shared_ptr<IEntity> pCamera);
+        void FlushMaterial(IMaterial* pMaterial);
+        void FlushStandardMaterial(StandardMaterial* pMaterial);
+
+        void BuildFrameGraph(IEntity* pCamera);
+        bool BuildForwardFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, IEntity* pCamera);
+        bool BuildDeferredFrameGraph(std::shared_ptr<FrameGraph> pFrameGraph, IEntity* pCamera);
 
         void GetVisableRenderable(RenderQueueItemListType& items);
+
+        void UpdateMaterial(IMaterial* pMaterial);
+        void UpdateStandardMaterial(StandardMaterial* pMaterial);
 
         std::shared_ptr<DrawingTarget> CreateSwapChain();
         std::shared_ptr<DrawingDepthBuffer> CreateDepthBuffer();
@@ -78,8 +87,8 @@ namespace Engine
         std::shared_ptr<DrawingResourceFactory> m_pResourceFactory;
         std::shared_ptr<DrawingResourceTable> m_pResourceTable;
 
-        std::vector<std::shared_ptr<IEntity>> m_pCameraList;
-        std::vector<std::shared_ptr<IEntity>> m_pLightList;
-        std::vector<std::shared_ptr<IEntity>> m_pMeshList;
+        std::vector<IEntity*> m_pCameraList;
+        std::vector<IEntity*> m_pLightList;
+        std::vector<IEntity*> m_pMeshList;
     };
 }

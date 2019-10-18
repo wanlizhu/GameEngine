@@ -34,7 +34,7 @@ void LogSystem::Tick(float elapsedTime)
 {
 }
 
-void LogSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void LogSystem::FlushEntity(IEntity* pEntity)
 {
 }
 

@@ -86,7 +86,7 @@ void InputSystem::Tick(float elapsedTime)
     }
 }
 
-void InputSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void InputSystem::FlushEntity(IEntity* pEntity)
 {
 }
 

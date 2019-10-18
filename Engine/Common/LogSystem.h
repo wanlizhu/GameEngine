@@ -23,7 +23,7 @@ namespace Engine
 
         void Tick(float elapsedTime) override;
 
-        void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
+        void FlushEntity(IEntity* pEntity) override;
 
     private:
         #define DEF_InputEventType(event, enum)                                         \

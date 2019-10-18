@@ -32,7 +32,7 @@ void AnimationSystem::Tick(float elapsedTime)
     }
 }
 
-void AnimationSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void AnimationSystem::FlushEntity(IEntity* pEntity)
 {
     if (pEntity->HasComponent<AnimationComponent>())
         m_pEntityList.emplace_back(pEntity);

@@ -16,6 +16,6 @@ void SceneSystem::Tick(float elapsedTime)
 {
 }
 
-void SceneSystem::FlushEntity(std::shared_ptr<IEntity> pEntity)
+void SceneSystem::FlushEntity(IEntity* pEntity)
 {
 }

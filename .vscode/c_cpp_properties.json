@@ -20,6 +20,8 @@
                 "${workspaceFolder}/Engine/Entity/Light",
                 "${workspaceFolder}/Engine/Entity/Mesh",
                 "${workspaceFolder}/Engine/Entity/Import",
+                "${workspaceFolder}/Engine/Entity/Material",
+                "${workspaceFolder}/Engine/Entity/Texture",
                 "${workspaceFolder}/Engine/Math",
                 "${workspaceFolder}/Engine/Util",
                 "${workspaceFolder}/Platform/Windows",

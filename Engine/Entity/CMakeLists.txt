@@ -18,12 +18,24 @@ file(GLOB SRC_IMPORT
     "Import/*.h"
 )
 
+file(GLOB SRC_MATERIAL
+    "Material/*.cpp"
+    "Material/*.h"
+)
+
+file(GLOB SRC_TEXTURE
+    "Texture/*.cpp"
+    "Texture/*.h"
+)
+
 add_library(
     Entity
     ${SRC_ENTITY}
     ${SRC_LIGHT}
     ${SRC_MESH}
     ${SRC_IMPORT}
+    ${SRC_MATERIAL}
+    ${SRC_TEXTURE}
 )
 
 include_directories("${PROJECT_SOURCE_DIR}/Thirdparts/glTF2-loader/Include")

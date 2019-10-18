@@ -111,7 +111,6 @@ float4 ForwardShading_PS(ForwardShading_VertexAttr input) : SV_Target
     color = ambient + Lo * sssVal;
 
     color = color / (color + 1.0f);
-    
     color = pow(color, 1.0f / 2.2f);
 
     color += emissive;

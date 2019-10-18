@@ -130,7 +130,7 @@ namespace Engine
         virtual void Shutdown() = 0;
 
         virtual void Tick(float elapsedTime) = 0;
-        virtual void FlushEntity(std::shared_ptr<IEntity> pEntity) = 0;
+        virtual void FlushEntity(IEntity* pEntity) = 0;
 
     protected:
         CompBitset m_compBitset;

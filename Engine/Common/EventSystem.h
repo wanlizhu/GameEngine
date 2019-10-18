@@ -19,7 +19,7 @@ namespace Engine
         void Shutdown() override;
         void Tick(float elapsedTime) override;
 
-        void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
+        void FlushEntity(IEntity* pEntity) override;
 
         bool AddListener(IEventData::id_t id, EventDelegate proc) override;
         bool RemoveListener(IEventData::id_t id, EventDelegate proc) override;

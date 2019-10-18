@@ -19,7 +19,7 @@ namespace Engine
         void Shutdown() override;
         void Tick(float elapsedTime) override;
 
-        void FlushEntity(std::shared_ptr<IEntity> pEntity) override;
+        void FlushEntity(IEntity* pEntity) override;
 
         void DispatchInputEvent(EInputEvent event, InputMsg msg) override;
 

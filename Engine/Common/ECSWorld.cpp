@@ -43,5 +43,5 @@ void ECSWorld::Flush()
 
     for (auto& system : m_systemPool)
         for (auto& entity : m_entityPool)
-            system->FlushEntity(entity);
+            system->FlushEntity(entity.get());
 }
