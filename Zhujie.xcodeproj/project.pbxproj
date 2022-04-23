@@ -7,29 +7,64 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		74989A212806B91400E94BA7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 74989A202806B91400E94BA7 /* AppDelegate.m */; };
-		74989A242806B91400E94BA7 /* Renderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 74989A232806B91400E94BA7 /* Renderer.m */; };
-		74989A272806B91400E94BA7 /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 74989A262806B91400E94BA7 /* GameViewController.m */; };
-		74989A292806B91400E94BA7 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 74989A282806B91400E94BA7 /* Shaders.metal */; };
-		74989A2C2806B91600E94BA7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 74989A2B2806B91600E94BA7 /* Assets.xcassets */; };
-		74989A2F2806B91600E94BA7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 74989A2D2806B91600E94BA7 /* Main.storyboard */; };
+		7405522E280B0511004D8C69 /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7405522C280B0511004D8C69 /* Mesh.cpp */; };
+		74055231280B05DD004D8C69 /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7405522F280B05DD004D8C69 /* Material.cpp */; };
+		74055237280B14A2004D8C69 /* Camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74055235280B14A2004D8C69 /* Camera.cpp */; };
+		7405524F280C69B3004D8C69 /* CMeshLoader_OBJ.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7405524D280C69B3004D8C69 /* CMeshLoader_OBJ.cpp */; };
+		74055255280C6A4C004D8C69 /* CImageLoader_STB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74055253280C6A4C004D8C69 /* CImageLoader_STB.cpp */; };
+		7450F2AE280DC26A00D8241C /* FS_MaterialPBR.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7450F2AD280DC26A00D8241C /* FS_MaterialPBR.metal */; };
+		7450F2B5280FC02800D8241C /* CDevice_Metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7450F2B3280FC02800D8241C /* CDevice_Metal.mm */; };
+		74989A212806B91400E94BA7 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 74989A202806B91400E94BA7 /* AppDelegate.mm */; };
+		74989A242806B91400E94BA7 /* ViewDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 74989A232806B91400E94BA7 /* ViewDelegate.mm */; };
+		74989A272806B91400E94BA7 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 74989A262806B91400E94BA7 /* ViewController.mm */; };
 		74989A312806B91600E94BA7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 74989A302806B91600E94BA7 /* main.m */; };
+		74989A402806BB6E00E94BA7 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74989A3A2806BB4100E94BA7 /* Metal.framework */; };
+		74989A432806BB7000E94BA7 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74989A3C2806BB4700E94BA7 /* MetalKit.framework */; };
+		74989A452806BB7100E94BA7 /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 74989A3E2806BB4B00E94BA7 /* ModelIO.framework */; };
+		74989A482806C76300E94BA7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 74989A472806C76300E94BA7 /* Main.storyboard */; };
+		74C780E62807401000B2CBC1 /* VS_WorldTransform.metal in Sources */ = {isa = PBXBuildFile; fileRef = 74C780E42807401000B2CBC1 /* VS_WorldTransform.metal */; };
+		74C780E72807401000B2CBC1 /* HelloWorld.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74C780E52807401000B2CBC1 /* HelloWorld.cpp */; };
+		74C7811728086FAD00B2CBC1 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 74C7811628086FAD00B2CBC1 /* Utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		74989A1C2806B91400E94BA7 /* Zhujie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zhujie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7405522C280B0511004D8C69 /* Mesh.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Mesh.cpp; sourceTree = "<group>"; };
+		7405522D280B0511004D8C69 /* Mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Mesh.h; sourceTree = "<group>"; };
+		7405522F280B05DD004D8C69 /* Material.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Material.cpp; sourceTree = "<group>"; };
+		74055230280B05DD004D8C69 /* Material.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Material.h; sourceTree = "<group>"; };
+		74055235280B14A2004D8C69 /* Camera.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Camera.cpp; sourceTree = "<group>"; };
+		74055236280B14A2004D8C69 /* Camera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Camera.h; sourceTree = "<group>"; };
+		74055239280BA159004D8C69 /* IResourceTable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IResourceTable.h; sourceTree = "<group>"; };
+		7405524D280C69B3004D8C69 /* CMeshLoader_OBJ.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CMeshLoader_OBJ.cpp; sourceTree = "<group>"; };
+		7405524E280C69B3004D8C69 /* CMeshLoader_OBJ.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMeshLoader_OBJ.h; sourceTree = "<group>"; };
+		74055253280C6A4C004D8C69 /* CImageLoader_STB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CImageLoader_STB.cpp; sourceTree = "<group>"; };
+		74055254280C6A4C004D8C69 /* CImageLoader_STB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CImageLoader_STB.h; sourceTree = "<group>"; };
+		74055256280C6AF9004D8C69 /* IImageLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IImageLoader.h; sourceTree = "<group>"; };
+		74055257280C6B08004D8C69 /* IMeshLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IMeshLoader.h; sourceTree = "<group>"; };
+		7450F2AC280DC14D00D8241C /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		7450F2AD280DC26A00D8241C /* FS_MaterialPBR.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FS_MaterialPBR.metal; sourceTree = "<group>"; };
+		7450F2B2280FBEF700D8241C /* IDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IDevice.h; sourceTree = "<group>"; };
+		7450F2B3280FC02800D8241C /* CDevice_Metal.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CDevice_Metal.mm; sourceTree = "<group>"; };
+		7450F2B4280FC02800D8241C /* CDevice_Metal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDevice_Metal.h; sourceTree = "<group>"; };
+		74989A1C2806B91400E94BA7 /* Zhujie_macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zhujie_macOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		74989A1F2806B91400E94BA7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		74989A202806B91400E94BA7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		74989A222806B91400E94BA7 /* Renderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Renderer.h; sourceTree = "<group>"; };
-		74989A232806B91400E94BA7 /* Renderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Renderer.m; sourceTree = "<group>"; };
-		74989A252806B91400E94BA7 /* GameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameViewController.h; sourceTree = "<group>"; };
-		74989A262806B91400E94BA7 /* GameViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
-		74989A282806B91400E94BA7 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
-		74989A2A2806B91400E94BA7 /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
-		74989A2B2806B91600E94BA7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		74989A2E2806B91600E94BA7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		74989A202806B91400E94BA7 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		74989A222806B91400E94BA7 /* ViewDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewDelegate.h; sourceTree = "<group>"; };
+		74989A232806B91400E94BA7 /* ViewDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewDelegate.mm; sourceTree = "<group>"; };
+		74989A252806B91400E94BA7 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		74989A262806B91400E94BA7 /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		74989A302806B91600E94BA7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		74989A322806B91600E94BA7 /* Zhujie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Zhujie.entitlements; sourceTree = "<group>"; };
+		74989A3A2806BB4100E94BA7 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		74989A3C2806BB4700E94BA7 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		74989A3E2806BB4B00E94BA7 /* ModelIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ModelIO.framework; path = System/Library/Frameworks/ModelIO.framework; sourceTree = SDKROOT; };
+		74989A472806C76300E94BA7 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		74C780E32807401000B2CBC1 /* HelloWorld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HelloWorld.h; sourceTree = "<group>"; };
+		74C780E42807401000B2CBC1 /* VS_WorldTransform.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = VS_WorldTransform.metal; sourceTree = "<group>"; };
+		74C780E52807401000B2CBC1 /* HelloWorld.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HelloWorld.cpp; sourceTree = "<group>"; };
+		74C780E92807411900B2CBC1 /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		74C780EE280848BF00B2CBC1 /* Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Config.h; sourceTree = "<group>"; };
+		74C7811628086FAD00B2CBC1 /* Utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,54 +72,122 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				74989A452806BB7100E94BA7 /* ModelIO.framework in Frameworks */,
+				74989A432806BB7000E94BA7 /* MetalKit.framework in Frameworks */,
+				74989A402806BB6E00E94BA7 /* Metal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		74055228280AF435004D8C69 /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				7450F2AC280DC14D00D8241C /* ShaderTypes.h */,
+				74C780E42807401000B2CBC1 /* VS_WorldTransform.metal */,
+				7450F2AD280DC26A00D8241C /* FS_MaterialPBR.metal */,
+			);
+			path = Shaders;
+			sourceTree = "<group>";
+		};
 		74989A132806B91400E94BA7 = {
 			isa = PBXGroup;
 			children = (
-				74989A1E2806B91400E94BA7 /* Zhujie */,
+				74C780E12807401000B2CBC1 /* Modules */,
+				74989A1E2806B91400E94BA7 /* Zhujie_macOS */,
 				74989A1D2806B91400E94BA7 /* Products */,
+				74989A392806BB4100E94BA7 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		74989A1D2806B91400E94BA7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				74989A1C2806B91400E94BA7 /* Zhujie.app */,
+				74989A1C2806B91400E94BA7 /* Zhujie_macOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		74989A1E2806B91400E94BA7 /* Zhujie */ = {
+		74989A1E2806B91400E94BA7 /* Zhujie_macOS */ = {
 			isa = PBXGroup;
 			children = (
 				74989A1F2806B91400E94BA7 /* AppDelegate.h */,
-				74989A202806B91400E94BA7 /* AppDelegate.m */,
-				74989A222806B91400E94BA7 /* Renderer.h */,
-				74989A232806B91400E94BA7 /* Renderer.m */,
-				74989A252806B91400E94BA7 /* GameViewController.h */,
-				74989A262806B91400E94BA7 /* GameViewController.m */,
-				74989A282806B91400E94BA7 /* Shaders.metal */,
-				74989A2A2806B91400E94BA7 /* ShaderTypes.h */,
-				74989A2B2806B91600E94BA7 /* Assets.xcassets */,
-				74989A2D2806B91600E94BA7 /* Main.storyboard */,
+				74989A202806B91400E94BA7 /* AppDelegate.mm */,
+				74989A222806B91400E94BA7 /* ViewDelegate.h */,
+				74989A232806B91400E94BA7 /* ViewDelegate.mm */,
+				74989A252806B91400E94BA7 /* ViewController.h */,
+				74989A262806B91400E94BA7 /* ViewController.mm */,
 				74989A302806B91600E94BA7 /* main.m */,
+				74989A472806C76300E94BA7 /* Main.storyboard */,
 				74989A322806B91600E94BA7 /* Zhujie.entitlements */,
 			);
-			path = Zhujie;
+			path = Zhujie_macOS;
+			sourceTree = "<group>";
+		};
+		74989A392806BB4100E94BA7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				74989A3E2806BB4B00E94BA7 /* ModelIO.framework */,
+				74989A3C2806BB4700E94BA7 /* MetalKit.framework */,
+				74989A3A2806BB4100E94BA7 /* Metal.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		74C780E12807401000B2CBC1 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				74C780E8280740A600B2CBC1 /* PBRT_Wanli */,
+				74C780E22807401000B2CBC1 /* HelloWorld */,
+			);
+			path = Modules;
+			sourceTree = "<group>";
+		};
+		74C780E22807401000B2CBC1 /* HelloWorld */ = {
+			isa = PBXGroup;
+			children = (
+				74055228280AF435004D8C69 /* Shaders */,
+				74C780EE280848BF00B2CBC1 /* Config.h */,
+				74055239280BA159004D8C69 /* IResourceTable.h */,
+				74C780E92807411900B2CBC1 /* Utils.h */,
+				74C7811628086FAD00B2CBC1 /* Utils.cpp */,
+				74C780E32807401000B2CBC1 /* HelloWorld.h */,
+				74C780E52807401000B2CBC1 /* HelloWorld.cpp */,
+				7405522D280B0511004D8C69 /* Mesh.h */,
+				7405522C280B0511004D8C69 /* Mesh.cpp */,
+				74055230280B05DD004D8C69 /* Material.h */,
+				7405522F280B05DD004D8C69 /* Material.cpp */,
+				74055236280B14A2004D8C69 /* Camera.h */,
+				74055235280B14A2004D8C69 /* Camera.cpp */,
+				7405524D280C69B3004D8C69 /* CMeshLoader_OBJ.cpp */,
+				7405524E280C69B3004D8C69 /* CMeshLoader_OBJ.h */,
+				74055253280C6A4C004D8C69 /* CImageLoader_STB.cpp */,
+				74055254280C6A4C004D8C69 /* CImageLoader_STB.h */,
+				74055256280C6AF9004D8C69 /* IImageLoader.h */,
+				74055257280C6B08004D8C69 /* IMeshLoader.h */,
+				7450F2B2280FBEF700D8241C /* IDevice.h */,
+				7450F2B4280FC02800D8241C /* CDevice_Metal.h */,
+				7450F2B3280FC02800D8241C /* CDevice_Metal.mm */,
+			);
+			path = HelloWorld;
+			sourceTree = "<group>";
+		};
+		74C780E8280740A600B2CBC1 /* PBRT_Wanli */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PBRT_Wanli;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		74989A1B2806B91400E94BA7 /* Zhujie */ = {
+		74989A1B2806B91400E94BA7 /* Zhujie_macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 74989A352806B91600E94BA7 /* Build configuration list for PBXNativeTarget "Zhujie" */;
+			buildConfigurationList = 74989A352806B91600E94BA7 /* Build configuration list for PBXNativeTarget "Zhujie_macOS" */;
 			buildPhases = (
+				7405524C280C5782004D8C69 /* CMake Build CGAL */,
 				74989A182806B91400E94BA7 /* Sources */,
 				74989A192806B91400E94BA7 /* Frameworks */,
 				74989A1A2806B91400E94BA7 /* Resources */,
@@ -93,9 +196,9 @@
 			);
 			dependencies = (
 			);
-			name = Zhujie;
+			name = Zhujie_macOS;
 			productName = Zhujie;
-			productReference = 74989A1C2806B91400E94BA7 /* Zhujie.app */;
+			productReference = 74989A1C2806B91400E94BA7 /* Zhujie_macOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -125,7 +228,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				74989A1B2806B91400E94BA7 /* Zhujie */,
+				74989A1B2806B91400E94BA7 /* Zhujie_macOS */,
 			);
 		};
 /* End PBXProject section */
@@ -135,38 +238,58 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				74989A2C2806B91600E94BA7 /* Assets.xcassets in Resources */,
-				74989A2F2806B91600E94BA7 /* Main.storyboard in Resources */,
+				74989A482806C76300E94BA7 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7405524C280C5782004D8C69 /* CMake Build CGAL */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/ThirdParty/CGAL-5.4",
+			);
+			name = "CMake Build CGAL";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/CGAL",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/Applications/CMake.app/Contents/bin/cmake --version\n/Applications/CMake.app/Contents/bin/cmake -G Xcode -Wno-dev -DCMAKE_CONFIGURATION_TYPES=$CONFIG -DCMAKE_INSTALL_PREFIX=\"$SCRIPT_OUTPUT_FILE_0/installed\" -S \"$SCRIPT_INPUT_FILE_0\" -B \"$SCRIPT_OUTPUT_FILE_0\"\n/Applications/CMake.app/Contents/bin/cmake --build \"$SCRIPT_OUTPUT_FILE_0\"\n/Applications/CMake.app/Contents/bin/cmake --install \"$SCRIPT_OUTPUT_FILE_0\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		74989A182806B91400E94BA7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				74055255280C6A4C004D8C69 /* CImageLoader_STB.cpp in Sources */,
+				74055237280B14A2004D8C69 /* Camera.cpp in Sources */,
+				7450F2AE280DC26A00D8241C /* FS_MaterialPBR.metal in Sources */,
+				74C780E62807401000B2CBC1 /* VS_WorldTransform.metal in Sources */,
 				74989A312806B91600E94BA7 /* main.m in Sources */,
-				74989A292806B91400E94BA7 /* Shaders.metal in Sources */,
-				74989A242806B91400E94BA7 /* Renderer.m in Sources */,
-				74989A272806B91400E94BA7 /* GameViewController.m in Sources */,
-				74989A212806B91400E94BA7 /* AppDelegate.m in Sources */,
+				74055231280B05DD004D8C69 /* Material.cpp in Sources */,
+				7405522E280B0511004D8C69 /* Mesh.cpp in Sources */,
+				7450F2B5280FC02800D8241C /* CDevice_Metal.mm in Sources */,
+				74989A242806B91400E94BA7 /* ViewDelegate.mm in Sources */,
+				7405524F280C69B3004D8C69 /* CMeshLoader_OBJ.cpp in Sources */,
+				74989A272806B91400E94BA7 /* ViewController.mm in Sources */,
+				74989A212806B91400E94BA7 /* AppDelegate.mm in Sources */,
+				74C780E72807401000B2CBC1 /* HelloWorld.cpp in Sources */,
+				74C7811728086FAD00B2CBC1 /* Utils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		74989A2D2806B91600E94BA7 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				74989A2E2806B91600E94BA7 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		74989A332806B91600E94BA7 /* Debug */ = {
@@ -281,15 +404,22 @@
 		74989A362806B91600E94BA7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Zhujie/Zhujie.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Zhujie_macOS/Zhujie.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIG = Debug;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F98T77MP52;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/Modules",
+					"$(PROJECT_DIR)/ThirdParty",
+					"$(PROJECT_DIR)/ThirdParty/glm/include",
+					"$(DERIVED_FILE_DIR)/CGAL/installed/include",
+				);
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -298,6 +428,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MTL_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Modules";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.wanlizhu.Zhujie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -307,15 +439,22 @@
 		74989A372806B91600E94BA7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Zhujie/Zhujie.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Zhujie_macOS/Zhujie.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CONFIG = Release;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F98T77MP52;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/Modules",
+					"$(PROJECT_DIR)/ThirdParty",
+					"$(PROJECT_DIR)/ThirdParty/glm/include",
+					"$(DERIVED_FILE_DIR)/CGAL/installed/include",
+				);
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -324,6 +463,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				MTL_HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/Modules";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.wanlizhu.Zhujie;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -342,7 +483,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		74989A352806B91600E94BA7 /* Build configuration list for PBXNativeTarget "Zhujie" */ = {
+		74989A352806B91600E94BA7 /* Build configuration list for PBXNativeTarget "Zhujie_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				74989A362806B91600E94BA7 /* Debug */,
