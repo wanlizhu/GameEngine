@@ -1,0 +1,12 @@
+.history/
+.idea/
+.gradle/
+.externalNativeBuild/
+.vs/
+*.vcxproj.user
+*.lnk
+*.ipch
+*.VC.db
+*.VC.opendb
+*.DS_Store
+/build*
