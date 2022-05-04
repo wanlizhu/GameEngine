@@ -6,10 +6,12 @@ void OpenWorld::initWithView(void* view)
     glm::ivec2 viewSize = drawableSizeWithMTKView(view);
     _device = std::make_shared<CDevice_Metal>(view);
     _camera = std::make_shared<Camera>();
-    _camera->initWithPerspectiveProjection(glm::radians(45.0),
-                                           (float)viewSize.x / viewSize.y,
-                                           0.0,  // znear
-                                           1.0); // zfar
+    _camera->initWithDesc(glm::radians(45.0),
+                          (float)viewSize.x / viewSize.y,
+                          0.0,  // znear
+                          1.0); // zfar
+    _light = std::make_shared<Light>();
+    _light->initWithDesc(glm::vec3(1000, 1000, 1000));
 }
 
 void OpenWorld::drawInView(void* view)
@@ -21,7 +23,7 @@ void OpenWorld::drawInView(void* view)
     
     for (const auto& model : _models)
     {
-        _device->drawModel(model.get(), _camera.get());
+        _device->drawModel(model.get(), _light.get(), _camera.get());
     }
     
     _device->endEncoding();

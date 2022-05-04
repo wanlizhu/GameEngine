@@ -165,13 +165,6 @@ enum PixelFormat
 #define PixelFormat_SystemRTV RGBA8Unorm
 #endif
 
-#define VAO_POSITION "position"
-#define VAO_NORMAL   "normal"
-#define VAO_TEXCOORD "texcoord"
-#define MODEL_MATRIX "modelMatrix"
-#define VIEW_MATRIX  "viewMatrix"
-#define PROJECTION_MATRIX  "projectionMatrix"
-
 namespace fs = std::filesystem;
 
 class BoundingBox

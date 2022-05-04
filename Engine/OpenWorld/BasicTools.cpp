@@ -1,5 +1,6 @@
 #include "BasicTools.h"
 #include "IDevice.h"
+#include "Shaders/ShaderConstants.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -100,6 +101,30 @@ std::vector<std::string> resourcePathsWithType(const std::string& type)
     return paths;
 }
 
+bool loadBinaryFile(const std::string& path, std::vector<uint8_t>* bytes)
+{
+    FILE* file = fopen(path.c_str(), "rb");
+    fseek(file, 0, SEEK_END);
+    size_t size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    bytes->resize(size);
+    
+    size_t offset = 0;
+    
+    while (size > 0)
+    {
+        size_t num = fread(bytes->data() + offset, sizeof(uint8_t), size, file);
+        size -= num;
+        offset += num;
+        
+        if (num == 0) {
+            break;
+        }
+    }
+    
+    return size == 0;
+}
+
 bool loadImageFile(const std::string& path,
                    std::vector<uint32_t>* pixels,
                    int* width,
@@ -181,11 +206,22 @@ PrimitiveType getPrimitiveType(int mode)
 MaterialDesc getMaterialDesc(const tinygltf::Model& model,
                              const tinygltf::Primitive& primitive)
 {
-    if (primitive.material > -1 || primitive.material >= model.materials.size())
+    if (primitive.material <= -1 || primitive.material >= model.materials.size())
         return {};
     
     const tinygltf::Material& material = model.materials[primitive.material];
-    return {}; // TODO
+    MaterialDesc desc;
+    desc.name = material.name;
+    desc.uniforms.flags = 0;
+    desc.uniforms.baseColor = float3(1, 0, 0);
+    desc.uniforms.metallic = 1.0;
+    desc.uniforms.roughness = 0.0;
+    desc.uniforms.emissive = float3(0, 0, 0);
+    desc.uniforms.ao = 1.0;
+    //TODO
+    //assert(false);
+    
+    return desc;
 }
 
 ProgramDesc getProgramDesc(const tinygltf::Model& model)
@@ -212,14 +248,14 @@ ProgramDesc getProgramDesc(const tinygltf::Model& model)
     return desc;
 }
 
-std::string translateAttributeName(const std::string& semantic)
+int translateAttributeName(const std::string& semantic)
 {
-    if (semantic == "POSITION") return "position";
-    if (semantic == "NORMAL") return "normal";
-    if (semantic == "TEXCOORD_0") return "texcoord";
+    if (semantic == "POSITION") return VAO_POSITION_INDEX;
+    if (semantic == "NORMAL") return VAO_NORMAL_INDEX;
+    if (semantic == "TEXCOORD_0") return VAO_TEXCOORD_INDEX;
     
     assert(false);
-    return "";
+    return -1;
 }
 
 void loadMesh_glTF(const tinygltf::Model& model,
@@ -236,6 +272,7 @@ void loadMesh_glTF(const tinygltf::Model& model,
         MeshDesc meshDesc;
         meshDesc.name = mesh.name;
         meshDesc.transform = transform;
+        meshDesc.material = getMaterialDesc(model, primitive);
         
         for (const auto& [semantic, index] : primitive.attributes)
         {
@@ -250,8 +287,8 @@ void loadMesh_glTF(const tinygltf::Model& model,
             assert(bufferDesc.data->size() == bufferDesc.elementCount * elementSizeInBytes);
             assert(attributeAccessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
             
-            std::string attributeName = translateAttributeName(semantic);
-            meshDesc.attributes[attributeName] = bufferDesc;
+            int attributeIndex = translateAttributeName(semantic);
+            meshDesc.attributes[attributeIndex] = bufferDesc;
         }
         
         const tinygltf::Accessor& indexAccessor = model.accessors[primitive.indices];
@@ -264,7 +301,6 @@ void loadMesh_glTF(const tinygltf::Model& model,
         indexBufferDesc.data = getData(model, indexAccessor);
         
         meshDesc.indices.push_back(indexBufferDesc);
-        meshDesc.material = getMaterialDesc(model, primitive);
         
         desc->meshes.push_back(meshDesc);
     }
@@ -419,15 +455,15 @@ bool loadHelloTriangle(ModelDesc* desc)
     desc->meshes[0].name = "Box Mesh";
     desc->meshes[0].transform = glm::mat4(1.0);
     desc->meshes[0].material = getMaterialDesc({}, {});
-    desc->meshes[0].attributes[VAO_POSITION].data = vao_pos;
-    desc->meshes[0].attributes[VAO_POSITION].elementType = DATA_Float3;
-    desc->meshes[0].attributes[VAO_POSITION].elementCount = vao_pos->size() / sizeof(glm::vec3);
-    desc->meshes[0].attributes[VAO_NORMAL].data = vao_norm;
-    desc->meshes[0].attributes[VAO_NORMAL].elementType = DATA_Float3;
-    desc->meshes[0].attributes[VAO_NORMAL].elementCount = vao_norm->size() / sizeof(glm::vec3);
-    desc->meshes[0].attributes[VAO_TEXCOORD].data = vao_texc;
-    desc->meshes[0].attributes[VAO_TEXCOORD].elementType = DATA_Float2;
-    desc->meshes[0].attributes[VAO_TEXCOORD].elementCount = vao_texc->size() / sizeof(glm::vec2);
+    desc->meshes[0].attributes[VAO_POSITION_INDEX].data = vao_pos;
+    desc->meshes[0].attributes[VAO_POSITION_INDEX].elementType = DATA_Float3;
+    desc->meshes[0].attributes[VAO_POSITION_INDEX].elementCount = vao_pos->size() / sizeof(glm::vec3);
+    desc->meshes[0].attributes[VAO_NORMAL_INDEX].data = vao_norm;
+    desc->meshes[0].attributes[VAO_NORMAL_INDEX].elementType = DATA_Float3;
+    desc->meshes[0].attributes[VAO_NORMAL_INDEX].elementCount = vao_norm->size() / sizeof(glm::vec3);
+    desc->meshes[0].attributes[VAO_TEXCOORD_INDEX].data = vao_texc;
+    desc->meshes[0].attributes[VAO_TEXCOORD_INDEX].elementType = DATA_Float2;
+    desc->meshes[0].attributes[VAO_TEXCOORD_INDEX].elementCount = vao_texc->size() / sizeof(glm::vec2);
     desc->meshes[0].indices.resize(1);
     desc->meshes[0].indices[0].data = ibo;
     desc->meshes[0].indices[0].elementType = DATA_Uint;

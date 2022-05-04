@@ -22,6 +22,7 @@ public:
 private:
     IDevice::ARC _device;
     Camera::ARC _camera;
+    Light::ARC _light;
     BoundingBox _boundingBox;
     std::vector<IDeviceObject::ARC> _models;
 };

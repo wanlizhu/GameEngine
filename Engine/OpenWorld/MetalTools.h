@@ -1,10 +1,19 @@
 #pragma once
 #include "CDevice_Metal.h"
 
+struct MaterialUniformsBinding
+{
+    id<MTLBuffer> ubo;
+    std::unordered_map<std::string, std::any> values;
+};
+
 struct Material
 {
     NSString* name = nil;
     bool enabled = false;
+   
+    MaterialUniformsBinding uniforms;
+    std::unordered_map<int, id<MTLTexture>> textures;
 };
 
 struct IndexDraw
@@ -19,7 +28,7 @@ struct IndexDraw
 struct Mesh
 {
     NSString* name = nil;
-    std::unordered_map<int, id<MTLBuffer>> ubos_VS;
+    glm::mat4 transform;
     BoundingBox boundingBox;
     Material material;
     
@@ -47,8 +56,8 @@ struct Model
 
 id<MTLBuffer> createBufferWithBytes(id<MTLCommandQueue> commandQueue, const void* data, size_t size, bool sharedStorageMode, const char* label);
 id<MTLTexture> createTextureWithPath(id<MTLCommandQueue> commandQueue, const char* path, const char* label);
+Material createMaterialWithDesc(id<MTLCommandQueue> commandQueue, const MaterialDesc& desc);
 Program createProgramWithDesc(id<MTLDevice> device, const ProgramDesc& desc);
-Material createMaterialWithDesc(id<MTLDevice> device, const MaterialDesc& desc);
 
 MTLPrimitiveType getPrimitiveType(const char* type);
 MTLStencilDescriptor* getStencilDesc(bool stencilTest, bool stencilWrite);

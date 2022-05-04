@@ -2,6 +2,8 @@
 
 #include "BasicTools.h"
 #include "Camera.h"
+#include "Light.h"
+#include "Shaders/ShaderConstants.h"
 
 class IDevice;
 class IDeviceObject;
@@ -22,7 +24,8 @@ struct IndexBufferDesc : public BufferDesc
 struct MaterialDesc
 {
     std::string name;
-    
+    MaterialUniforms uniforms;
+    std::unordered_map<int, std::string> textures;
 };
 
 struct MeshDesc
@@ -32,7 +35,7 @@ struct MeshDesc
     BoundingBox boundingBox;
     MaterialDesc material;
     
-    std::unordered_map<std::string, BufferDesc> attributes;
+    std::unordered_map<int, BufferDesc> attributes;
     std::vector<IndexBufferDesc> indices;
 };
 
@@ -80,7 +83,9 @@ public:
     virtual void present(void* view) = 0;
     virtual void commit() = 0;
     
-    virtual void drawModel(const IDeviceObject* model, const Camera* camera) = 0;
+    virtual void drawModel(const IDeviceObject* model,
+                           const Light* light,
+                           const Camera* camera) = 0;
 };
 
 class IDeviceObject

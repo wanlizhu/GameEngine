@@ -19,7 +19,9 @@ public:
     virtual void present(void* view) override;
     virtual void commit() override;
     
-    virtual void drawModel(const IDeviceObject* model, const Camera* camera) override;
+    virtual void drawModel(const IDeviceObject* model,
+                           const Light* light,
+                           const Camera* camera) override;
     
 private:
     std::shared_ptr<Context> self;

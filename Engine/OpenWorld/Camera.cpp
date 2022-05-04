@@ -1,9 +1,9 @@
 #include "Camera.h"
 
-void Camera::initWithPerspectiveProjection(float fovy,
-                                           float aspect,
-                                           float znear,
-                                           float zfar)
+void Camera::initWithDesc(float fovy,
+                          float aspect,
+                          float znear,
+                          float zfar)
 {
     _fovy = fovy;
     _aspect = aspect;

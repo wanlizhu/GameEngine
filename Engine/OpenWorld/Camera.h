@@ -11,14 +11,15 @@ public:
     Camera(const Camera&) = delete;
     Camera& operator=(const Camera&) = delete;
     
-    void initWithPerspectiveProjection(float fovy,
-                                       float aspect,
-                                       float znear,
-                                       float zfar);
+    void initWithDesc(float fovy,
+                      float aspect,
+                      float znear,
+                      float zfar);
     void keyboardEventDidReceive();
     void mouseEventDidReceive();
     void zoomToFit(BoundingBox const& box);
     void setAspect(float aspect);
+    glm::vec3 const& position() const { return _pos; }
     glm::mat4 const& viewMatrix() const { return _viewMatrix; }
     glm::mat4 const& projectionMatrix() const { return _projectionMatrix; }
     

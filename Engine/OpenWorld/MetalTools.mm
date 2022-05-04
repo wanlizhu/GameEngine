@@ -1,4 +1,4 @@
-#include "CDevice_Metal_Tools.h"
+#include "MetalTools.h"
 
 id<MTLBuffer> createBufferWithBytes(id<MTLCommandQueue> commandQueue,
                                     const void* data,
@@ -275,9 +275,32 @@ Program createProgramWithDesc(id<MTLDevice> device, const ProgramDesc& desc)
     NSError* error = nil;
     NSString* libraryPath = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:desc.library.c_str()]
                                                             ofType:@".metallib"];
-    assert(libraryPath != nil);
-    id<MTLLibrary> shaderLibrary = [device newLibraryWithFile:libraryPath
-                                                        error:&error];
+    id<MTLLibrary> shaderLibrary = nil;
+    
+    if (libraryPath)
+    {
+        shaderLibrary = [device newLibraryWithFile:libraryPath
+                                             error:&error];
+    }
+    else
+    {
+        std::vector<uint8_t> bytes;
+        
+        if (loadBinaryFile(desc.library, &bytes))
+        {
+            NSString* source = [NSString stringWithUTF8String:(const char*)bytes.data()];
+            MTLCompileOptions* options = [[MTLCompileOptions alloc] init];
+            shaderLibrary = [device newLibraryWithSource:source
+                                                 options:options
+                                                   error:&error];
+        }
+        else
+        {
+            NSLog(@"Failed to load shader source: %s", desc.library.c_str());
+            assert(false);
+            return {};
+        }
+    }
     
     id<MTLFunction> vertexFunc = [shaderLibrary newFunctionWithName:[NSString stringWithUTF8String:desc.vertexFunc.c_str()]];
     if (vertexFunc == nil)
@@ -367,9 +390,25 @@ Program createProgramWithDesc(id<MTLDevice> device, const ProgramDesc& desc)
     return program;
 }
 
-Material createMaterialWithDesc(id<MTLDevice> device, const MaterialDesc& desc)
+Material createMaterialWithDesc(id<MTLCommandQueue> commandQueue, const MaterialDesc& desc)
 {
-    return {};
+    Material material;
+    material.name = [NSString stringWithUTF8String:desc.name.c_str()];
+    material.enabled = true;
+    material.uniforms.values[MAT_FLAGS_NAME] = desc.uniforms.flags;
+    material.uniforms.values[MAT_BASE_COLOR_NAME] = desc.uniforms.baseColor;
+    material.uniforms.values[MAT_METALLIC_NAME] = desc.uniforms.metallic;
+    material.uniforms.values[MAT_ROUGHNESS_NAME] = desc.uniforms.roughness;
+    material.uniforms.values[MAT_EMISSIVE_NAME] = desc.uniforms.emissive;
+    material.uniforms.values[MAT_AO_NAME] = desc.uniforms.ao;
+    
+    for (const auto& [index, path] : desc.textures)
+    {
+        std::string name = std::filesystem::path(path).filename();
+        material.textures[index] = createTextureWithPath(commandQueue, path.c_str(), name.c_str());
+    }
+    
+    return material;
 }
 
 int getAttributeIndex(const std::string& name, id<MTLFunction> vertexFunc)
@@ -391,45 +430,5 @@ MTLPrimitiveType getPrimitiveType(PrimitiveType type)
         case PRIM_Lines: return MTLPrimitiveTypeLine;
         case PRIM_Triangles: return MTLPrimitiveTypeTriangle;
         default: assert(false); return MTLPrimitiveTypeTriangle;
-    }
-}
-
-void updateMeshUniforms_VS(Mesh& mesh,
-                           const Program& program,
-                           const glm::mat4& viewMatrix,
-                           const glm::mat4& projectionMatrix)
-{
-    id<MTLDevice> device = program.renderPipelineState.device;
-    
-    int viewMatrixIndex = getResourceIndex(program.reflection, VIEW_MATRIX, "VS");
-    if (mesh.ubos_VS.find(viewMatrixIndex) == mesh.ubos_VS.end())
-    {
-        id<MTLBuffer> buffer = [device newBufferWithBytes:&viewMatrix
-                                                   length:sizeof(glm::mat4)
-                                                  options:MTLResourceStorageModeShared];
-        [buffer setLabel:[NSString stringWithUTF8String:VIEW_MATRIX]];
-        mesh.ubos_VS[viewMatrixIndex] = buffer;
-    }
-    else
-    {
-        void* dst = mesh.ubos_VS[viewMatrixIndex].contents;
-        const void* src = &viewMatrix;
-        memcpy(dst, src, sizeof(glm::mat4));
-    }
-    
-    int projectionMatrixIndex = getResourceIndex(program.reflection, PROJECTION_MATRIX, "VS");
-    if (mesh.ubos_VS.find(projectionMatrixIndex) == mesh.ubos_VS.end())
-    {
-        id<MTLBuffer> buffer = [device newBufferWithBytes:&projectionMatrix
-                                                   length:sizeof(glm::mat4)
-                                                  options:MTLResourceStorageModeShared];
-        [buffer setLabel:[NSString stringWithUTF8String:PROJECTION_MATRIX]];
-        mesh.ubos_VS[projectionMatrixIndex] = buffer;
-    }
-    else
-    {
-        void* dst = mesh.ubos_VS[projectionMatrixIndex].contents;
-        const void* src = &projectionMatrix;
-        memcpy(dst, src, sizeof(glm::mat4));
     }
 }
