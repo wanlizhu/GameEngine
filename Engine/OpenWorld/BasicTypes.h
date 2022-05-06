@@ -111,6 +111,9 @@
 #include <windows.h>
 #undef min
 #undef max
+using MessageParameter = std::pair<WPARAM, LPARAM>;
+#else
+using MessageParameter = void*;
 #endif
 
 #define VEC2(ptr) glm::vec2(ptr[0], ptr[1])
@@ -191,4 +194,31 @@ public:
 private:
     glm::vec3 _min;
     glm::vec3 _max;
+};
+
+enum EventType
+{
+    EVENT_Invalid = 0,
+    EVENT_MouseButton,
+    EVENT_MouseMove,
+    EVENT_MouseScroll,
+};
+
+enum ModKey
+{
+    MOD_Shift = 1,
+    MOD_Ctrl  = 1 << 1,
+    MOD_Alt   = 1 << 2,
+};
+
+struct MouseEvent
+{
+    EventType type = EVENT_Invalid;
+    char button;
+    int  mods = 0;
+
+    int x;
+    int y;
+    int dx;
+    int dy;
 };

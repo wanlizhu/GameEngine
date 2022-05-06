@@ -3,8 +3,9 @@
 
 void OpenWorld::initWithView(void* view)
 {
-    glm::ivec2 viewSize = drawableSizeWithMTKView(view);
-    _device = std::make_shared<CDevice_Metal>(view);
+    return;
+    glm::ivec2 viewSize = drawableSizeWithView(view);
+    _device = DeviceFactory::createDevice(view);
     _camera = std::make_shared<Camera>();
     _camera->initWithDesc(glm::radians(45.0),
                           (float)viewSize.x / viewSize.y,
@@ -16,7 +17,7 @@ void OpenWorld::initWithView(void* view)
 
 void OpenWorld::drawInView(void* view)
 {
-   if (!_device)
+   if (!_device || !view)
        return;
     
     _device->beginEncoding();
@@ -33,21 +34,30 @@ void OpenWorld::drawInView(void* view)
 
 void OpenWorld::resizeView(void* view)
 {
-    if (_camera)
-    {
-        glm::ivec2 size = drawableSizeWithMTKView(view);
-        _camera->setAspect((float)size.x / size.y);
-    }
+    if (!_camera)
+        return;
+
+    glm::ivec2 size = drawableSizeWithView(view);
+    _camera->setAspect((float)size.x / size.y);
 }
+
+void OpenWorld::messageDidReceive(int message, MessageParameter param)
+{}
 
 void OpenWorld::zoomToFit()
 {
+    if (!_camera)
+        return;
+
     assert(_boundingBox.isValid());
     _camera->zoomToFit(_boundingBox);
 }
 
 bool OpenWorld::loadModel(const std::string& name)
 {
+    if (!_device || name.empty())
+        return false;
+
     std::string path = resourcePathWithName(name);
     ModelDesc modelDesc;
     

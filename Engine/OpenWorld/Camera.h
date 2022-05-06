@@ -15,8 +15,8 @@ public:
                       float aspect,
                       float znear,
                       float zfar);
-    void keyboardEventDidReceive();
-    void mouseEventDidReceive();
+    void keyboardEventDidReceive(char key, bool pressed, int mods);
+    void mouseEventDidReceive(const MouseEvent& event);
     void zoomToFit(BoundingBox const& box);
     void setAspect(float aspect);
     glm::vec3 const& position() const { return _pos; }

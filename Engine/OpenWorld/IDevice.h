@@ -3,10 +3,10 @@
 #include "BasicTools.h"
 #include "Camera.h"
 #include "Light.h"
-#include "Shaders/ShaderConstants.h"
+#include "ShaderConstants.h"
 
 class IDevice;
-class IDeviceObject;
+class DeviceObject;
 
 struct BufferDesc
 {
@@ -74,7 +74,7 @@ public:
     using ARC = std::shared_ptr<IDevice>;
     
     virtual ~IDevice() = default;
-    virtual std::shared_ptr<IDeviceObject> createModelWithDesc(const ModelDesc& desc) = 0;
+    virtual std::shared_ptr<DeviceObject> createModelWithDesc(const ModelDesc& desc) = 0;
     virtual BoundingBox boundingBox(void* object) = 0;
     virtual void release(void* object) = 0;
 
@@ -83,28 +83,34 @@ public:
     virtual void present(void* view) = 0;
     virtual void commit() = 0;
     
-    virtual void drawModel(const IDeviceObject* model,
+    virtual void drawModel(const DeviceObject* model,
                            const Light* light,
                            const Camera* camera) = 0;
 };
 
-class IDeviceObject
+class DeviceFactory
 {
 public:
-    using ARC = std::shared_ptr<IDeviceObject>;
+    static IDevice::ARC createDevice(void* view);
+};
+
+class DeviceObject
+{
+public:
+    using ARC = std::shared_ptr<DeviceObject>;
     void* object = nullptr;
     IDevice* device = nullptr;
     
     static ARC create(void* obj, IDevice* dev) {
-        return std::make_shared<IDeviceObject>(obj, dev);
+        return std::make_shared<DeviceObject>(obj, dev);
     }
     
-    IDeviceObject(const IDeviceObject&) = delete;
-    IDeviceObject& operator=(const IDeviceObject&) = delete;
-    IDeviceObject(void* obj, IDevice* dev)
+    DeviceObject(const DeviceObject&) = delete;
+    DeviceObject& operator=(const DeviceObject&) = delete;
+    DeviceObject(void* obj, IDevice* dev)
     : object(obj), device(dev)
     {}
-    virtual ~IDeviceObject();
+    virtual ~DeviceObject();
     
     BoundingBox boundingBox() const {
         return device->boundingBox(object);

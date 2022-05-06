@@ -14,10 +14,10 @@ void Camera::initWithDesc(float fovy,
     _viewMatrix = glm::lookAt(glm::vec3(0, 0, 1), glm::vec3(0), glm::vec3(0, 1, 0));
 }
 
-void Camera::keyboardEventDidReceive()
+void Camera::keyboardEventDidReceive(char key, bool pressed, int mods)
 {}
 
-void Camera::mouseEventDidReceive()
+void Camera::mouseEventDidReceive(const MouseEvent& event)
 {}
 
 void Camera::zoomToFit(BoundingBox const& box)

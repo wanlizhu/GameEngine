@@ -2,15 +2,14 @@
 
 #include "IDevice.h"
 
-class CDevice_Metal : public IDevice
+class CDevice_Vulkan : public IDevice
 {
 public:
-    struct Context;
-    using ARC = std::shared_ptr<CDevice_Metal>;
-    
-    CDevice_Metal(void* view);
-    virtual ~CDevice_Metal() = default;
-    virtual DeviceObject::ARC createModelWithDesc(const ModelDesc& desc) override;
+    using ARC = std::shared_ptr<CDevice_Vulkan>;
+
+    CDevice_Vulkan(void* view);
+    virtual ~CDevice_Vulkan() = default;
+    virtual DeviceObject::ARC createModelWithDesc(const ModelDesc & desc) override;
     virtual BoundingBox boundingBox(void* object) override;
     virtual void release(void* object) override;
 
@@ -18,11 +17,14 @@ public:
     virtual void endEncoding() override;
     virtual void present(void* view) override;
     virtual void commit() override;
-    
+
     virtual void drawModel(const DeviceObject* model,
                            const Light* light,
                            const Camera* camera) override;
-    
+
 private:
-    std::shared_ptr<Context> self;
+    HWND _hwnd = NULL;
+    
+    std::unordered_map<void*, size_t> _types;
 };
+

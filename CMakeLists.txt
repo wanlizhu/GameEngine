@@ -14,6 +14,16 @@ macro(remove_ignored_files FileListName)
     endforeach()
 endmacro()
 
+macro(remove_files_with_suffix FileListName Suffix)
+	foreach(FilePath IN LISTS ${FileListName})
+        get_filename_component(BaseName "${FilePath}" NAME_WE)
+		string(FIND "${BaseName}" "${Suffix}" Index) 
+        if (NOT "${Index}" STREQUAL "-1")
+            list(REMOVE_ITEM ${FileListName} ${FilePath})
+        endif()
+    endforeach()
+endmacro()
+
 # Initialize global/default properties
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -31,20 +41,17 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
         "${PROJECT_DIR}/Engine/OpenWorld/*.h"
         "${PROJECT_DIR}/Engine/OpenWorld/*.cpp"
         "${PROJECT_DIR}/Engine/OpenWorld/*.mm")
+	remove_files_with_suffix(SourceFiles_Engine "_Vulkan")
 
     file(GLOB_RECURSE SourceFiles_Engine_Shaders
-        "${PROJECT_DIR}/Engine/OpenWorld/*.metal")
+        "${PROJECT_DIR}/Assets/Shaders/*.metal")
     set_source_files_properties(${SourceFiles_Engine_Shaders} 
         PROPERTIES LANGUAGE METAL)
 else()
     file(GLOB_RECURSE SourceFiles_Engine
         "${PROJECT_DIR}/Engine/OpenWorld/*.h"
-        "${PROJECT_DIR}/Engine/OpenWorld/*.cpp"
-        "${PROJECT_DIR}/Engine/OpenWorld/*.glsl")
-
-    file(GLOB_RECURSE SourceFiles_Engine_Shaders
-        "${PROJECT_DIR}/Engine/OpenWorld/*.glsl")
-    message(FATAL_ERROR "TODO: Compile Shaders")
+        "${PROJECT_DIR}/Engine/OpenWorld/*.cpp")
+	remove_files_with_suffix(SourceFiles_Engine "_Metal")
 endif()
 
 remove_ignored_files(SourceFiles_Engine)
@@ -59,12 +66,14 @@ source_group(TREE "${PROJECT_DIR}" PREFIX "" FILES ${ResourceFiles})
 add_library(Engine STATIC ${SourceFiles_Engine})
 
 target_include_directories(Engine PUBLIC "${PROJECT_DIR}/Engine")
+target_include_directories(Engine PUBLIC "${PROJECT_DIR}/Assets/Shaders")
 target_include_directories(Engine PUBLIC "${PROJECT_DIR}/ThirdParty")
 target_include_directories(Engine PUBLIC "${PROJECT_DIR}/ThirdParty/glm/include")
 
 target_compile_definitions(Engine PUBLIC $<$<CONFIG:DEBUG>:DEBUG>)
 target_compile_definitions(Engine PUBLIC $<$<BOOL:${BUILD_SHARED_LIBS}>:BUILD_SHARED_LIBS>)
 
+target_compile_options(Engine PUBLIC $<$<BOOL:${WIN32}>:/wd4244>)
 target_compile_options(Engine PUBLIC $<$<BOOL:${WIN32}>:/wd4251>)
 target_compile_options(Engine PUBLIC $<$<BOOL:${WIN32}>:/wd4267>)
 target_compile_options(Engine PUBLIC $<$<BOOL:${WIN32}>:/wd4996>)
@@ -76,6 +85,9 @@ if (WIN32)
     source_group(TREE "${PROJECT_DIR}/" PREFIX "" FILES ${SourceFiles_Windows})
     
     add_executable(Playground ${SourceFiles_Windows} ${ResourceFiles})
+	
+	add_custom_command(TARGET Playground POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${PROJECT_DIR}/Assets" "${OUT_DIR}/$(Configuration)/Assets")
 
     if (MSVC)	
 	    set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY 
@@ -91,7 +103,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     remove_ignored_files(SourceFiles_macOS)
     source_group(TREE "${PROJECT_DIR}/Playground" PREFIX "" FILES ${SourceFiles_macOS})
 
-    add_executable(Playground MACOSX_BUNDLE ${SourceFiles_macOS} ${ResourceFiles} ${SourceFiles_Engine_Shaders})
+    add_executable(Playground MACOSX_BUNDLE ${SourceFiles_macOS} ${ResourceFiles})
 
     # Available properties https://help.apple.com/xcode/mac/current/#/itcaec37c2a6
     set_target_properties(Playground PROPERTIES

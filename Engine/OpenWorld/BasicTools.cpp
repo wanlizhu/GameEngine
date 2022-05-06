@@ -1,6 +1,6 @@
 #include "BasicTools.h"
 #include "IDevice.h"
-#include "Shaders/ShaderConstants.h"
+#include "ShaderConstants.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -18,7 +18,7 @@ std::string getEnv(const char* name)
     if (uint32_t size = GetEnvironmentVariable(name, nullptr, 0))
     {
         std::vector<char> buffer(size);
-        GetEnvironmentVariable(name.c_str(), buffer.data(), size);
+        GetEnvironmentVariable(name, buffer.data(), size);
         return std::string(buffer.data());
     }
 #else
@@ -70,7 +70,7 @@ std::string stringFormat(const char* format, ...)
 #ifndef __APPLE__
 std::string currentPath()
 {
-    return std::filesystem::current_path();
+    return std::filesystem::current_path().string();
 }
 #endif
 
@@ -100,6 +100,18 @@ std::vector<std::string> resourcePathsWithType(const std::string& type)
     
     return paths;
 }
+
+#ifndef __APPLE__
+glm::ivec2 drawableSizeWithView(void* view)
+{
+    HWND hwnd = (HWND)view;
+    RECT rect = {};
+
+    GetClientRect(hwnd, &rect);
+
+    return glm::ivec2(rect.right - rect.left, rect.bottom - rect.top);
+}
+#endif
 
 bool loadBinaryFile(const std::string& path, std::vector<uint8_t>* bytes)
 {

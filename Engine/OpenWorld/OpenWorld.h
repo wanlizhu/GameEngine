@@ -16,6 +16,7 @@ public:
     void initWithView(void* view);
     void drawInView(void* view);
     void resizeView(void* view);
+    void messageDidReceive(int message, MessageParameter param);
     void zoomToFit();
     bool loadModel(const std::string& name);
     
@@ -24,5 +25,5 @@ private:
     Camera::ARC _camera;
     Light::ARC _light;
     BoundingBox _boundingBox;
-    std::vector<IDeviceObject::ARC> _models;
+    std::vector<DeviceObject::ARC> _models;
 };
