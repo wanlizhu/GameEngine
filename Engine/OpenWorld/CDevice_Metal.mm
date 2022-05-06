@@ -263,7 +263,6 @@ void setMaterialUniforms(id<MTLRenderCommandEncoder> renderEncoder,
             *(float*)(buffer + offsets[MAT_AO_NAME]) = std::any_cast<float>(material.uniforms.values[MAT_AO_NAME]);
         }
         
-        
         [renderEncoder pushDebugGroup:@"Setup Material Uniforms"];
         [renderEncoder setFragmentBuffer:material.uniforms.ubo
                                   offset:0
