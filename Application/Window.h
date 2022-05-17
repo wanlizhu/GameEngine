@@ -16,6 +16,8 @@ public:
 private:
     HWND _hwnd = NULL;
     HDC  _hdc = NULL;
+    MatrixMVP _mvp;
     ARC<VulkanCanvas> _canvas;
+    std::vector<Model> _models;
 };
 

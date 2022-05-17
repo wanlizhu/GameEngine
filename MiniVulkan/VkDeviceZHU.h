@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanConfig.h"
+#include "VkPipelineZHU.h"
 
 struct VkDeviceCreateInfoZHU
 {
@@ -20,12 +21,19 @@ public:
     VkDeviceZHU& operator=(const VkDeviceZHU&) = delete;
     virtual ~VkDeviceZHU();
 
-    void beginFrame();
+    void beginFrame(const MatrixMVP& mvp);
     void endFrame();
     void beginRenderPass(bool clearBackground);
     void endRenderPass();
     void waitIdle();
     void resize(int width, int height);
+
+    GPUModel createGPUModel(const Model& src);
+    GPUNurbs createGPUNurbs(const Nurbs& src);
+    void deleteGPUModel(GPUModel& model);
+    void deleteGPUNurbs(GPUNurbs& nurbs);
+    void drawModel(const GPUModel& model);
+    void drawNurbs(const GPUNurbs& nurbs);
 
 private:
     void createVkInstance();
@@ -35,48 +43,71 @@ private:
     void chooseQueueFamilyIndex();
     void createLogicalDevice();
     void createCommandPool();
+    void createDescriptorPool();
+    void createSemaphorePool();
+    void createFencePool();
     void chooseSwapchainProperties();
     void createSwapchain();
     void createDepthImage();
-    void createRenderPass();
+    void createRenderPasses();
     void createFramebuffers();
+    void createPipelines();
+    void deleteVkInstance();
+    void deleteDebugUtils();
+    void deleteSurface();
+    void deleteLogicalDevice();
+    void deleteCommandPool();
+    void deleteDescriptorPool();
+    void deleteSemaphorePool();
+    void deleteFencePool();
+    void deleteSwapchain();
+    void deleteDepthImage();
+    void deleteRenderPasses();
+    void deleteFramebuffers();
+    void deletePipelines();
 
     void acquireNextImage();
     void transitionImageLayout(VkImage image, VkImageLayout newLayout);
+    void freeSemaphore(VkSemaphore semaphore);
+    void freeFence(VkFence fence);
 
-    VkFence allocateFence();
+    GPUBuffer createGPUBuffer(const ARCData& data,
+                              VkBufferUsageFlagBits usage,
+                              VkMemoryPropertyFlags props);
     VkSemaphore allocateSemaphore();
-    void freeFence(VkFence& fence);
-    void freeSemaphore(VkSemaphore& semaphore);
+    VkFence allocateFence();
 
 private:
     // create info
     VkDeviceCreateInfoZHU _info;
 
     // vulkan instance data
-    VkInstance _instance = 0;
-    VkDebugUtilsMessengerEXT _debugUtils = 0;
+    VkInstance _instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT _debugUtils = VK_NULL_HANDLE;
 
     // surface data
-    VkSurfaceKHR _surface = 0;
+    VkSurfaceKHR _surface = VK_NULL_HANDLE;
     VkExtent2D _surfaceExtent;
     VkFormat _surfaceFormat = VK_FORMAT_UNDEFINED;
     VkColorSpaceKHR _surfaceColorspace;
 
     // physical device data
-    VkPhysicalDevice _physicalDevice = 0;
-    VkDevice _device = 0;
-    VkQueue  _queue = 0;
+    VkPhysicalDevice _physicalDevice = VK_NULL_HANDLE;
+    VkDevice _device = VK_NULL_HANDLE;
+    VkQueue  _queue = VK_NULL_HANDLE;
     uint32_t _queueFamilyIndex = UINT32_MAX;
-    VkCommandPool _commandPool = 0;
+    VkCommandPool _commandPool = VK_NULL_HANDLE;
+    VkDescriptorPool _descriptorPool = VK_NULL_HANDLE;
+    std::deque<VkSemaphore> _semaphorePool;
+    std::deque<VkFence> _fencePool;
 
     // swapchain data
-    VkSwapchainKHR _swapchain = 0;
-    VkRenderPass   _renderPassLoad = 0;
-    VkRenderPass   _renderPassClear = 0;
-    VkImage        _depthImage = 0;
-    VkImageView    _depthImageView = 0;
-    VkDeviceMemory _depthImageMemory = 0;
+    VkSwapchainKHR _swapchain = VK_NULL_HANDLE;
+    VkRenderPass   _renderPassLoad = VK_NULL_HANDLE;
+    VkRenderPass   _renderPassClear = VK_NULL_HANDLE;
+    VkImage        _depthImage = VK_NULL_HANDLE;
+    VkImageView    _depthImageView = VK_NULL_HANDLE;
+    VkDeviceMemory _depthImageMemory = VK_NULL_HANDLE;
     VkFormat       _depthFormat = VK_FORMAT_UNDEFINED;
     VkImageLayout  _depthImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     std::vector<VkImage> _backingImages;
@@ -89,10 +120,13 @@ private:
     float _clearDepth = 1.0;
     int _clearStencil = 0;
 
-    // resource state trackings
+    // resources
     std::map<VkImage, VkImageLayout> _imageLayouts;
+    ARC<VkPipelineZHU> _pipeline2D;
+    ARC<VkPipelineZHU> _pipeline3D;
 
-    // current render pass
-    VkCommandBuffer _commandBuffer = 0;
+    // current frame
+    VkCommandBuffer _commandBuffer = VK_NULL_HANDLE;
     bool _submitAsync = false;
+    MatrixMVP _mvp;
 };

@@ -69,7 +69,8 @@ int Window::run()
 
         if (_canvas)
         {
-            _canvas->beginPaint();
+            _canvas->beginPaint(_mvp);
+            _canvas->drawModels(_models, true);
             _canvas->endPaint();
             _canvas->display();
         }

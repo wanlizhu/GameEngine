@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)_Objects\</IntDir>
+    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)_Objects\</IntDir>
+    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -66,11 +66,11 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>MiniVulkan.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir)..\$(Platform)$(Configuration)_MiniVulkan;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(OutDir)MiniVulkan.dll"
-mklink  "$(OutDir)MiniVulkan.dll"  "$(OutDir)..\$(Platform)$(Configuration)_MiniVulkan\MiniVulkan.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -90,11 +90,11 @@ mklink  "$(OutDir)MiniVulkan.dll"  "$(OutDir)..\$(Platform)$(Configuration)_Mini
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>MiniVulkan.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir)..\$(Platform)$(Configuration)_MiniVulkan;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(OutDir)MiniVulkan.dll"
-mklink  "$(OutDir)MiniVulkan.dll"  "$(OutDir)..\$(Platform)$(Configuration)_MiniVulkan\MiniVulkan.dll"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

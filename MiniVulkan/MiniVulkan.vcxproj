@@ -22,14 +22,14 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)_Objects\</IntDir>
+    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)_Objects\</IntDir>
+    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -69,6 +69,10 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"
+xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -90,12 +94,32 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"
+xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="VkCommonZHU.cpp" />
     <ClCompile Include="VkDeviceZHU.cpp" />
+    <ClCompile Include="VkPipelineZHU.cpp" />
+    <ClCompile Include="VkShaderModuleZHU.cpp" />
     <ClCompile Include="VulkanCanvas.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="StandardSurface.vert.glsl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
+    </ClInclude>
+    <ClInclude Include="StandardSurface.frag.glsl">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
+      <FileType>Document</FileType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
+    </ClInclude>
+    <ClInclude Include="VkCommonZHU.h" />
+    <ClInclude Include="VkPipelineZHU.h" />
+    <ClInclude Include="VkShaderModuleZHU.h" />
     <ClInclude Include="VulkanCanvas.h" />
     <ClInclude Include="VkDeviceZHU.h" />
     <ClInclude Include="VulkanConfig.h" />

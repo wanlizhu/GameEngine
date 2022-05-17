@@ -9,12 +9,24 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{e9bd512a-6cb4-464c-a5b7-63acab952b40}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VkDeviceZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VulkanCanvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VkPipelineZHU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VkShaderModuleZHU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VkCommonZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -26,6 +38,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VulkanCanvas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VkPipelineZHU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StandardSurface.vert.glsl">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="StandardSurface.frag.glsl">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="VkShaderModuleZHU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VkCommonZHU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
