@@ -29,7 +29,7 @@ void main()
 
     mat3 matrixNormal = mat3(inverse(transpose(config.modelMatrix)));
     vec3 normal = matrixNormal * in_normal;
-
+    
     out_worldPos = worldPos;
     out_worldNormal = normal;
     out_texcoord = in_texcoord;

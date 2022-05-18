@@ -4,8 +4,7 @@
 bool loadFile(const std::string& path, std::vector<uint8_t>* bytes)
 {
 	FILE* file = fopen(path.c_str(), "rb");
-
-    if (!file)
+    if (file == nullptr)
     {
         printf("Failed to open file: %s\n", path.c_str());
         assert(false);
@@ -28,8 +27,7 @@ bool loadFile(const std::string& path, std::vector<uint8_t>* bytes)
 bool loadTextFile(const std::string& path, std::string* content)
 {
 	std::vector<uint8_t> bytes;
-	
-	if (loadFile(path, &bytes))
+	if (!loadFile(path, &bytes))
 	{
 		return false;
 	}
@@ -40,7 +38,7 @@ bool loadTextFile(const std::string& path, std::string* content)
 	return true;
 }
 
-bool beginsWith(const std::string& str, const std::string& prefix)
+bool startsWith(const std::string& str, const std::string& prefix)
 {
 	return str.find(prefix) == 0;
 }
@@ -48,6 +46,18 @@ bool beginsWith(const std::string& str, const std::string& prefix)
 bool endsWith(const std::string& str, const std::string& suffix)
 {
     return str.find(suffix) == (str.size() - suffix.size());
+}
+
+std::string trim(const std::string& str)
+{
+    if (str.empty())
+        return "";
+
+    std::string dup(str);
+    dup.erase(0, dup.find_first_not_of(" \t\r\n"));
+    dup.erase(dup.find_last_not_of(" \t\r\n") + 1);
+
+    return dup;
 }
 
 std::string replaceFileExtension(const std::string& _path, const std::string& ext)
@@ -235,15 +245,34 @@ const char* getFormatName(VkFormat format)
     switch (format)
     {
         case VK_FORMAT_R8G8B8A8_UNORM: return "RGBA8_UNORM";
+        case VK_FORMAT_B8G8R8A8_UNORM: return "BGRA8_UNORM";
         case VK_FORMAT_R8G8B8A8_SRGB: return "RGBA8_SRGB";
+        case VK_FORMAT_B8G8R8A8_SRGB: return "BGRA8_SRGB";
+
         case VK_FORMAT_R32G32B32A32_SFLOAT: return "RGBA32_FLOAT";
+        case VK_FORMAT_R32G32B32A32_UINT: return "RGBA32_UINT";
+        case VK_FORMAT_R32G32B32A32_SINT: return "RGBA32_INT";
+
+        case VK_FORMAT_R32G32B32_SFLOAT: return "RGB32_FLOAT";
+        case VK_FORMAT_R32G32B32_UINT: return "RGB32_UINT";
+        case VK_FORMAT_R32G32B32_SINT: return "RGB32_INT";
+
         case VK_FORMAT_R32G32_SFLOAT: return "RG32_FLOAT";
         case VK_FORMAT_R32G32_UINT: return "RG32_UINT";
+        case VK_FORMAT_R32G32_SINT: return "RG32_INT";
+
         case VK_FORMAT_R32_SFLOAT: return "R32_FLOAT";
         case VK_FORMAT_R32_UINT: return "R32_UINT";
+        case VK_FORMAT_R32_SINT: return "R32_INT";
+
         case VK_FORMAT_D32_SFLOAT: return "D32_FLOAT";
         case VK_FORMAT_D32_SFLOAT_S8_UINT: return "D32_FLOAT_S8_UINT";
         case VK_FORMAT_UNDEFINED: return "UNDEFINED";
+
+        case VK_FORMAT_MAT2: return "MAT2_FLOAT";
+        case VK_FORMAT_MAT3: return "MAT3_FLOAT";
+        case VK_FORMAT_MAT4: return "MAT4_FLOAT";
+
         default: 
         {
             static std::string cache;
@@ -588,14 +617,25 @@ long sizeofFormat(VkFormat format)
 {
     switch (format)
     {
-        case VK_FORMAT_R32_SFLOAT: return sizeof(float);
-        case VK_FORMAT_R32G32_SFLOAT: return sizeof(float) * 2;
-        case VK_FORMAT_R32G32B32_SFLOAT: return sizeof(float) * 3;
-        case VK_FORMAT_R32G32B32A32_SFLOAT: return sizeof(float) * 4;
-        case VK_FORMAT_R32_UINT: return sizeof(int);
-        case VK_FORMAT_R32G32_UINT: return sizeof(int) * 2;
-        case VK_FORMAT_R32G32B32_UINT: return sizeof(int) * 3;
-        case VK_FORMAT_R32G32B32A32_UINT: return sizeof(int) * 4;
+        case VK_FORMAT_R32_SFLOAT: 
+        case VK_FORMAT_R32_SINT:
+        case VK_FORMAT_R32_UINT:
+            return sizeof(float);
+
+        case VK_FORMAT_R32G32_SFLOAT:
+        case VK_FORMAT_R32G32_SINT:
+        case VK_FORMAT_R32G32_UINT:
+            return sizeof(float) * 2;
+
+        case VK_FORMAT_R32G32B32_SFLOAT: 
+        case VK_FORMAT_R32G32B32_SINT:
+        case VK_FORMAT_R32G32B32_UINT:
+            return sizeof(float) * 3;
+
+        case VK_FORMAT_R32G32B32A32_SFLOAT:
+        case VK_FORMAT_R32G32B32A32_SINT:
+        case VK_FORMAT_R32G32B32A32_UINT:
+            return sizeof(float) * 4;
 
         case VK_FORMAT_R8G8B8A8_UNORM:
         case VK_FORMAT_R8G8B8A8_UINT:
@@ -604,6 +644,10 @@ long sizeofFormat(VkFormat format)
         case VK_FORMAT_B8G8R8A8_UINT:
         case VK_FORMAT_B8G8R8A8_SRGB:
             return sizeof(char) * 4;
+
+        case VK_FORMAT_MAT2: return sizeof(float) * 4;
+        case VK_FORMAT_MAT3: return sizeof(float) * 9;
+        case VK_FORMAT_MAT4: return sizeof(float) * 16;
 
         default:
             assert(false);

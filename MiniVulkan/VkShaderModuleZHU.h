@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanConfig.h"
+#include "VkReflectionZHU.h"
 
 struct VkShaderModuleCreateInfoZHU
 {
@@ -10,12 +11,6 @@ struct VkShaderModuleCreateInfoZHU
     std::string entryPoint;
     std::vector<std::string> searchPath;
     std::unordered_map<std::string, std::string> macros;
-};
-
-struct VkReflectionZHU
-{
-    std::unordered_map<std::string, VkDescriptorType> descriptorTypes;
-
 };
 
 class VkShaderModuleZHU : public std::enable_shared_from_this<VkShaderModuleZHU>
@@ -31,7 +26,8 @@ public:
     const char* entryPoint() const { return _info.entryPoint.c_str(); }
 	
 private:
-	void compileAndReflect();
+	void compile();
+    void reflect();
 	void loadSPIRV();
 	void loadReflection(); 
 

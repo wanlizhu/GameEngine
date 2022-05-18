@@ -71,7 +71,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"
-xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
+xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
+xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -96,13 +97,15 @@ xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"
-xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
+xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
+xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="VkCommonZHU.cpp" />
     <ClCompile Include="VkDeviceZHU.cpp" />
     <ClCompile Include="VkPipelineZHU.cpp" />
+    <ClCompile Include="VkReflectionZHU.cpp" />
     <ClCompile Include="VkShaderModuleZHU.cpp" />
     <ClCompile Include="VulkanCanvas.cpp" />
   </ItemGroup>
@@ -119,6 +122,7 @@ xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"</Command>
     </ClInclude>
     <ClInclude Include="VkCommonZHU.h" />
     <ClInclude Include="VkPipelineZHU.h" />
+    <ClInclude Include="VkReflectionZHU.h" />
     <ClInclude Include="VkShaderModuleZHU.h" />
     <ClInclude Include="VulkanCanvas.h" />
     <ClInclude Include="VkDeviceZHU.h" />

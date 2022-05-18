@@ -11,6 +11,10 @@
 #include <algorithm>
 #include <optional>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <regex>
 
 #include "vulkan/vulkan.h"
 #include "glm/glm.hpp"

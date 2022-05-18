@@ -6,8 +6,9 @@ struct VkDeviceCreateInfoZHU;
 
 bool loadFile(const std::string& path, std::vector<uint8_t>* bytes);
 bool loadTextFile(const std::string& path, std::string* str);
-bool beginsWith(const std::string& str, const std::string& prefix);
+bool startsWith(const std::string& str, const std::string& prefix);
 bool endsWith(const std::string& str, const std::string& suffix);
+std::string trim(const std::string& str);
 std::string replaceFileExtension(const std::string& path, const std::string& ext);
 const char* sizeFormat(size_t size);
 

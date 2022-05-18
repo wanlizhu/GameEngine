@@ -6,9 +6,14 @@ VkShaderModuleZHU::VkShaderModuleZHU(const VkShaderModuleCreateInfoZHU& info)
 {
     std::vector<uint8_t> spirv;
 
-    if (endsWith(info.sourcePath, ".glsl"))
+    if (endsWith(_info.sourcePath, ".glsl"))
     {
-        compileAndReflect();
+        compile();
+    }
+
+    if (endsWith(_info.sourcePath, ".spv"))
+    {
+        reflect();
     }
 	
 	loadSPIRV();
@@ -36,104 +41,80 @@ VkShaderModuleZHU::~VkShaderModuleZHU()
     }
 }
 
-void VkShaderModuleZHU::compileAndReflect()
+std::string concatIncludes(const std::vector<std::string>& searchPath)
 {
-	std::string spvPath = replaceFileExtension(_info.sourcePath, ".spv");
-	std::string reflectionPath = replaceFileExtension(_info.sourcePath, ".reflection");
-    std::vector<char> cmdLine;
-    std::string cmdLineTemp;
-    
-    cmdLineTemp += " --target-env vulkan1.1 --client vulkan100 ";
-    cmdLineTemp += " --auto-map-bindings ";
-    cmdLineTemp += " -l "; // link all input files together to form a single module
-    cmdLineTemp += " -q "; // dump reflection query database; requires -l for linking
-    cmdLineTemp += " -R "; // allowing the use of gl_VertexID and gl_InstanceID keywords
-    cmdLineTemp += " -o " + spvPath + " ";
+    std::string str;
 
-    for (const auto& path : _info.searchPath)
+    for (const auto& path : searchPath)
     {
-        cmdLineTemp += " -I" + path + " ";
+        str += " -I" + path + " ";
     }
 
-    for (const auto& [name, value] : _info.macros)
+    return str;
+}
+
+std::string concatMacros(const std::unordered_map<std::string, std::string>& macros)
+{
+    std::string str;
+
+    for (const auto& [name, value] : macros)
     {
-        cmdLineTemp += " -D" + name + (value.empty() ? "" : ("=" + value)) + " ";
+        str += " -D" + name + (value.empty() ? "" : ("=" + value)) + " ";
     }
 
-    cmdLineTemp += " " + _info.sourcePath + " ";
-    cmdLine.assign(cmdLineTemp.begin(), cmdLineTemp.end());
-    cmdLine.push_back('\0');
+    return str;
+}
 
-    SECURITY_ATTRIBUTES attributes = {};
-    attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-    attributes.lpSecurityDescriptor = NULL;
-    attributes.bInheritHandle = TRUE;
-
-    HANDLE readPipe = NULL;
-    HANDLE writePipe = NULL;
-
-    if (!CreatePipe(&readPipe, &writePipe, &attributes, 1024 * 32))
+void printErrors(const std::string& path)
+{
+    std::string content;
+    if (!std::filesystem::exists(path) ||
+        !loadTextFile(path, &content) ||
+        content.find("ERROR:") == std::string::npos)
     {
-        printf("[Error:%d] Failed to create pipe\n", GetLastError());
-		assert(false);
-		return;
-    }
-
-    STARTUPINFO startupInfo = {};
-    ZeroMemory(&startupInfo, sizeof(STARTUPINFO));
-    startupInfo.cb = sizeof(STARTUPINFO);
-    startupInfo.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-    startupInfo.wShowWindow = SW_HIDE;
-    startupInfo.hStdOutput = writePipe;
-    startupInfo.hStdError = writePipe;
-
-    PROCESS_INFORMATION procInfo = {};
-    HRESULT result = CreateProcess("glslangValidator.exe", 
-                                   cmdLine.data(), 
-                                   &attributes, // process security attributes
-                                   &attributes, // thread security attributes
-                                   TRUE, // inherit handles from parent process
-                                   0,    // creation flags
-                                   NULL, // use parent process' environments
-                                   NULL, // use parent process' current directory
-                                   &startupInfo,
-                                   &procInfo);
-    if (FAILED(result))
-    {
-        printf("[Error:%d] Failed to start up shader compile process\n", GetLastError());
-        CloseHandle(readPipe);
-		assert(false);
         return;
     }
 
-    WaitForSingleObject(procInfo.hProcess, INFINITE);
+    printf("%s\n", content.c_str());
+}
 
-    char output[1024 * 32] = {};
-    DWORD outputLength = 1024 * 32;
+void VkShaderModuleZHU::compile()
+{
+	std::string spvPath = replaceFileExtension(_info.sourcePath, ".spv");
+    std::string logPath = replaceFileExtension(_info.sourcePath, ".log");
+    std::string cmdLine = "glslangValidator.exe ";
+    
+    cmdLine += " --target-env vulkan1.1 --client vulkan100 ";
+    cmdLine += " --auto-map-bindings ";
+    cmdLine += " -l "; // link all input files together to form a single module
+    cmdLine += " -R "; // allowing the use of gl_VertexID and gl_InstanceID keywords
+    cmdLine += " -o " + spvPath + " ";
+    cmdLine += concatIncludes(_info.searchPath);
+    cmdLine += concatMacros(_info.macros);
+    cmdLine += " " + _info.sourcePath + " ";
+    cmdLine += " > " + logPath;
 
-    if (ReadFile(readPipe, output, outputLength, &outputLength, NULL))
-    {
-		HANDLE outputFile = CreateFile(reflectionPath.c_str(), 
-		                               GENERIC_WRITE, 
-									   0, 
-									   NULL, 
-									   CREATE_ALWAYS, 
-									   FILE_ATTRIBUTE_NORMAL, 
-									   NULL);
-		DWORD writtenLength = 0;
-		
-		WriteFile(outputFile, output, outputLength, &writtenLength, NULL);
-		assert(writtenLength == outputLength);
-		
-		CloseHandle(outputFile);
-    }
+    system(cmdLine.c_str());
+    printErrors(logPath);
 
     _info.sourcePath = spvPath;
-    _info.reflectionPath = reflectionPath;
+}
 
-    CloseHandle(readPipe);
-    CloseHandle(procInfo.hThread);
-    CloseHandle(procInfo.hProcess);
+void VkShaderModuleZHU::reflect()
+{
+    std::string jsonPath = replaceFileExtension(_info.sourcePath, ".json");
+    std::string logPath = replaceFileExtension(_info.sourcePath, ".log");
+    std::string cmdLine = "spirv-cross.exe";
+
+    cmdLine += " --reflect";
+    cmdLine += " --output " + jsonPath + " ";
+    cmdLine += " " + _info.sourcePath + " ";
+    cmdLine += " > " + logPath;
+
+    system(cmdLine.c_str());
+    printErrors(logPath);
+
+    _info.reflectionPath = jsonPath;
 }
 
 void VkShaderModuleZHU::loadSPIRV()
@@ -148,11 +129,21 @@ void VkShaderModuleZHU::loadSPIRV()
 		_stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 	}
 	
-    loadFile(_info.sourcePath, &_spirv);
+    if (!loadFile(_info.sourcePath, &_spirv))
+    {
+        printf("Failed to load SPIRV binary\n");
+        assert(false);
+    }
 }
 
 void VkShaderModuleZHU::loadReflection()
-{}
+{
+    if (!_reflection.loadFromFile(_info.reflectionPath))
+    {
+        printf("Failed to load reflection\n");
+        assert(false);
+    }
+}
 
 
 
