@@ -1,0 +1,71 @@
+{
+    "name": "Spheres",
+    "camera": {
+        "position": [ 13, 2, 3 ],
+        "target": [ 0, 0, 0 ],
+        "up": [ 0, 1, 0 ],
+        "aspect": 0.6,
+        "fovy": 20,
+        "aperture": 0.1,
+        "focus": 10,
+        "shutter_open": 0,
+        "shutter_close": 0
+    },
+    "world": {
+        "objects": [
+            {
+                "name": "-",
+                "type": "sphere",
+                "center": [ 0, -1000, 0 ],
+                "radius": 1000,
+                "material": "floor"
+            },
+            {
+                "name": "ball-1",
+                "type": "sphere",
+                "center": [ 0, 1, 0 ],
+                "radius": 1.0,
+                "material": "ball-1"
+            },
+            {
+                "name": "ball-2",
+                "type": "sphere",
+                "center": [ -4, 1, 0 ],
+                "radius": 1.0,
+                "material": "ball-2"
+            },
+            {
+                "name": "ball-3",
+                "type": "sphere",
+                "center": [ 4, 1, 0 ],
+                "radius": 1.0,
+                "material": "ball-3"
+            }
+        ],
+        "materials": [
+            {
+                "name": "floor",
+                "type": "lambertian",
+                "albedo": [ 0.5, 0.5, 0.5 ]
+            },
+            {
+                "name": "ball-1",
+                "type": "dielectric",
+                "basecolor": [ 1, 1, 1 ],
+                "index_of_refraction": 1.5
+            },
+            {
+                "name": "ball-2",
+                "type": "lambertian",
+                "albedo": [ 0.4, 0.2, 0.1 ]
+            },
+            {
+                "name": "ball-3",
+                "type": "metal",
+                "basecolor": [ 0.7, 0.6, 0.5 ],
+                "metallic": 1.0,
+                "roughness": 0.0
+            }
+        ]
+    }
+}

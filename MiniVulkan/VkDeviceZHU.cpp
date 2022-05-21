@@ -404,10 +404,7 @@ void VkDeviceZHU::createDepthImage()
     assert(_depthImage == VK_NULL_HANDLE);
 
     if (_depthFormat == VK_FORMAT_UNDEFINED)
-    {
-        printf("Depth attachment is disabled\n");
         return;
-    }
 
     assert(false);
 }

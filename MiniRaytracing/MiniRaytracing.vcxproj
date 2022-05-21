@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{6cae1011-7627-49db-a92a-93f15004450f}</ProjectGuid>
-    <RootNamespace>MiniVulkan</RootNamespace>
+    <ProjectGuid>{4269d934-d59d-4888-857d-a4f7bc218fad}</ProjectGuid>
+    <RootNamespace>MiniRaytracing</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -57,23 +57,17 @@
     <ClCompile>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;MINI_VULKAN_EXPORT;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;MINI_RAYTRACING_EXPORT;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir);$(SolutionDir)ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
-xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"
-if not exist "$(OutDir)StandardSurface.vert.glsl" mklink "$(OutDir)StandardSurface.vert.glsl" "$(ProjectDir)StandardSurface.vert.glsl"
-if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurface.frag.glsl" "$(ProjectDir)StandardSurface.frag.glsl"</Command>
+      <Command>if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDir)spheres.json"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -82,53 +76,50 @@ if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurfa
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;MINI_VULKAN_EXPORT;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;MINI_RAYTRACING_EXPORT;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(SolutionDir);$(SolutionDir)ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
-xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"
-if not exist "$(OutDir)StandardSurface.vert.glsl" mklink "$(OutDir)StandardSurface.vert.glsl" "$(ProjectDir)StandardSurface.vert.glsl"
-if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurface.frag.glsl" "$(ProjectDir)StandardSurface.frag.glsl"</Command>
+      <Command>if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDir)spheres.json"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="VkCommonZHU.cpp" />
-    <ClCompile Include="VkDeviceZHU.cpp" />
-    <ClCompile Include="VkPipelineZHU.cpp" />
-    <ClCompile Include="VkReflectionZHU.cpp" />
-    <ClCompile Include="VkShaderModuleZHU.cpp" />
-    <ClCompile Include="VulkanCanvas.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="StandardSurface.vert.glsl">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
+    <ClCompile Include="BasicToolsRT.cpp" />
+    <ClCompile Include="CameraRT.cpp" />
+    <ClCompile Include="ContextMNRT.cpp" />
+    <ClCompile Include="MaterialRT.cpp" />
+    <ClCompile Include="MaterialRT_Dielectric.cpp" />
+    <ClCompile Include="MaterialRT_Lambertian.cpp" />
+    <ClCompile Include="MaterialRT_Metal.cpp" />
+    <ClCompile Include="ObjectRT.cpp" />
+    <ClCompile Include="ObjectRT_Sphere.cpp" />
+    <ClCompile Include="RaytracingAPI.cpp" />
+    <ClCompile Include="WorldBVH.cpp" />
+    <ClInclude Include="BasicToolsRT.h" />
+    <ClInclude Include="CameraRT.h" />
+    <ClInclude Include="ContextMNRT.h" />
+    <ClInclude Include="MaterialRT.h" />
+    <ClInclude Include="MaterialRT_Dielectric.h" />
+    <ClInclude Include="MaterialRT_Lambertian.h" />
+    <ClInclude Include="MaterialRT_Metal.h" />
+    <ClInclude Include="ObjectRT.h" />
+    <ClInclude Include="ObjectRT_Sphere.h" />
+    <ClInclude Include="Ray.h" />
+    <ClInclude Include="RaytracingAPI.h" />
+    <ClInclude Include="RaytracingConfig.h" />
+    <ClInclude Include="spheres.json">
       <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </ClInclude>
-    <ClInclude Include="StandardSurface.frag.glsl">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
-      <FileType>Document</FileType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
-    </ClInclude>
-    <ClInclude Include="VkCommonZHU.h" />
-    <ClInclude Include="VkPipelineZHU.h" />
-    <ClInclude Include="VkReflectionZHU.h" />
-    <ClInclude Include="VkShaderModuleZHU.h" />
-    <ClInclude Include="VulkanCanvas.h" />
-    <ClInclude Include="VkDeviceZHU.h" />
-    <ClInclude Include="VulkanConfig.h" />
+    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="WorldBVH.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,12 +1,10 @@
 #include "VkReflectionZHU.h"
 #include "VkCommonZHU.h"
+#include "json.hpp"
+
+using namespace nlohmann;
 
 bool VkVertexAttributeZHU::parse(const std::string& line)
-{
-    return 0;
-}
-
-bool VkUniformZHU::parse(const std::string& line)
 {
     return 0;
 }

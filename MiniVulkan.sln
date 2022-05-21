@@ -8,7 +8,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Application\Application.vcxproj", "{2A520DFD-7294-4361-984E-A94620ECAAFD}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6CAE1011-7627-49DB-A92A-93F15004450F} = {6CAE1011-7627-49DB-A92A-93F15004450F}
+		{4269D934-D59D-4888-857D-A4F7BC218FAD} = {4269D934-D59D-4888-857D-A4F7BC218FAD}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniRaytracing", "MiniRaytracing\MiniRaytracing.vcxproj", "{4269D934-D59D-4888-857D-A4F7BC218FAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +27,10 @@ Global
 		{2A520DFD-7294-4361-984E-A94620ECAAFD}.Debug|x64.Build.0 = Debug|x64
 		{2A520DFD-7294-4361-984E-A94620ECAAFD}.Release|x64.ActiveCfg = Release|x64
 		{2A520DFD-7294-4361-984E-A94620ECAAFD}.Release|x64.Build.0 = Release|x64
+		{4269D934-D59D-4888-857D-A4F7BC218FAD}.Debug|x64.ActiveCfg = Debug|x64
+		{4269D934-D59D-4888-857D-A4F7BC218FAD}.Debug|x64.Build.0 = Debug|x64
+		{4269D934-D59D-4888-857D-A4F7BC218FAD}.Release|x64.ActiveCfg = Release|x64
+		{4269D934-D59D-4888-857D-A4F7BC218FAD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

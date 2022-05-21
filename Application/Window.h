@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Windows.h>
-#include "VulkanCanvas.h"
+#include "MiniRaytracing/RaytracingAPI.h"
+#include "MiniVulkan/VulkanCanvas.h"
 
 class Window
 {
