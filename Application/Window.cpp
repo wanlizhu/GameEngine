@@ -60,12 +60,6 @@ Window::~Window()
 
 int Window::run()
 {
-    RaytracingCreateInfo info;
-    info.sceneFile = "spheres.json";
-    auto result = dispatchRaytracing(info);
-    result->wait();
-    result->save("rendered.png");
-
     MSG msg = {};
 
     while (GetMessage(&msg, NULL, 0, 0))

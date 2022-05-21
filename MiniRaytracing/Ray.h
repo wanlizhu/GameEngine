@@ -17,5 +17,5 @@ struct Ray
     {}
 
     glm::vec3 operator()(float t) const { return origin + direction * t; }
-    bool hasNaN() const { glm::any(glm::isnan(origin)) || glm::any(glm::isnan(direction)); }
+    bool has_NaN() const { glm::any(glm::isnan(origin)) || glm::any(glm::isnan(direction)); }
 };

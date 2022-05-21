@@ -10,7 +10,7 @@ ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
     , _width(*width)
     , _height(*height)
     , _info(info)
-    , _threadPool()
+    , _thread_pool()
     , _world()
 {
     nlohmann::json json;
@@ -20,18 +20,22 @@ ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
     _camera.deserialize(json["camera"]);
     _world.deserialize(json["world"]);
 
-    _width = 1000;
+    _width = DEFAULT_CANVAS_WIDTH;
     _height = _width * _camera.aspect();
     _pixels.resize(_width * _height, RGBA{ 0, 0, 0, 255 });
+
+    _window = std::make_shared<OpenGLWindow>();
+    _window->open(_width, _height);
 }
 
 ContextMNRT::~ContextMNRT()
 {
+    _thread_pool.release();
     _world.release();
-    _threadPool.release();
+    _window = nullptr;
 }
 
-RGBA packedRGBA(const glm::vec4& color)
+RGBA packed_RGBA(const glm::vec4& color)
 {
     RGBA rgba;
     rgba[0] = color.r * 255.99;
@@ -42,14 +46,40 @@ RGBA packedRGBA(const glm::vec4& color)
     return rgba;
 }
 
-void ContextMNRT::runAsync()
+void ContextMNRT::run_async()
 {
-    _beginTime = std::chrono::system_clock::now();
-    _threadPool.enqueue([this]()->void {
-        static const bool vflip = true;
-        for (int i = 0; i < _height; i++)
+    _begin_time = std::chrono::system_clock::now();
+    const glm::ivec2 tile(TILE_WIDTH, TILE_HEIGHT);
+   
+    int tiled_height = ((_height + TILE_HEIGHT - 1) / TILE_HEIGHT) * TILE_HEIGHT;
+    int tiled_width = ((_width + TILE_WIDTH - 1) / TILE_WIDTH) * TILE_WIDTH;
+
+    if (ENABLE_TILED_RENDERING)
+    {
+        for (int i = 0; i < tiled_height; i += TILE_HEIGHT)
         {
-            for (int j = 0; j < _width; j++)
+            for (int j = 0; j < tiled_width; j += TILE_WIDTH)
+            {
+                render_tile(glm::ivec2(j, i), tile);
+            }
+        }
+    }
+    else
+    {
+        render_tile(glm::ivec2(0, 0), glm::ivec2(_width, _height));
+    }
+}
+
+void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
+{
+    _thread_pool.enqueue([this, offset, extent]()->void {
+        int y_bound = MIN(_height, offset.y + extent.y);
+        int x_bound = MIN(_width, offset.x + extent.x);
+        int completion = 0;
+
+        for (int i = offset.y; i < y_bound; i++)
+        {
+            for (int j = offset.x; j < x_bound; j++)
             {
                 glm::vec3 color(0.0);
 
@@ -61,32 +91,36 @@ void ContextMNRT::runAsync()
                     float y = float(i + jitter_y) / _height;
                     x = CLAMP(x, 0.0, 1.0);
                     y = CLAMP(y, 0.0, 1.0);
-                    y = vflip ? (1.0 - y) : y;
+                    y = VERTICAL_FLIP ? (1.0 - y) : y;
 
-                    Ray ray = _camera.generateRay(x, y);
-                    color += tracePath(ray, 0);
+                    Ray ray = _camera.generate_ray(x, y);
+                    color += trace_path(ray, 0);
                 }
 
                 color /= NUM_SAMPLES_PER_PIXEL;
                 color = glm::sqrt(color);
 
                 int index = i * _width + j;
-                _pixels[index] = packedRGBA(glm::vec4(color, 1.0));
-                _completion += 1;
-                _completed.notify_one();
+                _pixels[index] = packed_RGBA(glm::vec4(color, 1.0));
+                completion += 1;
             }
         }
+
+        _completion += completion;
     });
 }
 
-void ContextMNRT::waitIdle()
+void ContextMNRT::wait_idle()
 {
-    std::unique_lock<std::mutex> lock(_mutex);
-    _completed.wait(lock, [&]() { 
-        return _completion == (_width * _height); 
-    });
+    while (_completion < (_width * _height))
+    {
+        _window->update_event();
+        _window->update_title(_completion);
+        _window->display(_pixels.data(), _width, _height);
+        std::this_thread::yield();
+    }
     
-    auto duration = std::chrono::system_clock::now() - _beginTime;
+    auto duration = std::chrono::system_clock::now() - _begin_time;
     auto sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
 
     printf("_______________\n");
@@ -95,7 +129,7 @@ void ContextMNRT::waitIdle()
     printf("\n");
 }
 
-glm::vec3 ContextMNRT::tracePath(Ray ray, int depth)
+glm::vec3 ContextMNRT::trace_path(Ray ray, int depth)
 {
     Intersection hit;
     ScatteredResult result;
@@ -112,19 +146,19 @@ glm::vec3 ContextMNRT::tracePath(Ray ray, int depth)
         {
             for (const auto& scatteredRay : result.scatteredRays)
             {
-                result.color *= tracePath(scatteredRay, depth + 1);
+                result.color *= trace_path(scatteredRay, depth + 1);
             }
         }
     }
     else
     {
-        result.color = missHit(ray);
+        result.color = miss_hit(ray);
     }
 
     return result.color;
 }
 
-glm::vec3 ContextMNRT::missHit(Ray ray)
+glm::vec3 ContextMNRT::miss_hit(Ray ray)
 {
     glm::vec3 dir = glm::normalize(ray.direction);
     float t = (dir.y + 1.0) * 0.5;

@@ -44,7 +44,7 @@ void CameraRT::deserialize(nlohmann::json json)
                      json["shutter_close"]);
 }
 
-Ray CameraRT::generateRay(float x, float y) const
+Ray CameraRT::generate_ray(float x, float y) const
 {
     assert(x >= 0.0 && x <= 1.0);
     assert(y >= 0.0 && y <= 1.0);

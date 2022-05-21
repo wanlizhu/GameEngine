@@ -1,5 +1,51 @@
 #include "BasicToolsRT.h"
 #include <random>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdarg>
+
+const char* cstr_format(const char* fmt, ...)
+{
+    static char buffer[256];
+
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    return buffer;
+}
+
+std::string get_available_name(const std::string& path)
+{
+    auto dir = std::filesystem::path(path).parent_path();
+    auto stem = std::filesystem::path(path).stem();
+    auto extension = std::filesystem::path(path).extension();
+    auto current = dir / (stem.string() + extension.string());
+    std::regex regex("(\\([0-9]+\\))$");
+
+    while (std::filesystem::exists(current))
+    {
+        std::smatch match;
+        std::string stemstr = stem.string();
+
+        if (std::regex_search(stemstr, match, regex))
+        {
+            int num = atoi(match[0].str().c_str() + 1);
+            std::string numstr = "(" + std::to_string(num + 1) + ")";
+            std::string newstr = std::regex_replace(stemstr, regex, numstr);
+            stem = newstr;
+        }
+        else
+        {
+            stem += " (1)";
+        }
+
+        current = dir / (stem.string() + extension.string());
+    }
+
+    return current.string();
+}
 
 float random1()
 {
@@ -109,3 +155,4 @@ glm::vec4 json_vec4(const nlohmann::json& value)
 
     return vec;
 }
+

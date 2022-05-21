@@ -6,6 +6,7 @@
 #include "WorldBVH.h"
 #include "Ray.h"
 #include "CameraRT.h"
+#include "OpenGLWindow.h"
 
 class ContextMNRT
 {
@@ -18,25 +19,25 @@ public:
     ContextMNRT& operator=(const ContextMNRT&) = delete;
     virtual ~ContextMNRT();
 
-    void runAsync();
-    void waitIdle();
+    void run_async();
+    void wait_idle();
 
 private:
-    glm::vec3 tracePath(Ray ray, int depth);
-    glm::vec3 missHit(Ray ray);
+    void render_tile(glm::ivec2 offset, glm::ivec2 extent);
+    glm::vec3 trace_path(Ray ray, int depth);
+    glm::vec3 miss_hit(Ray ray);
 
 private:
     std::vector<RGBA>& _pixels;
     int& _width;
     int& _height;
 
+    std::shared_ptr<OpenGLWindow> _window;
     std::atomic_int _completion;
-    std::condition_variable _completed;
-    std::mutex _mutex;
 
     RaytracingCreateInfo _info;
-    ThreadPool _threadPool;
+    ThreadPool _thread_pool;
     WorldBVH _world;
     CameraRT _camera;
-    TIME _beginTime;
+    TIME _begin_time;
 };

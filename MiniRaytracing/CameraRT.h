@@ -18,7 +18,7 @@ public:
              float shutter_close = 0);
 
     void deserialize(nlohmann::json json);
-    Ray generateRay(float x, float y) const;
+    Ray generate_ray(float x, float y) const;
 
     float aspect() const { return _viewport.aspect; }
 
