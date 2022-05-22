@@ -272,7 +272,8 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
 
     if (completion == width * height)
     {
-        title = cstr_format("Completed - cost: %dmin %dsec");
+        int past = SECONDS_SINCE(begin);
+        title = cstr_format("Completed - cost: %dmin %dsec", past / 60, past % 60);
     }
     else
     {
