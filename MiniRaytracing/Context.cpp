@@ -1,14 +1,14 @@
-#include "ContextMNRT.h"
+#include "Context.h"
 #include "RaytracingAPI.h"
-#include "BasicToolsRT.h"
+#include "BasicTools.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
-                         std::vector<RGBA>* pixels,
-                         int* width,
-                         int* height)
+Context::Context(const RaytracingCreateInfo& info,
+                 std::vector<RGBA>* pixels,
+                 int* width,
+                 int* height)
     : _pixels(*pixels)
     , _width(*width)
     , _height(*height)
@@ -32,14 +32,14 @@ ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
     _window->open(_width, _height);
 }
 
-ContextMNRT::~ContextMNRT()
+Context::~Context()
 {
     _thread_pool.release();
     _world.release();
     _window = nullptr;
 }
 
-RGBA packed_rgba(const glm::vec4& color)
+RGBA packed_rgba(const vec4& color)
 {
     RGBA rgba;
     rgba[0] = color.r * 255.99;
@@ -50,7 +50,7 @@ RGBA packed_rgba(const glm::vec4& color)
     return rgba;
 }
 
-void ContextMNRT::run_async()
+void Context::run_async()
 {
     printf("__________________\n");
     printf("   MiniRaytracing:\n");
@@ -59,6 +59,7 @@ void ContextMNRT::run_async()
     printf("Samples per pixel: %d\n", NUM_SAMPLES_PER_PIXEL);
     printf("        Tile size: [%d, %d]\n", ENABLE_TILED_RENDERING ? TILE_WIDTH : 0, ENABLE_TILED_RENDERING ? TILE_HEIGHT : 0);
     printf("          Threads: %d\n", ENABLE_TILED_RENDERING ? _thread_pool.thread_count() : 1);
+    printf("  Float precision: %d bits\n", USE_FLOAT64 ? 64 : 32);
     printf("\n");
     printf("Running... ");
 
@@ -84,7 +85,7 @@ void ContextMNRT::run_async()
     }
 }
 
-void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
+void Context::render_tile(glm::ivec2 offset, glm::ivec2 extent)
 {
     _thread_pool.enqueue([this, offset, extent]()->void {
         int y_bound = MIN(_height, offset.y + extent.y);
@@ -95,14 +96,14 @@ void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
         {
             for (int j = offset.x; j < x_bound; j++)
             {
-                glm::vec3 color(0.0);
+                vec3 color(0.0);
 
                 for (int k = 0; k < NUM_SAMPLES_PER_PIXEL; k++)
                 {
-                    float jitter_x = NUM_SAMPLES_PER_PIXEL > 1 ? random2() : 0;
-                    float jitter_y = NUM_SAMPLES_PER_PIXEL > 1 ? random2() : 0;
-                    float x = float(j + jitter_x) / _width;
-                    float y = float(i + jitter_y) / _height;
+                    FLOAT jitter_x = NUM_SAMPLES_PER_PIXEL > 1 ? random2() : 0;
+                    FLOAT jitter_y = NUM_SAMPLES_PER_PIXEL > 1 ? random2() : 0;
+                    FLOAT x = FLOAT(j + jitter_x) / _width;
+                    FLOAT y = FLOAT(i + jitter_y) / _height;
                     x = CLAMP(x, 0.0, 1.0);
                     y = CLAMP(y, 0.0, 1.0);
                     y = VERTICAL_FLIP ? (1.0 - y) : y;
@@ -115,7 +116,7 @@ void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
                 color = glm::sqrt(color);
 
                 int index = i * _width + j;
-                _pixels[index] = packed_rgba(glm::vec4(color, 1.0));
+                _pixels[index] = packed_rgba(vec4(color, 1.0));
                 completion += 1;
             }
         }
@@ -124,7 +125,7 @@ void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
     });
 }
 
-void ContextMNRT::wait_idle()
+void Context::wait_idle()
 {
     while (_completion < (_width * _height))
     {
@@ -135,15 +136,15 @@ void ContextMNRT::wait_idle()
     }
     
     _window->update_title(_begin_time, _completion);
-    int sec = SECONDS_SINCE(_begin_time);
 
+    int sec = SECONDS_SINCE(_begin_time);
     printf("Time cost: %dmin %dsec\n", sec / 60, sec % 60);
     printf("\n");
 
     save_result();
 }
 
-void ContextMNRT::save_result()
+void Context::save_result()
 {
     std::string path = get_available_name(_output_path);
     assert(!std::filesystem::exists(path));
@@ -158,18 +159,21 @@ void ContextMNRT::save_result()
         stbi_write_tga(path.c_str(), _width, _height, 4, _pixels.data());
 }
 
-glm::vec3 ContextMNRT::trace_path(Ray ray, int depth)
+vec3 Context::trace_path(Ray ray, int depth)
 {
     Intersection hit;
     ScatteredResult result;
-    result.color = glm::vec3(0.0);
+    result.color = vec3(0.0);
 
     if (depth > MAX_NUM_DEPTH)
     {
         return result.color;
     }
 
-    if (_world.intersect(ray, 0.000001, FLT_MAX, &hit))
+    FLOAT t_min = std::numeric_limits<FLOAT>::epsilon();
+    FLOAT t_max = std::numeric_limits<FLOAT>::max();
+
+    if (_world.intersect(ray, t_min, t_max, &hit))
     {
         if (hit.material->scatter(ray, hit, &result))
         {
@@ -187,10 +191,10 @@ glm::vec3 ContextMNRT::trace_path(Ray ray, int depth)
     return result.color;
 }
 
-glm::vec3 ContextMNRT::miss_hit(Ray ray)
+vec3 Context::miss_hit(Ray ray)
 {
-    glm::vec3 dir = glm::normalize(ray.direction);
-    float t = (dir.y + 1.0) * 0.5;
+    vec3 dir = glm::normalize(ray.direction);
+    FLOAT t = (dir.y + 1.0) * 0.5;
     
-    return  t * glm::vec3(0.5, 0.7, 1.0) + (1.0f - t) * glm::vec3(1.0);
+    return  t * vec3(0.5, 0.7, 1.0) + FLOAT(1.0 - t) * vec3(1.0);
 }

@@ -1,23 +1,23 @@
 #pragma once
 
-#include "RaytracingConfig.h"
-#include "BasicToolsRT.h"
+#include "RaytracingAPI.h"
+#include "BasicTools.h"
 #include "Ray.h"
 
 struct Intersection;
 
 struct ScatteredResult
 {
-    glm::vec3 color;
+    vec3 color;
     std::vector<Ray> scatteredRays;
 };
 
-class MaterialRT : public std::enable_shared_from_this<MaterialRT>
+class Material : public std::enable_shared_from_this<Material>
 {
 public:
-    static std::shared_ptr<MaterialRT> deserialize(nlohmann::json json);
+    static std::shared_ptr<Material> deserialize(nlohmann::json json);
 
-    virtual ~MaterialRT() = default;
+    virtual ~Material() = default;
     virtual bool scatter(const Ray& ray, 
                          const Intersection& hit,
                          ScatteredResult* result) = 0;

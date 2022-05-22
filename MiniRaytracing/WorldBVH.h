@@ -1,7 +1,7 @@
 #pragma once
 
-#include "RaytracingConfig.h"
-#include "ObjectRT.h"
+#include "RaytracingAPI.h"
+#include "Object.h"
 
 class WorldBVH
 {
@@ -14,10 +14,13 @@ public:
     void deserialize(nlohmann::json json);
     void release();
     bool intersect(const Ray& ray,
-                   float t_min,
-                   float t_max,
+                   FLOAT t_min,
+                   FLOAT t_max,
                    Intersection* hit);
 
 private:
-    std::vector<std::shared_ptr<ObjectRT>> _objects;
+    void generate_random_objects(nlohmann::json json_desc);
+
+private:
+    std::vector<std::shared_ptr<Object>> _objects;
 };

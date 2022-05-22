@@ -101,31 +101,32 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\ThirdParty\glad\src\glad.c" />
-    <ClCompile Include="BasicToolsRT.cpp" />
-    <ClCompile Include="CameraRT.cpp" />
-    <ClCompile Include="ContextMNRT.cpp" />
-    <ClCompile Include="MaterialRT.cpp" />
-    <ClCompile Include="MaterialRT_Dielectric.cpp" />
-    <ClCompile Include="MaterialRT_Lambertian.cpp" />
-    <ClCompile Include="MaterialRT_Metal.cpp" />
-    <ClCompile Include="ObjectRT.cpp" />
-    <ClCompile Include="ObjectRT_Sphere.cpp" />
+    <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="BasicTools.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Context.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MaterialDielectric.cpp" />
+    <ClCompile Include="MaterialLambertian.cpp" />
+    <ClCompile Include="MaterialMetal.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ObjectSphere.cpp" />
     <ClCompile Include="RaytracingAPI.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="WorldBVH.cpp" />
-    <ClInclude Include="BasicToolsRT.h" />
-    <ClInclude Include="CameraRT.h" />
-    <ClInclude Include="ContextMNRT.h" />
-    <ClInclude Include="MaterialRT.h" />
-    <ClInclude Include="MaterialRT_Dielectric.h" />
-    <ClInclude Include="MaterialRT_Lambertian.h" />
-    <ClInclude Include="MaterialRT_Metal.h" />
-    <ClInclude Include="ObjectRT.h" />
-    <ClInclude Include="ObjectRT_Sphere.h" />
+    <ClInclude Include="AABB.h" />
+    <ClInclude Include="BasicTools.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Context.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MaterialDielectric.h" />
+    <ClInclude Include="MaterialLambertian.h" />
+    <ClInclude Include="MaterialMetal.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="ObjectSphere.h" />
     <ClInclude Include="OpenGLWindow.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RaytracingAPI.h" />
-    <ClInclude Include="RaytracingConfig.h" />
     <ClInclude Include="spheres.json">
       <FileType>Document</FileType>
     </ClInclude>

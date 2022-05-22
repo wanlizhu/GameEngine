@@ -1,5 +1,5 @@
 #include "RaytracingAPI.h"
-#include "ContextMNRT.h"
+#include "Context.h"
 
 RaytracingResult::~RaytracingResult()
 {
@@ -19,10 +19,10 @@ std::shared_ptr<RaytracingResult>
 dispatchRaytracing(const RaytracingCreateInfo& info)
 {
     auto result = std::make_shared<RaytracingResult>();
-    result->context = new ContextMNRT(info, 
-                                      &result->pixels,
-                                      &result->width,
-                                      &result->height);
+    result->context = new Context(info,
+                                  &result->pixels,
+                                  &result->width,
+                                  &result->height);
     result->context->run_async();
 
     return result;

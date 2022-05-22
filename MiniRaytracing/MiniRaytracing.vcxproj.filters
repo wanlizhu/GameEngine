@@ -20,34 +20,34 @@
     <ClCompile Include="RaytracingAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ContextMNRT.cpp">
+    <ClCompile Include="Context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WorldBVH.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectRT_Sphere.cpp">
+    <ClCompile Include="ObjectSphere.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialRT_Metal.cpp">
+    <ClCompile Include="MaterialMetal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BasicToolsRT.cpp">
+    <ClCompile Include="BasicTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CameraRT.cpp">
+    <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectRT.cpp">
+    <ClCompile Include="Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialRT.cpp">
+    <ClCompile Include="Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialRT_Lambertian.cpp">
+    <ClCompile Include="MaterialLambertian.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MaterialRT_Dielectric.cpp">
+    <ClCompile Include="MaterialDielectric.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLWindow.cpp">
@@ -56,15 +56,15 @@
     <ClCompile Include="..\ThirdParty\glad\src\glad.c">
       <Filter>glad</Filter>
     </ClCompile>
+    <ClCompile Include="AABB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RaytracingAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RaytracingConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ContextMNRT.h">
+    <ClInclude Include="Context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ThreadPool.h">
@@ -76,34 +76,37 @@
     <ClInclude Include="Ray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectRT.h">
+    <ClInclude Include="Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectRT_Sphere.h">
+    <ClInclude Include="ObjectSphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialRT.h">
+    <ClInclude Include="Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialRT_Metal.h">
+    <ClInclude Include="MaterialMetal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CameraRT.h">
+    <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BasicToolsRT.h">
+    <ClInclude Include="BasicTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="spheres.json">
       <Filter>Scenes</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialRT_Lambertian.h">
+    <ClInclude Include="MaterialLambertian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MaterialRT_Dielectric.h">
+    <ClInclude Include="MaterialDielectric.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AABB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

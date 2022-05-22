@@ -1,23 +1,23 @@
 #pragma once
 
-#include "RaytracingConfig.h"
 #include "RaytracingAPI.h"
+#include "BasicTools.h"
 #include "ThreadPool.h"
 #include "WorldBVH.h"
 #include "Ray.h"
-#include "CameraRT.h"
+#include "Camera.h"
 #include "OpenGLWindow.h"
 
-class ContextMNRT
+class Context
 {
 public:
-    ContextMNRT(const RaytracingCreateInfo& info,
-                std::vector<RGBA>* pixels,
-                int* width,
-                int* height);
-    ContextMNRT(const ContextMNRT&) = delete;
-    ContextMNRT& operator=(const ContextMNRT&) = delete;
-    virtual ~ContextMNRT();
+    Context(const RaytracingCreateInfo& info,
+            std::vector<RGBA>* pixels,
+            int* width,
+            int* height);
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
+    virtual ~Context();
 
     void run_async();
     void wait_idle();
@@ -25,8 +25,8 @@ public:
 private:
     void save_result();
     void render_tile(glm::ivec2 offset, glm::ivec2 extent);
-    glm::vec3 trace_path(Ray ray, int depth);
-    glm::vec3 miss_hit(Ray ray);
+    vec3 trace_path(Ray ray, int depth);
+    vec3 miss_hit(Ray ray);
 
 private:
     std::vector<RGBA>& _pixels;
@@ -40,6 +40,6 @@ private:
     RaytracingCreateInfo _info;
     ThreadPool _thread_pool;
     WorldBVH _world;
-    CameraRT _camera;
+    Camera _camera;
     TIME _begin_time;
 };

@@ -14,10 +14,11 @@
     "world": {
         "objects": [
             {
-                "name": "-",
+                "name": "floor",
                 "type": "sphere",
                 "center": [ 0, -1000, 0 ],
                 "radius": 1000,
+                "velocity": [ 0, 0, 0 ],
                 "material": "floor"
             },
             {
@@ -25,6 +26,7 @@
                 "type": "sphere",
                 "center": [ 0, 1, 0 ],
                 "radius": 1.0,
+                "velocity": [ 0, 0, 0 ],
                 "material": "ball-1"
             },
             {
@@ -32,6 +34,7 @@
                 "type": "sphere",
                 "center": [ -4, 1, 0 ],
                 "radius": 1.0,
+                "velocity": [ 0, 0, 0 ],
                 "material": "ball-2"
             },
             {
@@ -39,7 +42,14 @@
                 "type": "sphere",
                 "center": [ 4, 1, 0 ],
                 "radius": 1.0,
+                "velocity": [ 0, 0, 0 ],
                 "material": "ball-3"
+            },
+            {
+                "type": "random",
+                "count": 500,
+                "bounding box": [ -11, 0.2, -11, 11, 0.2, 11 ],
+                "radius range": [0.2, 0.2]
             }
         ],
         "materials": [
