@@ -23,6 +23,7 @@ public:
     void wait_idle();
 
 private:
+    void save_result();
     void render_tile(glm::ivec2 offset, glm::ivec2 extent);
     glm::vec3 trace_path(Ray ray, int depth);
     glm::vec3 miss_hit(Ray ray);
@@ -34,6 +35,7 @@ private:
 
     std::shared_ptr<OpenGLWindow> _window;
     std::atomic_int _completion;
+    std::string _output_path;
 
     RaytracingCreateInfo _info;
     ThreadPool _thread_pool;

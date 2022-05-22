@@ -20,10 +20,11 @@ public:
     ThreadPool& operator=(const ThreadPool&) = delete;
     virtual ~ThreadPool() { release(); }
 
-    void release();
-
     template<typename Func, typename... Args>
     std::future<void> enqueue(Func&& func, Args&&... args);
+
+    void release();
+    int  thread_count() const;
 
 private:
     std::vector<std::thread> _workers;
@@ -36,7 +37,7 @@ private:
 inline ThreadPool::ThreadPool()
     : _quit(false)
 {
-    for (int i = 0; i < std::thread::hardware_concurrency(); i++)
+    for (int i = 0; i < std::thread::hardware_concurrency() /* 2*/; i++)
     {
         _workers.emplace_back([this]() {
             while (true)
@@ -69,7 +70,13 @@ inline void ThreadPool::release()
     _cond.notify_all();
 
     for (auto& worker : _workers)
-        worker.join();
+        if (worker.joinable())
+            worker.join();
+}
+
+inline int ThreadPool::thread_count() const 
+{
+    return _workers.size(); 
 }
 
 template<typename Func, typename... Args>

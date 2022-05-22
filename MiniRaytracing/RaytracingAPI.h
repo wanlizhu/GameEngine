@@ -19,7 +19,6 @@ struct PUBLIC_SYMBOL RaytracingResult
 
     virtual ~RaytracingResult();
     void wait();
-    void save(const std::string& path);
 };
 
 std::shared_ptr<RaytracingResult>

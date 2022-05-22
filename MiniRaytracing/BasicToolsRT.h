@@ -15,6 +15,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define CLAMP(x, a, b) (MIN(MAX(x, a), b))
+#define SECONDS_SINCE(begin) (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - begin).count())
 
 const char* cstr_format(const char*, ...);
 std::string get_available_name(const std::string& path);

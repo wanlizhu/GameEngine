@@ -2,6 +2,9 @@
 #include "RaytracingAPI.h"
 #include "BasicToolsRT.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
                          std::vector<RGBA>* pixels,
                          int* width,
@@ -17,6 +20,7 @@ ContextMNRT::ContextMNRT(const RaytracingCreateInfo& info,
     std::ifstream input(info.sceneFile);
     input >> json;
 
+    _output_path = json["name"].get<std::string>() + ".png";
     _camera.deserialize(json["camera"]);
     _world.deserialize(json["world"]);
 
@@ -35,7 +39,7 @@ ContextMNRT::~ContextMNRT()
     _window = nullptr;
 }
 
-RGBA packed_RGBA(const glm::vec4& color)
+RGBA packed_rgba(const glm::vec4& color)
 {
     RGBA rgba;
     rgba[0] = color.r * 255.99;
@@ -48,6 +52,16 @@ RGBA packed_RGBA(const glm::vec4& color)
 
 void ContextMNRT::run_async()
 {
+    printf("__________________\n");
+    printf("   MiniRaytracing:\n");
+    printf("        Film size: [%d, %d]\n", _width, _height);
+    printf("  Max trace depth: %d\n", MAX_NUM_DEPTH);
+    printf("Samples per pixel: %d\n", NUM_SAMPLES_PER_PIXEL);
+    printf("        Tile size: [%d, %d]\n", ENABLE_TILED_RENDERING ? TILE_WIDTH : 0, ENABLE_TILED_RENDERING ? TILE_HEIGHT : 0);
+    printf("          Threads: %d\n", ENABLE_TILED_RENDERING ? _thread_pool.thread_count() : 1);
+    printf("\n");
+    printf("Running... ");
+
     _begin_time = std::chrono::system_clock::now();
     const glm::ivec2 tile(TILE_WIDTH, TILE_HEIGHT);
    
@@ -101,7 +115,7 @@ void ContextMNRT::render_tile(glm::ivec2 offset, glm::ivec2 extent)
                 color = glm::sqrt(color);
 
                 int index = i * _width + j;
-                _pixels[index] = packed_RGBA(glm::vec4(color, 1.0));
+                _pixels[index] = packed_rgba(glm::vec4(color, 1.0));
                 completion += 1;
             }
         }
@@ -115,18 +129,33 @@ void ContextMNRT::wait_idle()
     while (_completion < (_width * _height))
     {
         _window->update_event();
-        _window->update_title(_completion);
+        _window->update_title(_begin_time, _completion);
         _window->display(_pixels.data(), _width, _height);
         std::this_thread::yield();
     }
     
-    auto duration = std::chrono::system_clock::now() - _begin_time;
-    auto sec = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    _window->update_title(_begin_time, _completion);
+    int sec = SECONDS_SINCE(_begin_time);
 
-    printf("_______________\n");
-    printf("MiniRaytracing:\n");
-    printf("     Time cost: %dmin %dsec\n", sec / 60, sec % 60);
+    printf("Time cost: %dmin %dsec\n", sec / 60, sec % 60);
     printf("\n");
+
+    save_result();
+}
+
+void ContextMNRT::save_result()
+{
+    std::string path = get_available_name(_output_path);
+    assert(!std::filesystem::exists(path));
+
+    if (path.find(".png") == path.size() - 4)
+        stbi_write_png(path.c_str(), _width, _height, 4, _pixels.data(), 0);
+    else if (path.find(".jpg") == path.size() - 4)
+        stbi_write_jpg(path.c_str(), _width, _height, 4, _pixels.data(), 0);
+    else if (path.find(".bmp") == path.size() - 4)
+        stbi_write_bmp(path.c_str(), _width, _height, 4, _pixels.data());
+    else if (path.find(".tga") == path.size() - 4)
+        stbi_write_tga(path.c_str(), _width, _height, 4, _pixels.data());
 }
 
 glm::vec3 ContextMNRT::trace_path(Ray ray, int depth)
@@ -140,7 +169,7 @@ glm::vec3 ContextMNRT::trace_path(Ray ray, int depth)
         return result.color;
     }
 
-    if (_world.intersect(ray, 0.0, FLT_MAX, &hit))
+    if (_world.intersect(ray, 0.000001, FLT_MAX, &hit))
     {
         if (hit.material->scatter(ray, hit, &result))
         {

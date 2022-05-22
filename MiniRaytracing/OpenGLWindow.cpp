@@ -260,7 +260,7 @@ void OpenGLWindow::display(const RGBA* data, int width, int height)
     glfwPollEvents();
 }
 
-void OpenGLWindow::update_title(int completion)
+void OpenGLWindow::update_title(const TIME& begin, int completion)
 {
     if (!_window)
         return;
@@ -268,10 +268,28 @@ void OpenGLWindow::update_title(int completion)
     int width, height;
     glfwGetWindowSize(_window, &width, &height);
 
-    const char* title = cstr_format("%d/%d - %.2f%%",
-                                    completion,
-                                    width * height,
-                                    completion / float(width * height) * 100);
+    const char* title = "";
+
+    if (completion == width * height)
+    {
+        title = cstr_format("Completed - cost: %dmin %dsec");
+    }
+    else
+    {
+        float ratio = completion / float(width * height);
+        int past = SECONDS_SINCE(begin);
+        int eta = past * (1 - ratio) / ratio;
+        
+        std::string eta_time(256, '\0');
+        snprintf(eta_time.data(), eta_time.size(), "%dmin %dsec", eta / 60, eta % 60);
+
+        title = cstr_format("Completion %d/%d - %.2f%% - eta: %s",
+                            completion,
+                            width * height,
+                            ratio * 100,
+                            eta_time.c_str());
+    }
+
     glfwSetWindowTitle(_window, title);
 }
 
