@@ -188,10 +188,11 @@ vec3 Context::trace_path(Ray ray, int depth)
         return result.color;
     }
 
-    FLOAT t_min = std::numeric_limits<FLOAT>::epsilon();
-    FLOAT t_max = std::numeric_limits<FLOAT>::max();
+    DEPTH_BOUNDS bounds;
+    bounds.first  = std::numeric_limits<FLOAT>::epsilon();
+    bounds.second = std::numeric_limits<FLOAT>::max();
 
-    if (_world.intersect(ray, t_min, t_max, &hit))
+    if (_world.intersect(ray, bounds, &hit))
     {
         if (hit.material->scatter(ray, hit, &result))
         {

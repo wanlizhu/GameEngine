@@ -5,8 +5,8 @@
 
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
-#define MAX_NUM_DEPTH 5
-#define NUM_SAMPLES_PER_PIXEL 1
+#define MAX_NUM_DEPTH 50
+#define NUM_SAMPLES_PER_PIXEL 100
 #define DEFAULT_CANVAS_WIDTH 800
 #define TILE_WIDTH  16
 #define TILE_HEIGHT 16
@@ -34,6 +34,9 @@ using mat2 = glm::mat2;
 using mat3 = glm::mat3;
 using mat4 = glm::mat4;
 #endif
+
+using INDEX_BOUNDS = std::pair<int, int>;
+using DEPTH_BOUNDS = std::pair<FLOAT, FLOAT>;
 
 const char* cstr_format(const char*, ...);
 std::string get_available_name(const std::string& path);

@@ -103,6 +103,7 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClCompile Include="..\ThirdParty\glad\src\glad.c" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="BasicTools.cpp" />
+    <ClCompile Include="BVHNode.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Context.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -113,9 +114,10 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClCompile Include="ObjectSphere.cpp" />
     <ClCompile Include="RaytracingAPI.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
-    <ClCompile Include="WorldBVH.cpp" />
+    <ClCompile Include="BVHScene.cpp" />
     <ClInclude Include="AABB.h" />
     <ClInclude Include="BasicTools.h" />
+    <ClInclude Include="BVHNode.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Context.h" />
     <ClInclude Include="Material.h" />
@@ -131,7 +133,7 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
       <FileType>Document</FileType>
     </ClInclude>
     <ClInclude Include="ThreadPool.h" />
-    <ClInclude Include="WorldBVH.h" />
+    <ClInclude Include="BVHScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

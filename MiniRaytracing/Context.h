@@ -3,7 +3,7 @@
 #include "RaytracingAPI.h"
 #include "BasicTools.h"
 #include "ThreadPool.h"
-#include "WorldBVH.h"
+#include "BVHScene.h"
 #include "Ray.h"
 #include "Camera.h"
 #include "OpenGLWindow.h"
@@ -40,7 +40,7 @@ private:
 
     RaytracingCreateInfo _info;
     ThreadPool _thread_pool;
-    WorldBVH _world;
+    BVHScene _world;
     Camera _camera;
     TIME _begin_time;
 };

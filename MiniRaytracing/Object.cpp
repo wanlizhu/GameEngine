@@ -1,6 +1,6 @@
 #include "ObjectSphere.h"
 
-void Intersection::setNormal(const Ray& ray,
+void Intersection::setNormal(const Ray& ray, 
                              const vec3& norm)
 {
     front_face = glm::dot(ray.direction, norm) < 0.0;

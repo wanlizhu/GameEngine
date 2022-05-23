@@ -1,18 +1,18 @@
-#include "WorldBVH.h"
+#include "BVHScene.h"
 #include "ObjectSphere.h"
 #include "MaterialLambertian.h"
 #include "MaterialMetal.h"
 #include "MaterialDielectric.h"
 
-WorldBVH::WorldBVH()
+BVHScene::BVHScene()
 {}
 
-WorldBVH::~WorldBVH()
+BVHScene::~BVHScene()
 {
     release();
 }
 
-void WorldBVH::deserialize(nlohmann::json json)
+void BVHScene::deserialize(nlohmann::json json)
 {
     for (const auto& json_obj : json["objects"])
     {
@@ -37,9 +37,13 @@ void WorldBVH::deserialize(nlohmann::json json)
             _objects.push_back(Object::deserialize(json_obj, json_mat));
         }
     }
+
+    _root = std::make_shared<BVHNode>(_objects, 
+                                      INDEX_BOUNDS(0, (int)_objects.size()),
+                                      DEPTH_BOUNDS(0, 1.0));
 }
 
-void WorldBVH::generate_random_objects(nlohmann::json json_desc)
+void BVHScene::generate_random_objects(nlohmann::json json_desc)
 {
     std::vector<FLOAT> bounding_box = json_desc["bounding box"];
     std::vector<FLOAT> radius_range = json_desc["radius range"];
@@ -69,29 +73,14 @@ void WorldBVH::generate_random_objects(nlohmann::json json_desc)
     }
 }
 
-void WorldBVH::release()
+void BVHScene::release()
 {
     _objects.clear();
 }
 
-bool WorldBVH::intersect(const Ray& ray,
-                         FLOAT t_min,
-                         FLOAT t_max,
+bool BVHScene::intersect(const Ray& ray,
+                         const DEPTH_BOUNDS& bounds,
                          Intersection* hit)
 {
-    bool hit_any = false;
-    FLOAT closest_hit = t_max;
-    Intersection temp;
-
-    for (const auto& object : _objects)
-    {
-        if (object->intersect(ray, t_min, closest_hit, &temp))
-        {
-            hit_any = true;
-            closest_hit = temp.t_hit;
-            *hit = temp;
-        }
-    }
-
-    return hit_any;
+    return _root->intersect(ray, bounds, hit);
 }

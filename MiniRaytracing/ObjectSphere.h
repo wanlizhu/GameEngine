@@ -11,9 +11,9 @@ public:
                  Material* material);
 
     virtual bool intersect(const Ray& ray,
-                           FLOAT minT,
-                           FLOAT maxT,
+                           const DEPTH_BOUNDS& bounds,
                            Intersection* point) override;
+    virtual AABB bounding_box(const DEPTH_BOUNDS& bounds) const override;
 
 private:
     std::shared_ptr<Material> _material;

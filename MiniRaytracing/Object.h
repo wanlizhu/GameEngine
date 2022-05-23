@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "Ray.h"
 #include "BasicTools.h"
+#include "AABB.h"
 
 struct Intersection
 {
@@ -24,7 +25,7 @@ public:
 
     virtual ~Object() = default;
     virtual bool intersect(const Ray& ray, 
-                           FLOAT t_min,
-                           FLOAT t_max,
+                           const DEPTH_BOUNDS& bounds,
                            Intersection* hit) = 0;
+    virtual AABB bounding_box(const DEPTH_BOUNDS& bounds) const = 0;
 };

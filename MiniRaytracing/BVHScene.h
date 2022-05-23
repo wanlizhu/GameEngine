@@ -2,20 +2,20 @@
 
 #include "RaytracingAPI.h"
 #include "Object.h"
+#include "BVHNode.h"
 
-class WorldBVH
+class BVHScene
 {
 public:
-    WorldBVH();
-    WorldBVH(const WorldBVH&) = delete;
-    WorldBVH& operator=(const WorldBVH&) = delete;
-    virtual ~WorldBVH();
+    BVHScene();
+    BVHScene(const BVHScene&) = delete;
+    BVHScene& operator=(const BVHScene&) = delete;
+    virtual ~BVHScene();
 
     void deserialize(nlohmann::json json);
     void release();
     bool intersect(const Ray& ray,
-                   FLOAT t_min,
-                   FLOAT t_max,
+                   const DEPTH_BOUNDS& bounds,
                    Intersection* hit);
 
 private:
@@ -23,4 +23,5 @@ private:
 
 private:
     std::vector<std::shared_ptr<Object>> _objects;
+    std::shared_ptr<BVHNode> _root;
 };

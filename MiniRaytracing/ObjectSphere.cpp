@@ -11,8 +11,7 @@ ObjectSphere::ObjectSphere(const vec3& center,
 {}
 
 bool ObjectSphere::intersect(const Ray& ray,
-                             FLOAT t_min,
-                             FLOAT t_max,
+                             const DEPTH_BOUNDS& bounds,
                              Intersection* hit)
 {
     vec3 current_center = _center + _velocity * ray.time;
@@ -28,11 +27,11 @@ bool ObjectSphere::intersect(const Ray& ray,
     FLOAT sqrtd = sqrt(discriminant);
     FLOAT root = (-b_half - sqrtd) / a;
 
-    if (root < t_min || root > t_max)
+    if (root < bounds.first || root > bounds.second)
     {
         root = (-b_half + sqrtd) / a;
 
-        if (root < t_min || root > t_max)
+        if (root < bounds.first || root > bounds.second)
             return false;
     }
 
@@ -42,4 +41,17 @@ bool ObjectSphere::intersect(const Ray& ray,
     hit->material = _material.get();
 
     return true;
+}
+
+AABB ObjectSphere::bounding_box(const DEPTH_BOUNDS& bounds) const
+{
+    vec3 radius_extent(_radius);
+
+    vec3 center_begin = _center + _velocity * bounds.first;
+    AABB begin(center_begin - radius_extent, center_begin + radius_extent);
+
+    vec3 center_end = _center + _velocity * bounds.second;
+    AABB end(center_end - radius_extent, center_end + radius_extent);
+
+    return begin + end;
 }
