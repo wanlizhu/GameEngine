@@ -7,7 +7,6 @@ int main(int argc, char** argv)
     info.sceneFile = "spheres.json";
     auto result = dispatchRaytracing(info);
     result->wait();
-    system("pause");
 
     return 0;
 #else

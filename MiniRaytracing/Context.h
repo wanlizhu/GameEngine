@@ -24,7 +24,8 @@ public:
 
 private:
     void save_result();
-    void render_tile(glm::ivec2 offset, glm::ivec2 extent);
+    void render_tile_radial(glm::ivec2 offset);
+    void render_tile(glm::ivec2 offset);
     vec3 trace_path(Ray ray, int depth);
     vec3 miss_hit(Ray ray);
 

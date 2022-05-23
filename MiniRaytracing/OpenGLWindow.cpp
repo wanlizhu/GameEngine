@@ -12,6 +12,12 @@ OpenGLWindow::~OpenGLWindow()
     glfwTerminate();
 }
 
+void on_window_close(GLFWwindow* win)
+{
+    auto window = (OpenGLWindow*)glfwGetWindowUserPointer(win);
+    if (window) window->close();
+}
+
 void OpenGLWindow::open(int width, int height)
 {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -31,6 +37,9 @@ void OpenGLWindow::open(int width, int height)
         printf("Failed to create OpenGL window\n");
         return;
     }
+
+    glfwSetWindowUserPointer(_window, this);
+    glfwSetWindowCloseCallback(_window, on_window_close);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -79,9 +88,20 @@ void OpenGLWindow::close()
         _image = 0;
     }
 
-    glfwSetWindowShouldClose(_window, GLFW_TRUE);
-    glfwDestroyWindow(_window);
-    _window = nullptr;
+    if (_window)
+    {
+        glfwSetWindowShouldClose(_window, GLFW_TRUE);
+        glfwDestroyWindow(_window);
+        _window = nullptr;
+    }
+}
+
+bool OpenGLWindow::is_closing() const
+{
+    if (!_window)
+        return true;
+
+    return glfwWindowShouldClose(_window);
 }
 
 bool check_shader_error(GLuint id, GLenum type)
@@ -268,15 +288,21 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
     int width, height;
     glfwGetWindowSize(_window, &width, &height);
 
-    const char* title = "";
+    const char* title = nullptr;
+    static bool completed = false;
 
     if (completion == width * height)
     {
-        int past = SECONDS_SINCE(begin);
-        title = cstr_format("Completed - cost: %dmin %dsec", past / 60, past % 60);
+        if (!completed)
+        {
+            completed = true;
+            int past = SECONDS_SINCE(begin);
+            title = cstr_format("Completed - cost: %dmin %dsec", past / 60, past % 60);
+        }
     }
     else
     {
+        completed = false;
         float ratio = completion / float(width * height);
         int past = SECONDS_SINCE(begin);
         int eta = past * (1 - ratio) / ratio;
@@ -291,7 +317,10 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
                             eta_time.c_str());
     }
 
-    glfwSetWindowTitle(_window, title);
+    if (title)
+    {
+        glfwSetWindowTitle(_window, title);
+    }
 }
 
 void OpenGLWindow::update_event()

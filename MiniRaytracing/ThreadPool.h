@@ -37,7 +37,7 @@ private:
 inline ThreadPool::ThreadPool()
     : _quit(false)
 {
-    for (int i = 0; i < std::thread::hardware_concurrency() * 2; i++)
+    for (int i = 0; i < std::thread::hardware_concurrency(); i++)
     {
         _workers.emplace_back([this]() {
             while (true)

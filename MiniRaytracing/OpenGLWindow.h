@@ -16,6 +16,7 @@ public:
 
     void open(int width, int height);
     void close();
+    bool is_closing() const;
     void display(const RGBA* data, int width, int height);
     void update_title(const TIME& begin, int completion);
     void update_event();

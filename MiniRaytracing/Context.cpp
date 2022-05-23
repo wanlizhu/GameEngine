@@ -57,39 +57,52 @@ void Context::run_async()
     printf("        Film size: [%d, %d]\n", _width, _height);
     printf("  Max trace depth: %d\n", MAX_NUM_DEPTH);
     printf("Samples per pixel: %d\n", NUM_SAMPLES_PER_PIXEL);
-    printf("        Tile size: [%d, %d]\n", ENABLE_TILED_RENDERING ? TILE_WIDTH : 0, ENABLE_TILED_RENDERING ? TILE_HEIGHT : 0);
-    printf("          Threads: %d\n", ENABLE_TILED_RENDERING ? _thread_pool.thread_count() : 1);
+    printf("        Tile size: [%d, %d]\n", TILE_WIDTH, TILE_HEIGHT);
+    printf("          Threads: %d\n", _thread_pool.thread_count());
     printf("  Float precision: %d bits\n", USE_FLOAT64 ? 64 : 32);
     printf("\n");
     printf("Running... ");
 
     _begin_time = std::chrono::system_clock::now();
-    const glm::ivec2 tile(TILE_WIDTH, TILE_HEIGHT);
-   
-    int tiled_height = ((_height + TILE_HEIGHT - 1) / TILE_HEIGHT) * TILE_HEIGHT;
-    int tiled_width = ((_width + TILE_WIDTH - 1) / TILE_WIDTH) * TILE_WIDTH;
 
-    if (ENABLE_TILED_RENDERING)
+    render_tile_radial(glm::ivec2(_width / 2, _height / 2));
+}
+
+void Context::render_tile_radial(glm::ivec2 offset)
+{
+    std::vector<glm::ivec2> tiles;
+    glm::ivec2 center(_width / 2, _height / 2);
+
+    for (int i = 0; i < _height; i += TILE_HEIGHT)
     {
-        for (int i = 0; i < tiled_height; i += TILE_HEIGHT)
+        for (int j = 0; j < _width; j += TILE_WIDTH)
         {
-            for (int j = 0; j < tiled_width; j += TILE_WIDTH)
-            {
-                render_tile(glm::ivec2(j, i), tile);
-            }
+            tiles.push_back(glm::ivec2(j, i));
         }
     }
-    else
+
+    auto radical_length = [&](const glm::ivec2& pos)->int {
+        return (pos.x - center.x) * (pos.x - center.x) + 
+               (pos.y - center.y) * (pos.y - center.y);
+    };
+
+    std::sort(tiles.begin(), 
+              tiles.end(), 
+              [&](const glm::ivec2& a, const glm::ivec2& b) {
+        return radical_length(a) < radical_length(b);
+    });
+
+    for (const auto& tile : tiles)
     {
-        render_tile(glm::ivec2(0, 0), glm::ivec2(_width, _height));
+        render_tile(tile);
     }
 }
 
-void Context::render_tile(glm::ivec2 offset, glm::ivec2 extent)
+void Context::render_tile(glm::ivec2 offset)
 {
-    _thread_pool.enqueue([this, offset, extent]()->void {
-        int y_bound = MIN(_height, offset.y + extent.y);
-        int x_bound = MIN(_width, offset.x + extent.x);
+    _thread_pool.enqueue([this, offset]()->void {
+        int y_bound = MIN(_height, offset.y + TILE_HEIGHT);
+        int x_bound = MIN(_width, offset.x + TILE_WIDTH);
         int completion = 0;
 
         for (int i = offset.y; i < y_bound; i++)
@@ -127,16 +140,21 @@ void Context::render_tile(glm::ivec2 offset, glm::ivec2 extent)
 
 void Context::wait_idle()
 {
-    while (_completion < (_width * _height))
+    while (!_window->is_closing())
     {
+        if (_completion < (_width * _height))
+            _window->update_title(_begin_time, _completion);
+        else
+            _window->update_title(_begin_time, _completion);
+
         _window->update_event();
-        _window->update_title(_begin_time, _completion);
         _window->display(_pixels.data(), _width, _height);
         std::this_thread::yield();
     }
-    
-    _window->update_title(_begin_time, _completion);
 
+    while (_completion < (_width * _height))
+        std::this_thread::yield();
+    
     int sec = SECONDS_SINCE(_begin_time);
     printf("Time cost: %dmin %dsec\n", sec / 60, sec % 60);
     printf("\n");

@@ -3,14 +3,13 @@
 #include "RaytracingAPI.h"
 #include "json.hpp"
 
-#define ENABLE_TILED_RENDERING true
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
-#define MAX_NUM_DEPTH 50
-#define NUM_SAMPLES_PER_PIXEL 10
-#define DEFAULT_CANVAS_WIDTH 1000
-#define TILE_WIDTH  32
-#define TILE_HEIGHT 32
+#define MAX_NUM_DEPTH 5
+#define NUM_SAMPLES_PER_PIXEL 1
+#define DEFAULT_CANVAS_WIDTH 800
+#define TILE_WIDTH  16
+#define TILE_HEIGHT 16
 
 #define RADIANS(deg) (deg * 3.141592653 / 180.0)
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
