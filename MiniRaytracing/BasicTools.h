@@ -2,6 +2,8 @@
 
 #include "RaytracingAPI.h"
 #include "json.hpp"
+#include "glm/glm.hpp"
+#include "glm/ext.hpp"
 
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
@@ -37,6 +39,7 @@ using mat4 = glm::mat4;
 
 using INDEX_BOUNDS = std::pair<int, int>;
 using DEPTH_BOUNDS = std::pair<FLOAT, FLOAT>;
+using RGBA32 = glm::vec4;
 
 const char* cstr_format(const char*, ...);
 std::string get_available_name(const std::string& path);

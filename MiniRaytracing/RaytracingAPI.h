@@ -18,9 +18,6 @@
 #include <chrono>
 #include <regex>
 
-#include "glm/glm.hpp"
-#include "glm/ext.hpp"
-
 #ifdef MINI_RAYTRACING_EXPORT
 #define PUBLIC_SYMBOL __declspec(dllexport)
 #else 

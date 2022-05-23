@@ -115,6 +115,11 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClCompile Include="RaytracingAPI.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="BVHScene.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureChecker.cpp" />
+    <ClCompile Include="TextureImage.cpp" />
+    <ClCompile Include="TextureNoise.cpp" />
+    <ClCompile Include="TextureSolidColor.cpp" />
     <ClInclude Include="AABB.h" />
     <ClInclude Include="BasicTools.h" />
     <ClInclude Include="BVHNode.h" />
@@ -132,6 +137,11 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClInclude Include="spheres.json">
       <FileType>Document</FileType>
     </ClInclude>
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureChecker.h" />
+    <ClInclude Include="TextureImage.h" />
+    <ClInclude Include="TextureNoise.h" />
+    <ClInclude Include="TextureSolidColor.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="BVHScene.h" />
   </ItemGroup>
