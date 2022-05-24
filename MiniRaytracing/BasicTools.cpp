@@ -120,13 +120,20 @@ vec3 random_on_unit_sphere()
     return glm::normalize(random_in_unit_sphere());
 }
 
+vec4 random_color()
+{
+    return vec4(random1(), random1(), random1(), 1.0);
+}
+
 vec2 json_vec2(const nlohmann::json& value)
 {
     assert(!value.is_null());
+    std::vector<FLOAT> array = value;
+    assert(array.size() >= 2);
 
     vec2 vec;
-    vec.x = value.at(0);
-    vec.y = value.at(1);
+    vec.x = array.at(0);
+    vec.y = array.at(1);
 
     return vec;
 }
@@ -134,24 +141,28 @@ vec2 json_vec2(const nlohmann::json& value)
 vec3 json_vec3(const nlohmann::json& value)
 {
     assert(!value.is_null());
+    std::vector<FLOAT> array = value;
+    assert(array.size() >= 3);
 
     vec3 vec;
-    vec.x = value.at(0);
-    vec.y = value.at(1);
-    vec.z = value.at(2);
+    vec.x = array.at(0);
+    vec.y = array.at(1);
+    vec.z = array.at(2);
 
     return vec;
 }
 
-vec4 json_vec4(const nlohmann::json& value)
+vec4 json_vec4(const nlohmann::json& value, FLOAT default_alpha)
 {
     assert(!value.is_null());
+    std::vector<FLOAT> array = value;
+    assert(array.size() >= 3);
 
     vec4 vec;
-    vec.x = value.at(0);
-    vec.y = value.at(1);
-    vec.z = value.at(2);
-    vec.w = value.at(3);
+    vec.x = array.at(0);
+    vec.y = array.at(1);
+    vec.z = array.at(2);
+    vec.w = array.size() >= 4 ? array.at(3) : default_alpha;
 
     return vec;
 }

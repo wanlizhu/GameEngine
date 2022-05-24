@@ -296,19 +296,19 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
         if (!completed)
         {
             completed = true;
-            int past = SECONDS_SINCE(begin);
+            int64_t past = SECONDS_SINCE(begin);
             title = cstr_format("Completed - cost: %dmin %dsec", past / 60, past % 60);
         }
     }
     else
     {
         completed = false;
-        float ratio = completion / float(width * height);
-        int past = SECONDS_SINCE(begin);
-        int eta = past * (1 - ratio) / ratio;
+        double ratio = completion / float(width * height);
+        int64_t past = SECONDS_SINCE(begin);
+        int64_t eta = int64_t(past * (1 - ratio) / ratio);
         
         std::string eta_time(256, '\0');
-        snprintf(eta_time.data(), eta_time.size(), "%dmin %dsec", eta / 60, eta % 60);
+        snprintf(eta_time.data(), eta_time.size(), "%lldmin %lldsec", eta / 60, eta % 60);
 
         title = cstr_format("Completion %d/%d - %.2f%% - eta: %s",
                             completion,

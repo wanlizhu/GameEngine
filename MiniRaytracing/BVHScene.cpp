@@ -3,6 +3,10 @@
 #include "MaterialLambertian.h"
 #include "MaterialMetal.h"
 #include "MaterialDielectric.h"
+#include "TextureSolidColor.h"
+#include "TextureNoise.h"
+#include "TextureChecker.h"
+#include "TextureImage.h"
 
 BVHScene::BVHScene()
 {}
@@ -12,9 +16,9 @@ BVHScene::~BVHScene()
     release();
 }
 
-void BVHScene::deserialize(nlohmann::json json)
+void BVHScene::deserialize(nlohmann::json json_scene)
 {
-    for (const auto& json_obj : json["objects"])
+    for (const auto& json_obj : json_scene["objects"])
     {
         if (json_obj["type"] == "random")
         {
@@ -22,24 +26,13 @@ void BVHScene::deserialize(nlohmann::json json)
         }
         else
         {
-            std::string name_mat = json_obj["material"];
-            nlohmann::json json_mat;
-
-            for (const auto& element : json["materials"])
-            {
-                if (element["name"] == name_mat)
-                {
-                    json_mat = element;
-                    break;
-                }
-            }
-
-            _objects.push_back(Object::deserialize(json_obj, json_mat));
+            _objects.push_back(Object::deserialize(json_obj, json_scene));
         }
     }
 
     _root = std::make_shared<BVHNode>(_objects, 
-                                      INDEX_BOUNDS(0, (int)_objects.size()),
+                                      0,
+                                      _objects.size(),
                                       DEPTH_BOUNDS(0, 1.0));
 }
 
@@ -51,15 +44,22 @@ void BVHScene::generate_random_objects(nlohmann::json json_desc)
 
     for (int i = 0; i < count; i++)
     {
+        FLOAT choose_tex = random1();
         FLOAT choose_mat = random1();
         std::shared_ptr<Material> material;
+        std::shared_ptr<Texture> texture;
+
+        if (choose_tex < 0.8)
+            texture = make_solid_color(random_color());
+        else
+            texture = make_checker(random_color(), vec4(1.0));
 
         if (choose_mat < 0.8)
-            material = std::make_shared<MaterialLambertian>(vec3(random1(), random1(), random1()));
+            material = std::make_shared<MaterialLambertian>(texture.get());
         else if (choose_mat < 0.95)
-            material = std::make_shared<MaterialMetal>(vec3(random1(), random1(), random1()), random1(), random1());
+            material = std::make_shared<MaterialMetal>(texture.get(), random1(), random1());
         else
-            material = std::make_shared<MaterialDielectric>(vec3(random1(), random1(), random1()), random1());
+            material = std::make_shared<MaterialDielectric>(texture.get(), random1());
 
         FLOAT x = random_in(bounding_box[0], bounding_box[3]);
         FLOAT y = random_in(bounding_box[1], bounding_box[4]);

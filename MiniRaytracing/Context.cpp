@@ -6,7 +6,7 @@
 #include "stb_image_write.h"
 
 Context::Context(const RaytracingCreateInfo& info,
-                 std::vector<RGBA>* pixels,
+                 RGBA** pixels,
                  int* width,
                  int* height)
     : _pixels(*pixels)
@@ -22,11 +22,11 @@ Context::Context(const RaytracingCreateInfo& info,
 
     _output_path = json["name"].get<std::string>() + ".png";
     _camera.deserialize(json["camera"]);
-    _world.deserialize(json["world"]);
+    _world.deserialize(json["scene"]);
 
     _width = DEFAULT_CANVAS_WIDTH;
-    _height = _width * _camera.aspect();
-    _pixels.resize(_width * _height, RGBA{ 0, 0, 0, 255 });
+    _height = int(_width * _camera.aspect());
+    _pixels = new RGBA[_width * _height];
 
     _window = std::make_shared<OpenGLWindow>();
     _window->open(_width, _height);
@@ -42,10 +42,10 @@ Context::~Context()
 RGBA packed_rgba(const vec4& color)
 {
     RGBA rgba;
-    rgba[0] = color.r * 255.99;
-    rgba[1] = color.g * 255.99;
-    rgba[2] = color.b * 255.99;
-    rgba[3] = color.a * 255.99;
+    rgba[0] = uint8_t(color.r * 255.99);
+    rgba[1] = uint8_t(color.g * 255.99);
+    rgba[2] = uint8_t(color.b * 255.99);
+    rgba[3] = uint8_t(color.a * 255.99);
 
     return rgba;
 }
@@ -109,7 +109,7 @@ void Context::render_tile(glm::ivec2 offset)
         {
             for (int j = offset.x; j < x_bound; j++)
             {
-                vec3 color(0.0);
+                vec4 color(0.0);
 
                 for (int k = 0; k < NUM_SAMPLES_PER_PIXEL; k++)
                 {
@@ -129,7 +129,7 @@ void Context::render_tile(glm::ivec2 offset)
                 color = glm::sqrt(color);
 
                 int index = i * _width + j;
-                _pixels[index] = packed_rgba(vec4(color, 1.0));
+                _pixels[index] = packed_rgba(color);
                 completion += 1;
             }
         }
@@ -148,15 +148,15 @@ void Context::wait_idle()
             _window->update_title(_begin_time, _completion);
 
         _window->update_event();
-        _window->display(_pixels.data(), _width, _height);
+        _window->display(_pixels, _width, _height);
         std::this_thread::yield();
     }
 
     while (_completion < (_width * _height))
         std::this_thread::yield();
     
-    int sec = SECONDS_SINCE(_begin_time);
-    printf("Time cost: %dmin %dsec\n", sec / 60, sec % 60);
+    int64_t sec = SECONDS_SINCE(_begin_time);
+    printf("Time cost: %lldmin %lldsec\n", sec / 60, sec % 60);
     printf("\n");
 
     save_result();
@@ -168,20 +168,20 @@ void Context::save_result()
     assert(!std::filesystem::exists(path));
 
     if (path.find(".png") == path.size() - 4)
-        stbi_write_png(path.c_str(), _width, _height, 4, _pixels.data(), 0);
+        stbi_write_png(path.c_str(), _width, _height, 4, _pixels, 0);
     else if (path.find(".jpg") == path.size() - 4)
-        stbi_write_jpg(path.c_str(), _width, _height, 4, _pixels.data(), 0);
+        stbi_write_jpg(path.c_str(), _width, _height, 4, _pixels, 0);
     else if (path.find(".bmp") == path.size() - 4)
-        stbi_write_bmp(path.c_str(), _width, _height, 4, _pixels.data());
+        stbi_write_bmp(path.c_str(), _width, _height, 4, _pixels);
     else if (path.find(".tga") == path.size() - 4)
-        stbi_write_tga(path.c_str(), _width, _height, 4, _pixels.data());
+        stbi_write_tga(path.c_str(), _width, _height, 4, _pixels);
 }
 
-vec3 Context::trace_path(Ray ray, int depth)
+vec4 Context::trace_path(Ray ray, int depth)
 {
     Intersection hit;
     ScatteredResult result;
-    result.color = vec3(0.0);
+    result.color = vec4(0.0);
 
     if (depth > MAX_NUM_DEPTH)
     {
@@ -196,7 +196,7 @@ vec3 Context::trace_path(Ray ray, int depth)
     {
         if (hit.material->scatter(ray, hit, &result))
         {
-            for (const auto& scatteredRay : result.scatteredRays)
+            for (const auto& scatteredRay : result.scattered_rays)
             {
                 result.color *= trace_path(scatteredRay, depth + 1);
             }
@@ -210,10 +210,10 @@ vec3 Context::trace_path(Ray ray, int depth)
     return result.color;
 }
 
-vec3 Context::miss_hit(Ray ray)
+vec4 Context::miss_hit(Ray ray)
 {
     vec3 dir = glm::normalize(ray.direction);
     FLOAT t = (dir.y + 1.0) * 0.5;
     
-    return  t * vec3(0.5, 0.7, 1.0) + FLOAT(1.0 - t) * vec3(1.0);
+    return  t * vec4(0.5, 0.7, 1.0, 1.0) + FLOAT(1.0 - t) * vec4(1.0);
 }

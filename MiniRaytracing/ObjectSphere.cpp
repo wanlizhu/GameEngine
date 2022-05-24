@@ -35,9 +35,10 @@ bool ObjectSphere::intersect(const Ray& ray,
             return false;
     }
 
-    hit->t_hit = root;
     hit->position = ray(root);
     hit->setNormal(ray, (hit->position - current_center) / _radius);
+    hit->uv = generate_uv(hit->position);
+    hit->depth_hit = root;
     hit->material = _material.get();
 
     return true;
@@ -54,4 +55,23 @@ AABB ObjectSphere::bounding_box(const DEPTH_BOUNDS& bounds) const
     AABB end(center_end - radius_extent, center_end + radius_extent);
 
     return begin + end;
+}
+
+vec2 ObjectSphere::generate_uv(const vec3& pos) const
+{
+    FLOAT theta = acos(-pos.y);
+    FLOAT phi = atan2(-pos.z, pos.x) + M_PI;
+    FLOAT u = phi / (2 * M_PI);
+    FLOAT v = theta / M_PI;
+
+    return vec2(u, v);
+}
+
+std::shared_ptr<Object> 
+make_sphere(const vec3& center,
+            FLOAT radius,
+            const vec3& velocity,
+            Material* material)
+{
+    return std::make_shared<ObjectSphere>(center, radius, velocity, material);
 }

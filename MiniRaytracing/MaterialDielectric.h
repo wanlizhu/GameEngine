@@ -6,7 +6,7 @@
 class MaterialDielectric : public Material
 {
 public:
-    MaterialDielectric(const vec3& basecolor,
+    MaterialDielectric(Texture* basecolor,
                        FLOAT ior);
 
     virtual bool scatter(const Ray& ray,
@@ -14,6 +14,8 @@ public:
                          ScatteredResult* result) override;
 
 private:
-    vec3  _basecolor;
+    std::shared_ptr<Texture>  _basecolor;
     FLOAT _index_of_refraction;
 };
+
+std::shared_ptr<Material> make_dielectric(Texture* basecolor, FLOAT ior);

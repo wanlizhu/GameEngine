@@ -6,12 +6,14 @@
 class MaterialLambertian : public Material
 {
 public:
-    MaterialLambertian(const vec3& albedo);
+    MaterialLambertian(Texture* albedo);
 
     virtual bool scatter(const Ray& ray,
                          const Intersection& hit,
                          ScatteredResult* result) override;
 
 private:
-    vec3 _albedo;
+    std::shared_ptr<Texture> _albedo;
 };
+
+std::shared_ptr<Material> make_lambertian(Texture* albedo);

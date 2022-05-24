@@ -7,7 +7,8 @@ class BVHNode : public Object
 public:
     BVHNode();
     BVHNode(const std::vector<std::shared_ptr<Object>>& objects,
-            const INDEX_BOUNDS& span,    // [first, second)
+            size_t index_begin,
+            size_t index_end,
             const DEPTH_BOUNDS& bounds); // [first, second)
     BVHNode(const BVHNode&) = delete;
     BVHNode& operator=(const BVHNode&) = delete;

@@ -4,12 +4,13 @@ BVHNode::BVHNode()
 {}
 
 BVHNode::BVHNode(const std::vector<std::shared_ptr<Object>>& objects,
-                 const INDEX_BOUNDS& span,
+                 size_t index_begin,
+                 size_t index_end,
                  const DEPTH_BOUNDS& bounds)
 {
     std::vector<std::shared_ptr<Object>> duplicates;
-    duplicates.assign(objects.begin() + span.first,
-                      objects.begin() + span.second);
+    duplicates.assign(objects.begin() + index_begin,
+                      objects.begin() + index_end);
 
     int axis = (int)random_in(0, 2.99);
     std::sort(duplicates.begin(),
@@ -38,9 +39,9 @@ BVHNode::BVHNode(const std::vector<std::shared_ptr<Object>>& objects,
     }
     else 
     {
-        int count = (int)duplicates.size();
-        _left  = std::make_shared<BVHNode>(duplicates, INDEX_BOUNDS(0, count / 2), bounds);
-        _right = std::make_shared<BVHNode>(duplicates, INDEX_BOUNDS(count / 2, count), bounds);
+        size_t count = duplicates.size();
+        _left  = std::make_shared<BVHNode>(duplicates, 0, count / 2, bounds);
+        _right = std::make_shared<BVHNode>(duplicates, count / 2, count, bounds);
     }
 
     AABB left_box  = _left->bounding_box(bounds);
@@ -60,7 +61,7 @@ bool BVHNode::intersect(const Ray& ray,
 
     bool hit_left = _left->intersect(ray, bounds, hit);
 
-    FLOAT closest_hit = hit_left ? hit->t_hit : bounds.second;
+    FLOAT closest_hit = hit_left ? hit->depth_hit : bounds.second;
     DEPTH_BOUNDS new_bounds(bounds.first, closest_hit);
     bool hit_right = _right->intersect(ray, new_bounds, hit);
 

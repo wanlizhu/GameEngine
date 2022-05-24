@@ -77,6 +77,12 @@
     <ClCompile Include="TextureChecker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ObjectRectangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RaytracingAPI.h">
@@ -143,6 +149,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextureImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectRectangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

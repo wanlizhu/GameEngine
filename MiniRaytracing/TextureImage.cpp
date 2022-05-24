@@ -1,6 +1,15 @@
 #include "TextureImage.h"
+
+#ifdef _MSC_VER
+#pragma warning (push, 0)
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#ifdef _MSC_VER
+#pragma warning (pop)
+#endif
 
 TextureImage::TextureImage(const std::string& path)
 {
@@ -38,10 +47,10 @@ TextureImage::TextureImage(const std::string& path)
     }
 }
 
-RGBA32 TextureImage::sample(const vec2& uv, const vec3& pos) const
+vec4 TextureImage::sample(const vec2& uv, const vec3& pos) const
 {
     if (_data == nullptr)
-        return RGBA32(0, 1, 1, 1); // solid cyan for debugging
+        return vec4(0, 1, 1, 1); // solid cyan for debugging
 
     FLOAT u = CLAMP(uv.x, 0.0, 1.0);
     FLOAT v = CLAMP(uv.y, 0.0, 1.0);
@@ -56,13 +65,14 @@ RGBA32 TextureImage::sample(const vec2& uv, const vec3& pos) const
     static const FLOAT scale = 1.0 / 255.0;
     const RGBA& pixel = *(_data->data() + j * _width + i);
 
-    return RGBA32(pixel[0] * scale, 
-                  pixel[1] * scale, 
-                  pixel[2] * scale,
-                  pixel[3] * scale);
+    return vec4(pixel[0] * scale,
+                pixel[1] * scale, 
+                pixel[2] * scale,
+                pixel[3] * scale);
 }
 
-std::shared_ptr<Texture> make_image(const std::string& path)
+std::shared_ptr<Texture> 
+make_image(const std::string& path)
 {
     return std::make_shared<TextureImage>(path);
 }

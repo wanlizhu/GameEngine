@@ -12,7 +12,7 @@ public:
     BVHScene& operator=(const BVHScene&) = delete;
     virtual ~BVHScene();
 
-    void deserialize(nlohmann::json json);
+    void deserialize(nlohmann::json json_scene);
     void release();
     bool intersect(const Ray& ray,
                    const DEPTH_BOUNDS& bounds,

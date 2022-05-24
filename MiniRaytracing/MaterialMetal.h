@@ -6,7 +6,7 @@
 class MaterialMetal : public Material
 {
 public:
-    MaterialMetal(const vec3& basecolor,
+    MaterialMetal(Texture* basecolor,
                   FLOAT metallic,
                   FLOAT roughness);
 
@@ -15,7 +15,11 @@ public:
                          ScatteredResult* result) override;
 
 private:
-    vec3  _basecolor;
+    std::shared_ptr<Texture>  _basecolor;
     FLOAT _metallic;
     FLOAT _roughness;
 };
+
+std::shared_ptr<Material> make_metal(Texture* basecolor,
+                                     FLOAT metallic,
+                                     FLOAT roughness);

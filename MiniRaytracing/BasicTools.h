@@ -1,5 +1,25 @@
 #pragma once
 
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <deque>
+#include <memory>
+#include <algorithm>
+#include <optional>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <regex>
+#include <chrono>
+#include <regex>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "RaytracingAPI.h"
 #include "json.hpp"
 #include "glm/glm.hpp"
@@ -8,8 +28,8 @@
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
 #define MAX_NUM_DEPTH 50
-#define NUM_SAMPLES_PER_PIXEL 100
-#define DEFAULT_CANVAS_WIDTH 800
+#define NUM_SAMPLES_PER_PIXEL 10
+#define DEFAULT_CANVAS_WIDTH 1000
 #define TILE_WIDTH  16
 #define TILE_HEIGHT 16
 
@@ -37,9 +57,9 @@ using mat3 = glm::mat3;
 using mat4 = glm::mat4;
 #endif
 
-using INDEX_BOUNDS = std::pair<int, int>;
 using DEPTH_BOUNDS = std::pair<FLOAT, FLOAT>;
-using RGBA32 = glm::vec4;
+
+class Texture;
 
 const char* cstr_format(const char*, ...);
 std::string get_available_name(const std::string& path);
@@ -53,7 +73,8 @@ vec2 random_in_unit_circle();
 vec2 random_on_unit_circle();
 vec3 random_in_unit_sphere();
 vec3 random_on_unit_sphere();
+vec4 random_color();
 
 vec2 json_vec2(const nlohmann::json& value);
 vec3 json_vec3(const nlohmann::json& value);
-vec4 json_vec4(const nlohmann::json& value);
+vec4 json_vec4(const nlohmann::json& value, FLOAT default_alpha);

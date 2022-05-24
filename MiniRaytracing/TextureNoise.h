@@ -27,15 +27,15 @@ private:
 class TextureNoise : public Texture
 {
 public:
-    TextureNoise() = default;
-    TextureNoise(FLOAT scale);
+    TextureNoise(int style, FLOAT scale);
 
-    virtual RGBA32 sample(const vec2& uv, const vec3& pos) const override;
+    virtual vec4 sample(const vec2& uv, const vec3& pos) const override;
 
 private:
     PerlinNoise _noise;
     FLOAT _scale = 1.0;
+    int _style = 1;
 };
 
-std::shared_ptr<Texture> make_noise(FLOAT scale);
+std::shared_ptr<Texture> make_noise(int style, FLOAT scale);
 

@@ -7,29 +7,25 @@ void Intersection::setNormal(const Ray& ray,
     normal = front_face ? norm : -norm;
 }
 
-std::shared_ptr<Object>
-Object::deserialize(nlohmann::json json_obj,
-                    nlohmann::json json_mat)
+std::shared_ptr<Object> 
+Object::deserialize(const nlohmann::json& json_obj,
+                    const nlohmann::json& json_scene)
 {
     std::string type = json_obj["type"];
-    std::shared_ptr<Material> material;
     std::shared_ptr<Object> object;
-
-    if (!json_mat.is_null())
-    {
-        material = Material::deserialize(json_mat);
-    }
+    std::shared_ptr<Material> material;
+   
+    material = Material::deserialize(json_obj["material"],
+                                     json_scene);
 
     if (type == "sphere")
     {
-        assert(material);
-        object = std::make_shared<ObjectSphere>(json_vec3(json_obj["center"]),
-                                                json_obj["radius"],
-                                                json_vec3(json_obj["velocity"]),
-                                                material.get());
+        object = make_sphere(json_vec3(json_obj["center"]),
+                             json_obj["radius"],
+                             json_vec3(json_obj["velocity"]),
+                             material.get());
     }
 
     assert(object);
-
     return object;
 }

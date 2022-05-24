@@ -5,10 +5,9 @@
 class TextureImage : public Texture
 {
 public:
-    TextureImage() = default;
     TextureImage(const std::string& path);
 
-    virtual RGBA32 sample(const vec2 & uv, const vec3 & pos) const override;
+    virtual vec4 sample(const vec2 & uv, const vec3 & pos) const override;
 
 private:
     std::shared_ptr<std::vector<RGBA>> _data;

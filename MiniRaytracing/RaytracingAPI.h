@@ -1,22 +1,8 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <deque>
-#include <memory>
-#include <algorithm>
-#include <optional>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <regex>
+#include <array>
 #include <chrono>
-#include <regex>
+#include <memory>
 
 #ifdef MINI_RAYTRACING_EXPORT
 #define PUBLIC_SYMBOL __declspec(dllexport)
@@ -38,16 +24,19 @@ struct PUBLIC_SYMBOL RaytracingCreateInfo
     // basic options
     bool quiet = false;
     VkDeviceZHU* device = nullptr; // optional
-    std::string sceneFile;
+    const char* sceneFile;
 };
 
 struct PUBLIC_SYMBOL RaytracingResult
 {
     Context* context = nullptr;
-    std::vector<RGBA> pixels;
+    RGBA* pixels = nullptr;
     int width = 0;
     int height = 0;
 
+    RaytracingResult() = default;
+    RaytracingResult(const RaytracingResult&) = delete;
+    RaytracingResult& operator=(const RaytracingResult&) = delete;
     virtual ~RaytracingResult();
     void wait();
 };

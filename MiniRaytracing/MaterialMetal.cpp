@@ -1,9 +1,9 @@
 #include "MaterialMetal.h"
 
-MaterialMetal::MaterialMetal(const vec3& basecolor,
+MaterialMetal::MaterialMetal(Texture* basecolor,
                              FLOAT metallic,
                              FLOAT roughness)
-    : _basecolor(basecolor)
+    : _basecolor(basecolor->shared_from_this())
     , _metallic(metallic)
     , _roughness(roughness)
 {}
@@ -15,8 +15,16 @@ bool MaterialMetal::scatter(const Ray& ray,
     vec3 reflected = glm::reflect(glm::normalize(ray.direction), hit.normal);
     vec3 scattered = reflected + _roughness * random_in_unit_sphere();
 
-    result->scatteredRays.push_back(Ray(hit.position, scattered, ray.time));
-    result->color = _basecolor;
+    result->color = _basecolor->sample(hit.uv, hit.position);
+    result->scattered_rays.push_back(Ray(hit.position, scattered, ray.time));
 
     return glm::dot(scattered, hit.normal) > 0;
+}
+
+std::shared_ptr<Material> 
+make_metal(Texture* basecolor,
+           FLOAT metallic,
+           FLOAT roughness)
+{
+    return std::make_shared<MaterialMetal>(basecolor, metallic, roughness);
 }

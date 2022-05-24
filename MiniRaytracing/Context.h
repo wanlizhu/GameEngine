@@ -12,7 +12,7 @@ class Context
 {
 public:
     Context(const RaytracingCreateInfo& info,
-            std::vector<RGBA>* pixels,
+            RGBA** pixels,
             int* width,
             int* height);
     Context(const Context&) = delete;
@@ -26,11 +26,11 @@ private:
     void save_result();
     void render_tile_radial(glm::ivec2 offset);
     void render_tile(glm::ivec2 offset);
-    vec3 trace_path(Ray ray, int depth);
-    vec3 miss_hit(Ray ray);
+    vec4 trace_path(Ray ray, int depth);
+    vec4 miss_hit(Ray ray);
 
 private:
-    std::vector<RGBA>& _pixels;
+    RGBA*& _pixels;
     int& _width;
     int& _height;
 

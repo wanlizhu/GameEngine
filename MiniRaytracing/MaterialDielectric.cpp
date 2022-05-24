@@ -1,14 +1,14 @@
 #include "MaterialDielectric.h"
 
-MaterialDielectric::MaterialDielectric(const vec3& basecolor,
+MaterialDielectric::MaterialDielectric(Texture* basecolor,
                                        FLOAT ior)
-    : _basecolor(basecolor)
+    : _basecolor(basecolor->shared_from_this())
     , _index_of_refraction(ior)
 {}
 
 FLOAT reflectance(FLOAT cosine, FLOAT ior)
 {
-    // Use Schlick's approximation for reflectance.
+    // use Schlick's approximation for reflectance.
     auto r0 = (1 - ior) / (1 + ior);
     r0 = r0 * r0;
     return r0 + (1 - r0) * pow((1 - cosine), 5);
@@ -31,8 +31,14 @@ bool MaterialDielectric::scatter(const Ray& ray,
     else
         direction = glm::refract(ray_in, hit.normal, ior);
 
-    result->color = _basecolor;
-    result->scatteredRays.push_back(Ray(hit.position, direction, ray.time));
+    result->color = _basecolor->sample(hit.uv, hit.position);
+    result->scattered_rays.push_back(Ray(hit.position, direction, ray.time));
 
     return true;
+}
+
+std::shared_ptr<Material> 
+make_dielectric(Texture* basecolor, FLOAT ior)
+{
+    return std::make_shared<MaterialDielectric>(basecolor, ior);
 }

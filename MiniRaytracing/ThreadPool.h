@@ -37,7 +37,7 @@ private:
 inline ThreadPool::ThreadPool()
     : _quit(false)
 {
-    for (int i = 0; i < std::thread::hardware_concurrency(); i++)
+    for (int i = 0; i < (int)std::thread::hardware_concurrency(); i++)
     {
         _workers.emplace_back([this]() {
             while (true)
@@ -76,7 +76,7 @@ inline void ThreadPool::release()
 
 inline int ThreadPool::thread_count() const 
 {
-    return _workers.size(); 
+    return (int)_workers.size(); 
 }
 
 template<typename Func, typename... Args>

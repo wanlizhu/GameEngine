@@ -73,7 +73,7 @@ void PerlinNoise::permute(int* p, int n)
 {
     for (int i = n - 1; i > 0; i--) 
     {
-        int target = random_in(0, i);
+        int target = (int)random_in(0, i);
         int tmp = p[i];
         p[i] = p[target];
         p[target] = tmp;
@@ -102,17 +102,27 @@ FLOAT PerlinNoise::perlin_interp(vec3 c[2][2][2], FLOAT u, FLOAT v, FLOAT w)
 }
 
 
-TextureNoise::TextureNoise(FLOAT scale)
-    : _scale(scale)
+TextureNoise::TextureNoise(int style, FLOAT scale)
+    : _style(style)
+    , _scale(scale)
 {}
 
-RGBA32 TextureNoise::sample(const vec2& uv, const vec3& pos) const
+vec4 TextureNoise::sample(const vec2& uv, const vec3& pos) const
 {
-    vec3 color = vec3(1.0) * FLOAT(0.5) * FLOAT(1.0 + sin(_scale * pos.z + 10.0 * _noise.turb(pos)));
-    return RGBA32(color.r, color.g, color.b, 1.0);
+    vec3 color;
+
+    switch (_style)
+    {
+        case 1: color = vec3(1) * FLOAT(0.5) * FLOAT(1.0 + sin(_scale * pos.z + 10.0 * _noise.turb(pos))); break;
+        case 2: color = vec3(1) * FLOAT(0.5) * FLOAT(1 + _noise.turb(_scale * pos)); break;
+        default: color = vec3(1) * _noise.turb(_scale * pos); break;
+    }
+
+    return vec4(color.r, color.g, color.b, 1.0);
 }
 
-std::shared_ptr<Texture> make_noise(FLOAT scale)
+std::shared_ptr<Texture>
+make_noise(int style, FLOAT scale)
 {
-    return std::make_shared<TextureNoise>(scale);
+    return std::make_shared<TextureNoise>(style, scale);
 }
