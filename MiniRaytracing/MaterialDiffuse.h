@@ -3,11 +3,10 @@
 #include "Material.h"
 #include "Object.h"
 
-class MaterialDielectric : public Material
+class MaterialDiffuse : public Material
 {
 public:
-    MaterialDielectric(Texture* basecolor,
-                       FLOAT ior);
+    MaterialDiffuse(Texture* color);
 
     virtual bool scatter(const Ray& ray,
                          const Intersection& hit,
@@ -17,8 +16,7 @@ public:
                          EmittedResult* result) override;
 
 private:
-    std::shared_ptr<Texture>  _basecolor;
-    FLOAT _index_of_refraction;
+    std::shared_ptr<Texture> _color;
 };
 
-std::shared_ptr<Material> make_dielectric(Texture* basecolor, FLOAT ior);
+std::shared_ptr<Material> make_diffuse(Texture* color);

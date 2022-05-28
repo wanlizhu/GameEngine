@@ -6,7 +6,7 @@
 class Texture : public std::enable_shared_from_this<Texture>
 {
 public:
-    static std::shared_ptr<Texture> deserialize(const std::string& name,
+    static std::shared_ptr<Texture> deserialize(const nlohmann::json& json_value,
                                                 const nlohmann::json& json_scene);
 
     virtual ~Texture() = default;

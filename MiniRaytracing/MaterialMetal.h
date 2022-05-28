@@ -13,6 +13,9 @@ public:
     virtual bool scatter(const Ray& ray,
                          const Intersection& hit,
                          ScatteredResult* result) override;
+    virtual bool emitted(const Ray& ray,
+                         const Intersection& hit,
+                         EmittedResult* result) override;
 
 private:
     std::shared_ptr<Texture>  _basecolor;

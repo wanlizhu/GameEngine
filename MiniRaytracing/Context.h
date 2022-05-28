@@ -43,4 +43,5 @@ private:
     BVHScene _world;
     Camera _camera;
     TIME _begin_time;
+    vec4 _background = vec4(0);
 };

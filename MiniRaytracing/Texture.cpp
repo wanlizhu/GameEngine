@@ -5,10 +5,16 @@
 #include "TextureNoise.h"
 #include "TextureImage.h"
 
-std::shared_ptr<Texture> Texture::deserialize(const std::string& name,
+std::shared_ptr<Texture> Texture::deserialize(const nlohmann::json& json_value,
                                               const nlohmann::json& json_scene)
 {
+    if (json_value.is_array())
+    {
+        return make_solid_color(json_vec4(json_value, 1.0));
+    }
+
     nlohmann::json json_tex;
+    std::string name = json_value.get<std::string>();
 
     for (const auto& element : json_scene["textures"])
     {

@@ -32,8 +32,7 @@ void BVHScene::deserialize(nlohmann::json json_scene)
     }
 
     _root = std::make_shared<BVHNode>(_objects, 
-                                      0,
-                                      _objects.size(),
+                                      0, _objects.size(),
                                       DEPTH_BOUNDS(0, 1.0));
 }
 

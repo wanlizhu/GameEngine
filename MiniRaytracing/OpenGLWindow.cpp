@@ -281,6 +281,23 @@ void OpenGLWindow::display(const RGBA* data, int width, int height)
     glfwPollEvents();
 }
 
+const char* format_time(int past)
+{
+    static char buffer[256];
+    int hour = past / 60 / 60;
+    int min = (past - hour * 60 * 60) / 60;
+    int sec = past % 60;
+
+    if (hour > 0)
+        sprintf(buffer, "%dhours %dminutes %dseconds", hour, min, sec);
+    else if (min > 0)
+        sprintf(buffer, "%dminutes %dseconds", min, sec);
+    else
+        sprintf(buffer, "%dseconds", sec);
+
+    return buffer;
+}
+
 void OpenGLWindow::update_title(const TIME& begin, int completion)
 {
     if (!_window)
@@ -297,8 +314,8 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
         if (!completed)
         {
             completed = true;
-            int64_t past = SECONDS_SINCE(begin);
-            title = cstr_format("Completed - cost: %dmin %dsec", past / 60, past % 60);
+            int64_t seconds = SECONDS_SINCE(begin);
+            title = cstr_format("Completed - cost: %s", format_time((int)seconds));
         }
     }
     else
@@ -306,16 +323,11 @@ void OpenGLWindow::update_title(const TIME& begin, int completion)
         completed = false;
         double ratio = completion / float(width * height);
         int64_t past = SECONDS_SINCE(begin);
-        int64_t eta = int64_t(past * (1 - ratio) / ratio);
+        int64_t remaining = int64_t(past * (1 - ratio) / ratio);
         
-        std::string eta_time(256, '\0');
-        snprintf(eta_time.data(), eta_time.size(), "%lldmin %lldsec", eta / 60, eta % 60);
-
-        title = cstr_format("Completion %d/%d - %.2f%% - eta: %s",
-                            completion,
-                            width * height,
+        title = cstr_format("Completion %.2f%% - remaining: %s",
                             ratio * 100,
-                            eta_time.c_str());
+                            format_time((int)remaining));
     }
 
     if (title)

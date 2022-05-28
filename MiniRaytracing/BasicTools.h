@@ -22,14 +22,15 @@
 
 #include "RaytracingAPI.h"
 #include "json.hpp"
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 
-#define ENABLE_CUDA
+//#define ENABLE_CUDA
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
 #define MAX_NUM_DEPTH 50
-#define NUM_SAMPLES_PER_PIXEL 500
+#define NUM_SAMPLES_PER_PIXEL 1
 #define DEFAULT_CANVAS_WIDTH 1000
 #define TILE_WIDTH  16
 #define TILE_HEIGHT 16
@@ -42,13 +43,20 @@
 
 #ifdef ENABLE_CUDA
 #include "cuda_runtime.h"
+#define CUDA_FUNC __host__ __device__
+#define CUDA_CHECK(error) { \
+    if (error != cudaSuccess) { \
+        fprintf(stderr, "Error: %s:%d ", __FILE__, __LINE__); \
+        fprintf(stderr, "code: %d, reason: %s\n", error, cudaGetErrorString(error)); \
+    } \
+}
 #else
 #define __host__
 #define __device__
 #define __global__
+#define CUDA_FUNC
+#define CUDA_CHECK(result) 
 #endif
-
-#define CUDA_FUNC __host__ __device__
 
 #if USE_FLOAT64
 using FLOAT = double;

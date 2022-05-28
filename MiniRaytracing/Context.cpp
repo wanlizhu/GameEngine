@@ -22,6 +22,7 @@ Context::Context(const RaytracingCreateInfo& info,
     input >> json;
 
     _output_path = json["name"].get<std::string>() + ".png";
+    _background = json_vec4(json["background"], 1.0);
     _camera.deserialize(json["camera"]);
     _world.deserialize(json["scene"]);
 
@@ -180,41 +181,42 @@ void Context::save_result()
 
 vec4 Context::trace_path(Ray ray, int depth)
 {
-    Intersection hit;
-    ScatteredResult result;
-    result.radiance = vec4(0.0);
-
     if (depth > MAX_NUM_DEPTH)
     {
-        return result.radiance;
+        return vec4(0);
     }
 
     DEPTH_BOUNDS bounds;
     bounds.first  = std::numeric_limits<FLOAT>::epsilon();
     bounds.second = std::numeric_limits<FLOAT>::max();
 
+    Intersection hit;
     if (_world.intersect(ray, bounds, &hit))
     {
-        if (hit.material->scatter(ray, hit, &result))
+        EmittedResult emitted;
+        if (hit.material->emitted(ray, hit, &emitted))
         {
-            for (const auto& scatteredRay : result.scattered_rays)
+            assert(!is_near_zero(emitted.radiance.rgb));
+        }
+
+        ScatteredResult scattered;
+        if (hit.material->scatter(ray, hit, &scattered))
+        {
+            for (const auto& rays : scattered.new_rays)
             {
-                result.radiance *= trace_path(scatteredRay, depth + 1);
+                scattered.radiance *= trace_path(rays, depth + 1);
             }
         }
+
+        return emitted.radiance + scattered.radiance;
     }
     else
     {
-        result.radiance = miss_hit(ray);
+        return miss_hit(ray);
     }
-
-    return result.radiance;
 }
 
 vec4 Context::miss_hit(Ray ray)
 {
-    vec3 dir = glm::normalize(ray.direction);
-    FLOAT t = (dir.y + 1.0) * 0.5;
-    
-    return  t * vec4(0.5, 0.7, 1.0, 1.0) + FLOAT(1.0 - t) * vec4(1.0);
+    return _background;
 }

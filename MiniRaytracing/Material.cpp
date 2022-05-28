@@ -2,6 +2,7 @@
 #include "MaterialMetal.h"
 #include "MaterialLambertian.h"
 #include "MaterialDielectric.h"
+#include "MaterialDiffuse.h"
 
 std::shared_ptr<Material> Material::deserialize(const std::string& name,
                                                 const nlohmann::json& json_scene)
@@ -41,6 +42,11 @@ std::shared_ptr<Material> Material::deserialize(const std::string& name,
     {
         auto basecolor = Texture::deserialize(json_mat["basecolor"], json_scene);
         material = make_dielectric(basecolor.get(), json_mat["index_of_refraction"]);
+    }
+    else if (type == "diffuse")
+    {
+        auto basecolor = Texture::deserialize(json_mat["color"], json_scene);
+        material = make_diffuse(basecolor.get());
     }
 
     assert(material);

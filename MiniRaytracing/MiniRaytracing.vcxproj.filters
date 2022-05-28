@@ -89,6 +89,9 @@
     <ClCompile Include="link_libs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MaterialDiffuse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RaytracingAPI.h">
@@ -163,15 +166,16 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MaterialDiffuse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <CopyFileToFolders Include="spheres - luminous floor.json">
+      <Filter>Scenes</Filter>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="spheres.json">
       <Filter>Scenes</Filter>
     </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="cuda_functions.cu">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -9,8 +9,13 @@ struct Intersection;
 
 struct ScatteredResult
 {
-    vec4 radiance;
-    std::vector<Ray> scattered_rays;
+    vec4 radiance = vec4(0);
+    std::vector<Ray> new_rays;
+};
+
+struct EmittedResult
+{
+    vec4 radiance = vec4(0);
 };
 
 class Material : public std::enable_shared_from_this<Material>
@@ -23,4 +28,7 @@ public:
     virtual bool scatter(const Ray& ray, 
                          const Intersection& hit,
                          ScatteredResult* result) = 0;
+    virtual bool emitted(const Ray& ray,
+                         const Intersection& hit,
+                         EmittedResult* result) = 0;
 };

@@ -1,6 +1,5 @@
 {
     "name": "three spheres",
-    "background": [1, 1, 1],
     "camera": {
         "position": [ 13, 2, 3 ],
         "target": [ 0, 0, 0 ],
@@ -50,19 +49,19 @@
                 "type": "random",
                 "count": 500,
                 "bounding box": [ -11, 0.2, -11, 11, 0.2, 11 ],
-                "radius range": [ 0.2, 0.2 ]
+                "radius range": [0.2, 0.2]
             }
         ],
         "materials": [
             {
                 "name": "floor",
-                "type": "lambertian",
-                "albedo": "checker floor"
+                "type": "diffuse",
+                "color": "checker floor"
             },
             {
                 "name": "ball 1",
                 "type": "dielectric",
-                "basecolor": [1, 1, 1],
+                "basecolor": "white",
                 "index_of_refraction": 1.5
             },
             {
@@ -73,12 +72,17 @@
             {
                 "name": "ball 3",
                 "type": "metal",
-                "basecolor": [ 0.7, 0.6, 0.5 ],
+                "basecolor": "color metal",
                 "metallic": 1.0,
                 "roughness": 0.0
             }
         ],
         "textures": [
+            {
+                "name": "white",
+                "type": "solid color",
+                "color": [1, 1, 1, 1]
+            },
             {
                 "name": "checker floor",
                 "type": "checker",
@@ -96,10 +100,20 @@
                 "color": [ 0.9, 0.9, 0.9 ]
             },
             {
+                "name": "white",
+                "type": "solid color",
+                "color": [ 1, 1, 1 ]
+            },
+            {
                 "name": "marble",
                 "type": "noise",
                 "style": 1,
                 "scale": 1.0
+            },
+            {
+                "name": "color metal",
+                "type": "solid color",
+                "color": [ 0.7, 0.6, 0.5 ]
             }
         ]
     }
