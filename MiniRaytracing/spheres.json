@@ -74,7 +74,7 @@
                 "type": "metal",
                 "basecolor": "color metal",
                 "metallic": 1.0,
-                "roughness": 0.0
+                "roughness": 0.0 
             }
         ],
         "textures": [

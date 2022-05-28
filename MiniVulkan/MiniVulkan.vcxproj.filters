@@ -17,7 +17,7 @@
     <ClCompile Include="VkDeviceZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanCanvas.cpp">
+    <ClCompile Include="VulkanAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VkPipelineZHU.cpp">
@@ -26,10 +26,16 @@
     <ClCompile Include="VkShaderModuleZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VkCommonZHU.cpp">
+    <ClCompile Include="_VkCommonZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VkReflectionZHU.cpp">
+    <ClCompile Include="_VkReflectionZHU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VkBufferZHU.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VkModelZHU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -37,10 +43,7 @@
     <ClInclude Include="VkDeviceZHU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VulkanCanvas.h">
+    <ClInclude Include="VulkanAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VkPipelineZHU.h">
@@ -55,10 +58,13 @@
     <ClInclude Include="VkShaderModuleZHU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VkCommonZHU.h">
+    <ClInclude Include="BasicTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VkReflectionZHU.h">
+    <ClInclude Include="VkBufferZHU.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VkModelZHU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

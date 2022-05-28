@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Context.h"
 #include "RaytracingAPI.h"
 #include "BasicTools.h"
@@ -181,11 +182,11 @@ vec4 Context::trace_path(Ray ray, int depth)
 {
     Intersection hit;
     ScatteredResult result;
-    result.color = vec4(0.0);
+    result.radiance = vec4(0.0);
 
     if (depth > MAX_NUM_DEPTH)
     {
-        return result.color;
+        return result.radiance;
     }
 
     DEPTH_BOUNDS bounds;
@@ -198,16 +199,16 @@ vec4 Context::trace_path(Ray ray, int depth)
         {
             for (const auto& scatteredRay : result.scattered_rays)
             {
-                result.color *= trace_path(scatteredRay, depth + 1);
+                result.radiance *= trace_path(scatteredRay, depth + 1);
             }
         }
     }
     else
     {
-        result.color = miss_hit(ray);
+        result.radiance = miss_hit(ray);
     }
 
-    return result.color;
+    return result.radiance;
 }
 
 vec4 Context::miss_hit(Ray ray)

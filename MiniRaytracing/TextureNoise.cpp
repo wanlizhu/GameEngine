@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextureNoise.h"
 
 PerlinNoise::PerlinNoise()
@@ -121,8 +122,7 @@ vec4 TextureNoise::sample(const vec2& uv, const vec3& pos) const
     return vec4(color.r, color.g, color.b, 1.0);
 }
 
-std::shared_ptr<Texture>
-make_noise(int style, FLOAT scale)
+std::shared_ptr<Texture> make_noise(int style, FLOAT scale)
 {
     return std::make_shared<TextureNoise>(style, scale);
 }

@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>VK_USE_PLATFORM_WIN32_KHR;MINI_VULKAN_EXPORT;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -72,13 +72,16 @@
     <PostBuildEvent>
       <Command>xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
 xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"
-if not exist "$(OutDir)StandardSurface.vert.glsl" mklink "$(OutDir)StandardSurface.vert.glsl" "$(ProjectDir)StandardSurface.vert.glsl"
-if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurface.frag.glsl" "$(ProjectDir)StandardSurface.frag.glsl"</Command>
+xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /q /f "$(OutDir)$(ProjectName).dll"
+del /q /f "$(OutDir)$(ProjectName).lib"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -99,19 +102,26 @@ if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurfa
     <PostBuildEvent>
       <Command>xcopy /y "$(VULKAN_SDK)\Bin\glslangValidator.exe" "$(OutDir)"
 xcopy /y "$(VULKAN_SDK)\Bin\spirv-cross.exe" "$(OutDir)"
-if not exist "$(OutDir)StandardSurface.vert.glsl" mklink "$(OutDir)StandardSurface.vert.glsl" "$(ProjectDir)StandardSurface.vert.glsl"
-if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurface.frag.glsl" "$(ProjectDir)StandardSurface.frag.glsl"</Command>
+xcopy /y "$(ProjectDir)*.glsl" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /q /f "$(OutDir)$(ProjectName).dll"
+del /q /f "$(OutDir)$(ProjectName).lib"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="VkCommonZHU.cpp" />
+    <ClCompile Include="VkBufferZHU.cpp" />
+    <ClCompile Include="VkModelZHU.cpp" />
+    <ClCompile Include="_VkCommonZHU.cpp" />
     <ClCompile Include="VkDeviceZHU.cpp" />
     <ClCompile Include="VkPipelineZHU.cpp" />
-    <ClCompile Include="VkReflectionZHU.cpp" />
+    <ClCompile Include="_VkReflectionZHU.cpp" />
     <ClCompile Include="VkShaderModuleZHU.cpp" />
-    <ClCompile Include="VulkanCanvas.cpp" />
+    <ClCompile Include="VulkanAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="VkBufferZHU.h" />
+    <ClInclude Include="VkModelZHU.h" />
     <ClInclude Include="StandardSurface.vert.glsl">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
       <FileType>Document</FileType>
@@ -122,13 +132,11 @@ if not exist "$(OutDir)StandardSurface.frag.glsl" mklink "$(OutDir)StandardSurfa
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
     </ClInclude>
-    <ClInclude Include="VkCommonZHU.h" />
+    <ClInclude Include="BasicTools.h" />
     <ClInclude Include="VkPipelineZHU.h" />
-    <ClInclude Include="VkReflectionZHU.h" />
     <ClInclude Include="VkShaderModuleZHU.h" />
-    <ClInclude Include="VulkanCanvas.h" />
+    <ClInclude Include="VulkanAPI.h" />
     <ClInclude Include="VkDeviceZHU.h" />
-    <ClInclude Include="VulkanConfig.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

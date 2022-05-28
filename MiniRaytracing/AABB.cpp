@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "AABB.h"
 
 bool AABB::intersect(const Ray& ray, const DEPTH_BOUNDS& bounds) const

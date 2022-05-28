@@ -9,7 +9,7 @@ struct Intersection;
 
 struct ScatteredResult
 {
-    vec4 color;
+    vec4 radiance;
     std::vector<Ray> scattered_rays;
 };
 

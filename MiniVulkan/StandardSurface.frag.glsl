@@ -17,11 +17,11 @@
 #define IMAGE_FLAG_NORMAL 32
 #define IMAGE_FLAG_AO 64
 
-layout(location = 0) in  vec3 in_worldPos;
-layout(location = 1) in  vec3 in_worldNormal;
+layout(location = 0) in  vec3 in_world_pos;
+layout(location = 1) in  vec3 in_world_normal;
 layout(location = 2) in  vec2 in_texcoord;
-layout(location = 3) in  vec3 in_sunVec;
-layout(location = 4) in  vec3 in_cameraVec;
+layout(location = 3) in  vec3 in_sun_vec;
+layout(location = 4) in  vec3 in_camera_vec;
 layout(location = 0) out vec4 out_color;
 
 layout(set = 0, binding = 1) uniform Config
@@ -29,15 +29,15 @@ layout(set = 0, binding = 1) uniform Config
     uint technique;
 
     // Blinn-Phong parameters
-    uint  phone_imageFlags;
+    uint  phone_image_mask;
     vec3  phong_ambient;
     vec3  phong_diffuse;
     vec3  phong_specular;
     float phong_gloss; // default: 20
 
     // PBR parameters
-    uint  pbr_imageFlags;
-    vec4  pbr_baseColor;
+    uint  pbr_image_mask;
+    vec4  pbr_basecolor;
     float pbr_metallic;
     float pbr_roughness;
 } config;

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "MaterialDielectric.h"
 
 MaterialDielectric::MaterialDielectric(Texture* basecolor,
@@ -31,14 +32,13 @@ bool MaterialDielectric::scatter(const Ray& ray,
     else
         direction = glm::refract(ray_in, hit.normal, ior);
 
-    result->color = _basecolor->sample(hit.uv, hit.position);
+    result->radiance = _basecolor->sample(hit.uv, hit.position);
     result->scattered_rays.push_back(Ray(hit.position, direction, ray.time));
 
     return true;
 }
 
-std::shared_ptr<Material> 
-make_dielectric(Texture* basecolor, FLOAT ior)
+std::shared_ptr<Material> make_dielectric(Texture* basecolor, FLOAT ior)
 {
     return std::make_shared<MaterialDielectric>(basecolor, ior);
 }

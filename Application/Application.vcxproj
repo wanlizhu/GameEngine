@@ -108,9 +108,6 @@
     <ProjectReference Include="..\MiniRaytracing\MiniRaytracing.vcxproj">
       <Project>{4269d934-d59d-4888-857d-a4f7bc218fad}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\MiniVulkan\MiniVulkan.vcxproj">
-      <Project>{6cae1011-7627-49db-a92a-93f15004450f}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

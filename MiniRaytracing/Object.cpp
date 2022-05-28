@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ObjectSphere.h"
 
 void Intersection::setNormal(const Ray& ray, 

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextureImage.h"
 
 #ifdef _MSC_VER
@@ -71,8 +72,7 @@ vec4 TextureImage::sample(const vec2& uv, const vec3& pos) const
                 pixel[3] * scale);
 }
 
-std::shared_ptr<Texture> 
-make_image(const std::string& path)
+std::shared_ptr<Texture> make_image(const std::string& path)
 {
     return std::make_shared<TextureImage>(path);
 }

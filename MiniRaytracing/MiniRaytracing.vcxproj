@@ -60,19 +60,23 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;MINI_RAYTRACING_EXPORT;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;$(SolutionDir)ThirdParty\glad\include;$(SolutionDir)ThirdParty\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;$(SolutionDir)ThirdParty\glad\include;$(SolutionDir)ThirdParty\glfw\include;$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\glfw\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\glfw\lib\;$(CUDA_PATH)\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(SolutionDir)ThirdParty\glfw\bin\glfw3.dll" "$(OutDir)"
-if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDir)spheres.json"
-</Command>
+      <Command>xcopy /y "$(SolutionDir)ThirdParty\glfw\bin\glfw3.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /q /f "$(OutDir)$(ProjectName).dll"
+del /q /f "$(OutDir)$(ProjectName).lib"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -83,7 +87,9 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;MINI_RAYTRACING_EXPORT;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;$(SolutionDir)ThirdParty\glad\include;$(SolutionDir)ThirdParty\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)ThirdParty;$(SolutionDir)ThirdParty\glad\include;$(SolutionDir)ThirdParty\glfw\include;$(CUDA_PATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -91,21 +97,27 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\glfw\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)ThirdParty\glfw\lib\;$(CUDA_PATH)\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(SolutionDir)ThirdParty\glfw\bin\glfw3.dll" "$(OutDir)"
-if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDir)spheres.json"
-</Command>
+      <Command>xcopy /y "$(SolutionDir)ThirdParty\glfw\bin\glfw3.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /q /f "$(OutDir)$(ProjectName).dll"
+del /q /f "$(OutDir)$(ProjectName).lib"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\ThirdParty\glad\src\glad.c" />
+    <ClCompile Include="..\ThirdParty\glad\src\glad.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="BasicTools.cpp" />
     <ClCompile Include="BVHNode.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Context.cpp" />
+    <ClCompile Include="link_libs.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MaterialDielectric.cpp" />
     <ClCompile Include="MaterialLambertian.cpp" />
@@ -114,6 +126,10 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClCompile Include="ObjectBox.cpp" />
     <ClCompile Include="ObjectRectangle.cpp" />
     <ClCompile Include="ObjectSphere.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="RaytracingAPI.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="BVHScene.cpp" />
@@ -136,11 +152,12 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClInclude Include="ObjectRectangle.h" />
     <ClInclude Include="ObjectSphere.h" />
     <ClInclude Include="OpenGLWindow.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RaytracingAPI.h" />
-    <ClInclude Include="spheres.json">
+    <CopyFileToFolders Include="spheres.json">
       <FileType>Document</FileType>
-    </ClInclude>
+    </CopyFileToFolders>
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureChecker.h" />
     <ClInclude Include="TextureImage.h" />
@@ -148,6 +165,9 @@ if not exist "$(OutDir)spheres.json" mklink "$(OutDir)spheres.json" "$(ProjectDi
     <ClInclude Include="TextureSolidColor.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="BVHScene.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cuda_functions.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

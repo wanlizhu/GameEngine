@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ObjectSphere.h"
 
 ObjectSphere::ObjectSphere(const vec3& center,
@@ -67,11 +68,10 @@ vec2 ObjectSphere::generate_uv(const vec3& pos) const
     return vec2(u, v);
 }
 
-std::shared_ptr<Object> 
-make_sphere(const vec3& center,
-            FLOAT radius,
-            const vec3& velocity,
-            Material* material)
+std::shared_ptr<Object> make_sphere(const vec3& center,
+                                    FLOAT radius,
+                                    const vec3& velocity,
+                                    Material* material)
 {
     return std::make_shared<ObjectSphere>(center, radius, velocity, material);
 }

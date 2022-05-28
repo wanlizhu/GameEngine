@@ -83,6 +83,12 @@
     <ClCompile Include="ObjectBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="link_libs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RaytracingAPI.h">
@@ -117,9 +123,6 @@
     </ClInclude>
     <ClInclude Include="BasicTools.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="spheres.json">
-      <Filter>Scenes</Filter>
     </ClInclude>
     <ClInclude Include="MaterialLambertian.h">
       <Filter>Header Files</Filter>
@@ -157,5 +160,18 @@
     <ClInclude Include="ObjectBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="spheres.json">
+      <Filter>Scenes</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cuda_functions.cu">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

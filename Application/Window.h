@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include "MiniRaytracing/RaytracingAPI.h"
-#include "MiniVulkan/VulkanCanvas.h"
+#include "MiniVulkan/VulkanAPI.h"
 
 class Window
 {
@@ -18,7 +18,5 @@ private:
     HWND _hwnd = NULL;
     HDC  _hdc = NULL;
     MatrixMVP _mvp;
-    ARC<VulkanCanvas> _canvas;
-    std::vector<Model> _models;
 };
 

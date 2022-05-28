@@ -7,7 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniVulkan", "MiniVulkan\Mi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Application", "Application\Application.vcxproj", "{2A520DFD-7294-4361-984E-A94620ECAAFD}"
 	ProjectSection(ProjectDependencies) = postProject
-		{6CAE1011-7627-49DB-A92A-93F15004450F} = {6CAE1011-7627-49DB-A92A-93F15004450F}
 		{4269D934-D59D-4888-857D-A4F7BC218FAD} = {4269D934-D59D-4888-857D-A4F7BC218FAD}
 	EndProjectSection
 EndProject

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "VulkanConfig.h"
-#include "VkReflectionZHU.h"
+#include "VulkanAPI.h"
 
 struct VkShaderModuleCreateInfoZHU
 {
     VkDevice device = VK_NULL_HANDLE;
-    std::string sourcePath;
-	std::string reflectionPath;
-    std::string entryPoint;
-    std::vector<std::string> searchPath;
+    std::string source_path;
+    std::string entry_point;
+    std::vector<std::string> search_path;
     std::unordered_map<std::string, std::string> macros;
 };
 
@@ -21,21 +19,29 @@ public:
     VkShaderModuleZHU& operator=(const VkShaderModuleZHU&) = delete;
     virtual ~VkShaderModuleZHU();
 
-    VkShaderModule const& shaderModule() const { return _shaderModule; }
+    uint32_t resource_binding(const std::string& name) const;
+    uint32_t resource_size(const std::string& name) const;
+    uint32_t member_offset(const std::string& name) const;
+    uint32_t member_size(const std::string& name) const;
+
+    VkShaderModule const& shader() const { return _shader; }
     VkShaderStageFlagBits const& stage() const { return _stage; }
-    const char* entryPoint() const { return _info.entryPoint.c_str(); }
+    const char* entry_point() const { return _info.entry_point.c_str(); }
 	
 private:
 	void compile();
     void reflect();
-	void loadSPIRV();
-	void loadReflection(); 
+	void load_spirv();
+    void load_reflection();
 
 private:
     VkShaderModuleCreateInfoZHU _info;
-    VkShaderModule _shaderModule = VK_NULL_HANDLE;
+    VkShaderModule _shader = VK_NULL_HANDLE;
     VkShaderStageFlagBits _stage;
-    VkReflectionZHU _reflection;
 	std::vector<uint8_t> _spirv;
+    std::unordered_map<std::string, uint32_t> _resource_bindings;
+    std::unordered_map<std::string, uint32_t> _resource_sizes;
+    std::unordered_map<std::string, uint32_t> _member_offsets;
+    std::unordered_map<std::string, uint32_t> _member_sizes;
 };
 

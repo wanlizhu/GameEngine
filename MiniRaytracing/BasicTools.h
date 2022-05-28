@@ -25,10 +25,11 @@
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 
+#define ENABLE_CUDA
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
 #define MAX_NUM_DEPTH 50
-#define NUM_SAMPLES_PER_PIXEL 10
+#define NUM_SAMPLES_PER_PIXEL 500
 #define DEFAULT_CANVAS_WIDTH 1000
 #define TILE_WIDTH  16
 #define TILE_HEIGHT 16
@@ -38,6 +39,16 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define CLAMP(x, a, b) (MIN(MAX(x, a), b))
 #define SECONDS_SINCE(begin) (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - begin).count())
+
+#ifdef ENABLE_CUDA
+#include "cuda_runtime.h"
+#else
+#define __host__
+#define __device__
+#define __global__
+#endif
+
+#define CUDA_FUNC __host__ __device__
 
 #if USE_FLOAT64
 using FLOAT = double;

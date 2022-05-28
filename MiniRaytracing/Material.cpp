@@ -1,13 +1,13 @@
+#include "pch.h"
 #include "MaterialMetal.h"
 #include "MaterialLambertian.h"
 #include "MaterialDielectric.h"
 
-std::shared_ptr<Material> 
-Material::deserialize(const std::string& name,
-                      const nlohmann::json& json_scene)
+std::shared_ptr<Material> Material::deserialize(const std::string& name,
+                                                const nlohmann::json& json_scene)
 {
     nlohmann::json json_mat;
-    
+
     for (const auto& element : json_scene["materials"])
     {
         if (element["name"] == name)

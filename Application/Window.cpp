@@ -48,8 +48,6 @@ Window::Window()
     _hdc = GetDC(_hwnd);
     SetWindowLongPtr(_hwnd, GWLP_USERDATA, NULL);
     ShowWindow(_hwnd, SW_SHOW);
-
-    _canvas = std::make_shared<VulkanCanvas>(_hwnd);
 }
 
 Window::~Window()
@@ -66,14 +64,6 @@ int Window::run()
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-
-        if (_canvas)
-        {
-            _canvas->beginPaint(_mvp);
-            _canvas->drawModels(_models, true);
-            _canvas->endPaint();
-            _canvas->display();
-        }
     }
 
     return (int)msg.wParam;

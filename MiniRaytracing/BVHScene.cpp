@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "BVHScene.h"
 #include "ObjectSphere.h"
 #include "MaterialLambertian.h"

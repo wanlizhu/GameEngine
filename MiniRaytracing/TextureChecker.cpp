@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextureChecker.h"
 #include "TextureSolidColor.h"
 
@@ -16,8 +17,7 @@ vec4 TextureChecker::sample(const vec2& uv, const vec3& pos) const
     return (sines < 0) ? _odd->sample(uv, pos) : _even->sample(uv, pos);
 }
 
-std::shared_ptr<Texture>
-make_checker(const vec4& odd, const vec4& even)
+std::shared_ptr<Texture> make_checker(const vec4& odd, const vec4& even)
 {
     auto odd_tex  = make_solid_color(odd);
     auto even_tex = make_solid_color(even);
@@ -25,8 +25,7 @@ make_checker(const vec4& odd, const vec4& even)
     return std::make_shared<TextureChecker>(odd_tex.get(), even_tex.get());
 }
 
-std::shared_ptr<Texture>
-make_checker(Texture* odd, Texture* even)
+std::shared_ptr<Texture> make_checker(Texture* odd, Texture* even)
 {
     return std::make_shared<TextureChecker>(odd, even);
 }

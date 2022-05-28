@@ -1,15 +1,15 @@
+#include "pch.h"
 #include "Texture.h"
 #include "TextureSolidColor.h"
 #include "TextureChecker.h"
 #include "TextureNoise.h"
 #include "TextureImage.h"
 
-std::shared_ptr<Texture> 
-Texture::deserialize(const std::string& name,
-                     const nlohmann::json& json_scene)
+std::shared_ptr<Texture> Texture::deserialize(const std::string& name,
+                                              const nlohmann::json& json_scene)
 {
     nlohmann::json json_tex;
-    
+
     for (const auto& element : json_scene["textures"])
     {
         if (element["name"] == name)
@@ -35,7 +35,7 @@ Texture::deserialize(const std::string& name,
     }
     else if (type == "checker")
     {
-        std::shared_ptr<Texture> odd  = deserialize(json_tex["odd"], json_scene);
+        std::shared_ptr<Texture> odd = deserialize(json_tex["odd"], json_scene);
         std::shared_ptr<Texture> even = deserialize(json_tex["even"], json_scene);
         texture = make_checker(odd.get(), even.get());
     }
