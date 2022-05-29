@@ -42,5 +42,10 @@ struct PUBLIC_API RaytracingResult
 };
 
 std::shared_ptr<RaytracingResult>
-PUBLIC_API dispatchRaytracing(const RaytracingCreateInfo& info);
+PUBLIC_API 
+dispatch_raytracing(const RaytracingCreateInfo& info);
+
+void
+PUBLIC_API
+run_unit_tests();
 

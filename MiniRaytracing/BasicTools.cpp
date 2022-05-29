@@ -168,3 +168,20 @@ vec4 json_vec4(const nlohmann::json& value, FLOAT default_alpha)
     return vec;
 }
 
+std::vector<vec3> json_vec3_array(const nlohmann::json& value)
+{
+    assert(!value.is_null());
+    std::vector<FLOAT> array = value;
+    assert(array.size() % 3 == 0);
+
+    std::vector<vec3> vertices;
+    for (int i = 0; i < array.size() / 3; i++)
+    {
+        vertices[i].x = array[i * 3 + 0];
+        vertices[i].y = array[i * 3 + 1];
+        vertices[i].z = array[i * 3 + 2];
+    }
+
+    return vertices;
+}
+

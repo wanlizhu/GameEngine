@@ -8,7 +8,8 @@ public:
     ObjectSphere(const vec3& center,
                  FLOAT radius,
                  const vec3& velocity,
-                 Material* material);
+                 Material* material,
+                 const Transform& transform);
 
     virtual bool intersect(const Ray& ray,
                            const DEPTH_BOUNDS& bounds,
@@ -28,4 +29,5 @@ private:
 std::shared_ptr<Object> make_sphere(const vec3& center,
                                     FLOAT radius,
                                     const vec3& velocity,
-                                    Material* material);
+                                    Material* material,
+                                    const Transform& transform);

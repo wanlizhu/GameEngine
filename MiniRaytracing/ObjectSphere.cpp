@@ -4,12 +4,20 @@
 ObjectSphere::ObjectSphere(const vec3& center,
                            FLOAT radius,
                            const vec3& velocity,
-                           Material* material)
+                           Material* material,
+                           const Transform& transform)
     : _material(material->shared_from_this())
     , _center(center)
     , _radius(radius)
     , _velocity(velocity)
-{}
+{
+    if (!transform.is_identical())
+    {
+        _center = transform(center);
+        _radius = transform(radius);
+        _velocity = transform(velocity);
+    }
+}
 
 bool ObjectSphere::intersect(const Ray& ray,
                              const DEPTH_BOUNDS& bounds,
@@ -71,7 +79,8 @@ vec2 ObjectSphere::generate_uv(const vec3& pos) const
 std::shared_ptr<Object> make_sphere(const vec3& center,
                                     FLOAT radius,
                                     const vec3& velocity,
-                                    Material* material)
+                                    Material* material,
+                                    const Transform& transform)
 {
-    return std::make_shared<ObjectSphere>(center, radius, velocity, material);
+    return std::make_shared<ObjectSphere>(center, radius, velocity, material, transform);
 }

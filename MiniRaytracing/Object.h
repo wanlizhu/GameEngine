@@ -5,15 +5,17 @@
 #include "Ray.h"
 #include "BasicTools.h"
 #include "AABB.h"
+#include "Transform.h"
+#include "Triangle.h"
 
 struct Intersection
 {
-    vec3 position;
-    vec3 normal;
-    vec2 uv;
-    FLOAT depth_hit;
-    bool  front_face;
-    Material* material;
+    vec3 position = vec3(0);
+    vec3 normal = vec3(0);
+    vec2 uv = vec2(0);
+    FLOAT depth_hit = FLT_MAX;
+    bool front_face = true;
+    Material* material = nullptr;
 
     void setNormal(const Ray& ray, const vec3& norm);
 };
