@@ -1,6 +1,5 @@
 {
     "name": "three spheres",
-    "background": [ 0, 0, 0 ],
     "camera": {
         "position": [ 13, 2, 3 ],
         "target": [ 0, 0, 0 ],
@@ -50,7 +49,7 @@
                 "type": "random",
                 "count": 500,
                 "bounding box": [ -11, 0.2, -11, 11, 0.2, 11 ],
-                "radius range": [ 0.2, 0.2 ]
+                "radius range": [0.2, 0.2]
             }
         ],
         "materials": [
@@ -82,7 +81,7 @@
             {
                 "name": "white",
                 "type": "solid color",
-                "color": [ 1, 1, 1, 1 ]
+                "color": [1, 1, 1, 1]
             },
             {
                 "name": "checker floor",

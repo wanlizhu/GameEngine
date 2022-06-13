@@ -127,13 +127,12 @@ del /q /f "$(OutDir)$(ProjectName).lib"</Command>
     <ClCompile Include="MaterialMetal.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectBox.cpp" />
-    <ClCompile Include="ObjectPolygon.cpp" />
+    <ClCompile Include="ObjectRectangle.cpp" />
     <ClCompile Include="ObjectSphere.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Ray.cpp" />
     <ClCompile Include="RaytracingAPI.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="BVHScene.cpp" />
@@ -142,9 +141,6 @@ del /q /f "$(OutDir)$(ProjectName).lib"</Command>
     <ClCompile Include="TextureImage.cpp" />
     <ClCompile Include="TextureNoise.cpp" />
     <ClCompile Include="TextureSolidColor.cpp" />
-    <ClCompile Include="Transform.cpp" />
-    <ClCompile Include="Triangle.cpp" />
-    <ClCompile Include="UnitTests.cpp" />
     <ClInclude Include="AABB.h" />
     <ClInclude Include="BasicTools.h" />
     <ClInclude Include="BVHNode.h" />
@@ -157,14 +153,12 @@ del /q /f "$(OutDir)$(ProjectName).lib"</Command>
     <ClInclude Include="MaterialMetal.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectBox.h" />
-    <ClInclude Include="ObjectPolygon.h" />
+    <ClInclude Include="ObjectRectangle.h" />
     <ClInclude Include="ObjectSphere.h" />
     <ClInclude Include="OpenGLWindow.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RaytracingAPI.h" />
-    <ClInclude Include="Transform.h" />
-    <ClInclude Include="Triangle.h" />
     <CopyFileToFolders Include="spheres - luminous floor.json">
       <FileType>Document</FileType>
     </CopyFileToFolders>

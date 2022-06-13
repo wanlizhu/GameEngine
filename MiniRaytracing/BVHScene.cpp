@@ -68,8 +68,7 @@ void BVHScene::generate_random_objects(nlohmann::json json_desc)
         auto object = std::make_shared<ObjectSphere>(vec3(x, y, z),
                                                      radius,
                                                      vec3(0),
-                                                     material.get(),
-                                                     Transform());
+                                                     material.get());
         _objects.push_back(object);
     }
 }

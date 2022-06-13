@@ -2,10 +2,10 @@
 
 #include "Object.h"
 
-class ObjectBox : public Object
+class ObjectRectangle : public Object
 {
 public:
-    ObjectBox();
+    ObjectRectangle();
 
     virtual bool intersect(const Ray& ray,
                            const DEPTH_BOUNDS& bounds,

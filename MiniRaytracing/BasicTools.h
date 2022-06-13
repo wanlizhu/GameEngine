@@ -25,16 +25,12 @@
 #define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
-#include "glm/gtc/quaternion.hpp"
-#include "glm/gtx/quaternion.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/transform.hpp"
 
 //#define ENABLE_CUDA
 #define USE_FLOAT64 true
 #define VERTICAL_FLIP true
 #define MAX_NUM_DEPTH 50
-#define NUM_SAMPLES_PER_PIXEL 500
+#define NUM_SAMPLES_PER_PIXEL 1
 #define DEFAULT_CANVAS_WIDTH 1000
 #define TILE_WIDTH  16
 #define TILE_HEIGHT 16
@@ -70,7 +66,6 @@ using vec4 = glm::dvec4;
 using mat2 = glm::dmat2;
 using mat3 = glm::dmat3;
 using mat4 = glm::dmat4;
-using quat = glm::dquat;
 #else
 using FLOAT = float;
 using vec2 = glm::vec2;
@@ -79,7 +74,6 @@ using vec4 = glm::vec4;
 using mat2 = glm::mat2;
 using mat3 = glm::mat3;
 using mat4 = glm::mat4;
-using quat = glm::quat;
 #endif
 
 using DEPTH_BOUNDS = std::pair<FLOAT, FLOAT>;
@@ -103,4 +97,3 @@ vec4 random_color();
 vec2 json_vec2(const nlohmann::json& value);
 vec3 json_vec3(const nlohmann::json& value);
 vec4 json_vec4(const nlohmann::json& value, FLOAT default_alpha);
-std::vector<vec3> json_vec3_array(const nlohmann::json& value);

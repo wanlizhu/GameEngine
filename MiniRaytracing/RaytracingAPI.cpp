@@ -17,7 +17,7 @@ void RaytracingResult::wait()
 }
 
 std::shared_ptr<RaytracingResult>
-dispatch_raytracing(const RaytracingCreateInfo& info)
+dispatchRaytracing(const RaytracingCreateInfo& info)
 {
     auto result = std::make_shared<RaytracingResult>();
     result->context = new Context(info,
