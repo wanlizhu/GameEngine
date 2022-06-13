@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include "MiniRaytracing/RaytracingAPI.h"
-#include "MiniVulkan/VulkanAPI.h"
+//#include "MiniVulkan/VulkanAPI.h"
 
 class Window
 {
@@ -17,6 +17,6 @@ public:
 private:
     HWND _hwnd = NULL;
     HDC  _hdc = NULL;
-    MatrixMVP _mvp;
+    //MatrixMVP _mvp;
 };
 
