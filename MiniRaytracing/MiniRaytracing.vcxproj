@@ -45,14 +45,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
     <CopyFileAfterTargets>PostBuildEvent</CopyFileAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)..\$(SolutionName).build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Platform)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)$(Configuration)_$(ProjectName)\</IntDir>
     <CopyFileAfterTargets>PostBuildEvent</CopyFileAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
